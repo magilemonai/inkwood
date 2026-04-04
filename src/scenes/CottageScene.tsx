@@ -59,7 +59,7 @@ function CottageScene({ progress: p }: SceneProps) {
       <defs>
         <GlowFilter id="flameGlow" radius={10} color="#e89a30" opacity={0.5} />
         <GlowFilter id="flameCore" radius={3} color="#ffe080" opacity={0.7} />
-        <GlowFilter id="journalGlow" radius={5} color="#e89a30" opacity={0.4} />
+{/* journal uses subtle fill overlay, no filter needed */}
 
         <radialGradient id="warmOverlay" cx="50%" cy="35%" r="55%">
           <stop offset="0%" stopColor="#e89a30" stopOpacity={p * 0.12} />
@@ -120,15 +120,24 @@ function CottageScene({ progress: p }: SceneProps) {
       <path d={WINDOW_SILL}
         fill={`rgb(${r + 12},${g + 7},${b + 3})`} />
 
-      {/* ── MUG on windowsill — ABOVE the fold ── */}
+      {/* ── MUG on far right of shelf — with steam against dark wall ── */}
       <g opacity={0.4 + sub(p, 0.3, 0.2) * 0.6}>
-        <path d="M68 140 Q66 134 67 130 Q68 127 73 127 Q78 127 79 130 Q80 134 78 140 Z"
-          fill={`rgb(${120 + Math.round(c1 * 40)},${80 + Math.round(c1 * 20)},55)`} />
-        <path d="M78 131 Q84 131 84 135 Q84 139 78 139"
-          fill="none" stroke={`rgb(${110 + Math.round(c1 * 30)},${75 + Math.round(c1 * 15)},50)`}
+        <path d="M348 118 Q346 112 347 108 Q348 105 353 105 Q358 105 359 108 Q360 112 358 118 Z"
+          fill={`rgb(${120 + Math.round(c3 * 40)},${80 + Math.round(c3 * 20)},55)`} />
+        <path d="M358 109 Q364 109 364 113 Q364 117 358 117"
+          fill="none" stroke={`rgb(${110 + Math.round(c3 * 30)},${75 + Math.round(c3 * 15)},50)`}
           strokeWidth="2" strokeLinecap="round" />
-        <ellipse cx="73" cy="127" rx="6" ry="1.8"
-          fill={`rgb(${130 + Math.round(c1 * 30)},${90 + Math.round(c1 * 15)},65)`} />
+        <ellipse cx="353" cy="105" rx="6" ry="1.8"
+          fill={`rgb(${130 + Math.round(c3 * 30)},${90 + Math.round(c3 * 15)},65)`} />
+        {/* Steam — thin wispy curves, visible against dark right wall */}
+        {sub(p, 0.55, 0.2) > 0 && (
+          <g opacity={sub(p, 0.55, 0.2) * 0.3}>
+            <path d={`M351 103 Q348 96 351 90 Q353 85 350 80`}
+              fill="none" stroke="#c8b898" strokeWidth="0.8" strokeLinecap="round" />
+            <path d={`M355 102 Q358 95 355 88 Q353 83 356 78`}
+              fill="none" stroke="#c8b898" strokeWidth="0.7" strokeLinecap="round" />
+          </g>
+        )}
       </g>
 
       {/* ── SHELF ── */}
@@ -176,12 +185,15 @@ function CottageScene({ progress: p }: SceneProps) {
           fill={bk.color} rx="0.5" opacity={0.3 + sub(p, 0.1 + i * 0.06, 0.2) * 0.7} />
       ))}
 
-      {/* ── JOURNAL on shelf — far right, narrative hook ── */}
+      {/* ── JOURNAL on shelf — small book that glows faintly, NOT a rectangle ── */}
       {journalP > 0 && (
-        <g opacity={journalP}>
-          <rect x="335" y="108" width="14" height="10" rx="1"
-            fill={`rgb(${60 + Math.round(p * 40)},${30 + Math.round(p * 15)},15)`}
-            filter="url(#journalGlow)" />
+        <g opacity={journalP * 0.7}>
+          {/* Book spine — thin, leaning slightly */}
+          <path d="M340 118 L338 106 Q339 104 341 104 L345 104 Q347 104 347 106 L345 118 Z"
+            fill={`rgb(${50 + Math.round(p * 30)},${25 + Math.round(p * 12)},12)`} />
+          {/* Subtle amber edge glow — NOT a glowing rectangle */}
+          <path d="M340 118 L338 106 Q339 104 341 104 L345 104 Q347 104 347 106 L345 118 Z"
+            fill="#e89a30" opacity={journalP * 0.12} />
         </g>
       )}
 
@@ -191,29 +203,41 @@ function CottageScene({ progress: p }: SceneProps) {
       <rect x="0" y="190" width="400" height="60"
         fill={`rgb(${r + 3},${g + 2},${b})`} />
 
-      {/* ── CAT — bigger, sitting on the floor but visible above overlay ── */}
+      {/* ── CAT — sitting on floor below window, recognizable silhouette ── */}
       {catP > 0 && (
-        <g opacity={catP * 0.9} transform="translate(30, 148) scale(1.3)">
-          {/* Body — sitting cat, facing right */}
+        <g opacity={catP * 0.9}>
+          {/* Body — sitting cat in profile, facing right. Round haunches,
+              upright posture, pointy ears, long curved tail */}
           <path d={`
-            M0 28 C0 18, 6 10, 14 8
-            C16 7, 18 5, 20 2
-            L22 -3 C23 -5, 25 -5, 25 -2 L25 1
-            L28 -4 C29 -6, 31 -6, 31 -3 L30 2
-            C32 3, 34 6, 34 9
-            C36 9, 38 12, 38 15
-            C38 18, 36 19, 34 19
-            C32 22, 30 26, 30 30
-            L30 32 L8 32
-            C2 32, 0 30, 0 28 Z
-          `} fill={`rgb(${r - 2},${g - 2},${b - 2})`} />
-          {/* Tail — long, curving */}
-          <path d="M30 28 C40 24, 50 18, 48 10 C46 6, 40 8, 42 14"
-            fill="none" stroke={`rgb(${r - 2},${g - 2},${b - 2})`}
-            strokeWidth="3" strokeLinecap="round" />
-          {/* Eyes */}
-          <circle cx="22" cy="3" r="1.2" fill="#e89a30" opacity={catP * 0.7} />
-          <circle cx="28" cy="3.5" r="1" fill="#e89a30" opacity={catP * 0.6} />
+            M55 190
+            C55 180, 58 172, 64 168
+            C67 166, 68 164, 68 160
+            C68 157, 66 154, 65 152
+            L63 148
+            C63 145, 66 144, 67 146
+            L68 150
+            C70 148, 72 145, 72 147
+            L71 150
+            C72 152, 74 155, 74 158
+            C74 161, 73 164, 72 166
+            C76 167, 80 170, 82 174
+            C84 178, 84 184, 82 190
+            Z
+          `} fill={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`} />
+          {/* Tail — arches up and curves back, clearly a tail */}
+          <path d="M82 186 C90 180, 98 170, 96 160 C94 154, 88 156, 90 162 C92 168, 88 174, 84 178"
+            fill="none" stroke={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`}
+            strokeWidth="3.5" strokeLinecap="round" />
+          {/* Eyes — amber glints */}
+          <circle cx="66" cy="155" r="1.3" fill="#e89a30" opacity={catP * 0.7} />
+          <circle cx="71" cy="155.5" r="1.1" fill="#e89a30" opacity={catP * 0.6} />
+          {/* Whiskers — very subtle */}
+          <g opacity={catP * 0.2}>
+            <line x1="74" y1="157" x2="82" y2="155" stroke="#e89a30" strokeWidth="0.4" />
+            <line x1="74" y1="158" x2="82" y2="159" stroke="#e89a30" strokeWidth="0.4" />
+            <line x1="63" y1="157" x2="55" y2="155" stroke="#e89a30" strokeWidth="0.4" />
+            <line x1="63" y1="158" x2="55" y2="159" stroke="#e89a30" strokeWidth="0.4" />
+          </g>
         </g>
       )}
 
