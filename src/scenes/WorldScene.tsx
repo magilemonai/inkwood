@@ -143,27 +143,28 @@ function WorldScene({ progress: p }: SceneProps) {
         const mx = (la.x + lb.x) / 2 + ((i % 3) - 1) * 8;
         const my = (la.y + lb.y) / 2 + ((i % 5) - 2) * 5;
 
-        // Animated growth: interpolate endpoint
-        const endX = la.x + (lb.x - la.x) * cp;
-        const endY = la.y + (lb.y - la.y) * cp;
-        const cmx = la.x + (mx - la.x) * cp;
-        const cmy = la.y + (my - la.y) * cp;
+        // Estimate path length for line-drawing animation
+        const lineLength = Math.sqrt((lb.x - la.x) ** 2 + (lb.y - la.y) ** 2) * 1.15;
 
         return (
           <g key={`ley-${i}`}>
             <path
-              d={`M${la.x} ${la.y} Q${cmx} ${cmy} ${endX} ${endY}`}
+              d={`M${la.x} ${la.y} Q${mx} ${my} ${lb.x} ${lb.y}`}
               fill="none"
               stroke="#d8c890"
               strokeWidth={1}
+              strokeDasharray={lineLength}
+              strokeDashoffset={lineLength * (1 - cp)}
               opacity={cp * 0.25}
             />
             {/* Brighter inner line */}
             <path
-              d={`M${la.x} ${la.y} Q${cmx} ${cmy} ${endX} ${endY}`}
+              d={`M${la.x} ${la.y} Q${mx} ${my} ${lb.x} ${lb.y}`}
               fill="none"
               stroke="#f0e8c0"
               strokeWidth={0.4}
+              strokeDasharray={lineLength}
+              strokeDashoffset={lineLength * (1 - cp)}
               opacity={cp * 0.15}
             />
           </g>
@@ -291,6 +292,9 @@ function WorldScene({ progress: p }: SceneProps) {
         );
       })()}
 
+      </g>{/* end midLayer */}
+
+      <g className="fgLayer">
       {/* ── Ambient wisps near nodes ── */}
       {[
         { x: 85,  y: 70,  delay: 0.5, color: "#6bbf6b" },
@@ -312,6 +316,8 @@ function WorldScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
+      </g>{/* end fgLayer */}
+
       {/* ── Final radiance effect at 90%+ ── */}
       {finalP > 0 && (
         <g>
@@ -328,6 +334,20 @@ function WorldScene({ progress: p }: SceneProps) {
           />
         </g>
       )}
+
+      {/* Atmospheric particles — energy motes traveling along connections */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.25;
+        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 4 === 0 ? "#f0e8c0" : "#d8c890"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }
