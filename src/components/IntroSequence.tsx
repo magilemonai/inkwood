@@ -10,69 +10,73 @@ import s from "../styles/Intro.module.css";
  * Zero text until the title. Pure visual storytelling.
  */
 
-/** Dormant Garden — grey, lifeless */
+/** Dormant Garden — grey, desaturated, clearly visible but lifeless */
 function DormantGarden({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      {/* Grey sky — must be visibly different from black */}
-      <rect width="400" height="250" fill="hsl(120, 5%, 8%)" />
+      <rect width="400" height="250" fill="hsl(200, 3%, 15%)" />
+      {/* Overcast sky hint */}
+      <rect width="400" height="130" fill="hsl(210, 4%, 18%)" />
       {/* Dead hills */}
-      <path d="M0 200 Q100 170 200 195 Q300 210 400 185 L400 250 L0 250Z" fill="hsl(120, 4%, 10%)" />
-      <path d="M0 215 Q80 195 180 210 Q280 225 400 205 L400 250 L0 250Z" fill="hsl(120, 3%, 11%)" />
+      <path d="M0 190 Q100 162 200 185 Q300 200 400 175 L400 250 L0 250Z" fill="hsl(120, 3%, 13%)" />
+      <path d="M0 210 Q80 192 180 205 Q280 218 400 200 L400 250 L0 250Z" fill="hsl(120, 2%, 14%)" />
       {/* Dead tree silhouettes */}
-      <line x1="80" y1="210" x2="80" y2="150" stroke="hsl(120,3%,12%)" strokeWidth="3" />
-      <line x1="80" y1="170" x2="60" y2="145" stroke="hsl(120,3%,12%)" strokeWidth="2" />
-      <line x1="80" y1="175" x2="100" y2="150" stroke="hsl(120,3%,12%)" strokeWidth="2" />
-      <line x1="300" y1="200" x2="300" y2="140" stroke="hsl(120,3%,12%)" strokeWidth="3" />
-      <line x1="300" y1="165" x2="280" y2="140" stroke="hsl(120,3%,12%)" strokeWidth="2" />
-      <line x1="300" y1="160" x2="320" y2="135" stroke="hsl(120,3%,12%)" strokeWidth="2" />
+      <path d="M80 205 L80 140 M80 165 Q65 148 55 138 M80 158 Q95 145 105 140" fill="none" stroke="hsl(120,3%,20%)" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M300 195 L300 130 M300 160 Q283 140 275 130 M300 152 Q318 138 325 130" fill="none" stroke="hsl(120,3%,20%)" strokeWidth="2.5" strokeLinecap="round" />
       {/* Dead flower stems — bare, no blooms */}
       {[120, 170, 220, 270].map((x, i) => (
-        <line key={i} x1={x} y1="215" x2={x + (i % 2 === 0 ? 2 : -2)} y2="195" stroke="hsl(120,3%,14%)" strokeWidth="1.2" />
+        <line key={i} x1={x} y1="210" x2={x + (i % 2 === 0 ? 2 : -2)} y2="190" stroke="hsl(120,3%,20%)" strokeWidth="1.5" />
       ))}
-      {/* Cracked ground lines */}
-      <path d="M50 230 L80 225 L90 240" fill="none" stroke="hsl(0,0%,13%)" strokeWidth="0.8" />
-      <path d="M250 235 L280 228 L300 238" fill="none" stroke="hsl(0,0%,13%)" strokeWidth="0.8" />
+      {/* Cracked dry ground */}
+      <path d="M50 225 L85 218 L95 232" fill="none" stroke="hsl(30,4%,18%)" strokeWidth="0.8" />
+      <path d="M250 228 L285 220 L305 232" fill="none" stroke="hsl(30,4%,18%)" strokeWidth="0.8" />
+      <path d="M160 235 L185 230 L200 240" fill="none" stroke="hsl(30,4%,17%)" strokeWidth="0.6" />
     </g>
   );
 }
 
-/** Dormant Cottage — pitch black, cold */
+/** Dormant Cottage — cold, dark interior but visible structure */
 function DormantCottage({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      <rect width="400" height="250" fill="hsl(0, 0%, 5%)" />
+      <rect width="400" height="250" fill="hsl(30, 4%, 12%)" />
       {/* Dark room walls */}
-      <rect x="0" y="0" width="400" height="200" fill="hsl(30, 5%, 5%)" />
-      <rect x="0" y="200" width="400" height="50" fill="hsl(25, 5%, 6%)" />
-      {/* Window — dead black, no light */}
-      <rect x="158" y="28" width="84" height="72" fill="hsl(0,0%,3%)" rx="4" />
-      <line x1="200" y1="28" x2="200" y2="100" stroke="hsl(30,5%,8%)" strokeWidth="3" />
-      <line x1="158" y1="64" x2="242" y2="64" stroke="hsl(30,5%,8%)" strokeWidth="3" />
-      <rect x="153" y="23" width="94" height="82" fill="none" stroke="hsl(30,5%,8%)" strokeWidth="5" rx="4" />
+      <rect x="0" y="0" width="400" height="200" fill="hsl(30, 5%, 10%)" />
+      <rect x="0" y="200" width="400" height="50" fill="hsl(25, 6%, 13%)" />
+      {/* Window — dark blue, cold moonlight hint */}
+      <rect x="158" y="28" width="84" height="72" fill="hsl(220,10%,10%)" rx="4" />
+      <line x1="200" y1="28" x2="200" y2="100" stroke="hsl(30,8%,16%)" strokeWidth="3" />
+      <line x1="158" y1="64" x2="242" y2="64" stroke="hsl(30,8%,16%)" strokeWidth="3" />
+      <rect x="153" y="23" width="94" height="82" fill="none" stroke="hsl(30,8%,16%)" strokeWidth="5" rx="4" />
       {/* Cold shelf */}
-      <rect x="48" y="173" width="304" height="7" fill="hsl(30,3%,7%)" rx="2" />
-      {/* Unlit candles */}
+      <rect x="48" y="173" width="304" height="7" fill="hsl(30,5%,14%)" rx="2" />
+      {/* Unlit candles — visible wax */}
       {[95, 200, 305].map((x, i) => (
-        <rect key={i} x={x - 5} y={148} width="10" height="25" fill="hsl(40,5%,10%)" rx="2" />
+        <rect key={i} x={x - 5} y={148} width="10" height="25" fill="hsl(40,8%,18%)" rx="2" />
+      ))}
+      {/* Floor boards hint */}
+      {[0, 60, 120, 180, 240, 300, 360].map((x, i) => (
+        <line key={i} x1={x} y1="200" x2={x} y2="250" stroke="hsl(30,5%,11%)" strokeWidth="0.5" />
       ))}
     </g>
   );
 }
 
-/** Dormant Sky — starless void */
+/** Dormant Sky — deep blue void, cold and empty */
 function DormantSky({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      <rect width="400" height="250" fill="hsl(232, 10%, 3%)" />
-      {/* Empty sky — just dark */}
-      <rect x="0" y="232" width="400" height="18" fill="hsl(0,0%,2%)" />
-      {/* Bare treeline */}
+      <rect width="400" height="250" fill="hsl(232, 15%, 10%)" />
+      {/* Faint horizon glow */}
+      <rect x="0" y="180" width="400" height="52" fill="hsl(232, 8%, 12%)" />
+      {/* Bare treeline — visible silhouettes */}
+      <rect x="0" y="232" width="400" height="18" fill="hsl(232,10%,6%)" />
       {[0, 28, 55, 90, 128, 168, 205, 242, 278, 312, 348, 378].map((x, i) => (
-        <polygon key={i} points={`${x},232 ${x + 14},${218 - (i % 3) * 5} ${x + 28},232`} fill="hsl(0,0%,2%)" />
+        <polygon key={i} points={`${x},232 ${x + 14},${216 - (i % 3) * 6} ${x + 28},232`} fill="hsl(232,10%,6%)" />
       ))}
-      {/* Moon — dead, barely visible */}
-      <circle cx="342" cy="45" r="20" fill="hsl(232,10%,6%)" opacity="0.3" />
+      {/* Moon — dead crescent, but visible */}
+      <circle cx="342" cy="45" r="20" fill="hsl(232,12%,14%)" opacity="0.5" />
+      <circle cx="334" cy="42" r="17" fill="hsl(232,15%,10%)" />
     </g>
   );
 }
@@ -99,9 +103,22 @@ const PHASES = [
 ];
 
 export default function IntroSequence() {
-  const { setScreen, startGame } = useGameStore();
+  const { startGame } = useGameStore();
   const [time, setTime] = useState(0);
   const [showTitle, setShowTitle] = useState(false);
+
+  // Keyboard: space/enter to skip or begin
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (showTitle) startGame();
+        else setShowTitle(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showTitle, startGame]);
 
   useEffect(() => {
     const start = performance.now();

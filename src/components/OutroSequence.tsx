@@ -42,6 +42,18 @@ export default function OutroSequence() {
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
 
+  // Keyboard: space/enter to restart when text is showing
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.key === " " || e.key === "Enter") && showText) {
+        e.preventDefault();
+        restart();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showText, restart]);
+
   useEffect(() => {
     const start = performance.now();
     let frame: number;

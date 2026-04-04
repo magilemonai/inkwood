@@ -10,8 +10,7 @@ export const LEVELS: Level[] = [
     scene: "garden",
     accent: "#6bbf6b",
     bg: "#080e08",
-    winText:
-      "Color returns to the earth. You feel something stir beneath the roots — older than the garden, deeper than the soil.",
+    winText: "Color returns. Something stirs beneath the roots.",
   },
   {
     title: "The Dark Cottage",
@@ -21,8 +20,7 @@ export const LEVELS: Level[] = [
     scene: "cottage",
     accent: "#e89a30",
     bg: "#0d0905",
-    winText:
-      "Warmth fills the forgotten rooms. On the shelf, a leather journal falls open — its pages covered in symbols you almost recognize.",
+    winText: "Warmth fills the rooms. A journal falls open — symbols you almost recognize.",
   },
   {
     title: "The Night Sky",
@@ -32,14 +30,12 @@ export const LEVELS: Level[] = [
     scene: "stars",
     accent: "#9090f8",
     bg: "#03030e",
-    winText:
-      "The constellations burn again. Their patterns trace lines across the dark — not random, but deliberate. A map, perhaps, to something below.",
+    winText: "The constellations burn. Their patterns are deliberate. A map to something below.",
   },
   // ── Act II: Discovery ──
   {
     title: "The Dry Well",
-    flavor:
-      "An ancient spring, long silent. The stones still remember the sound of water.",
+    flavor: "The stones still remember the sound of water.",
     prompts: [
       "deep water remember your name",
       "rise and carry the old songs home",
@@ -47,13 +43,11 @@ export const LEVELS: Level[] = [
     scene: "well",
     accent: "#50b8b8",
     bg: "#040a0a",
-    winText:
-      "Water fills the well and glowing runes surface on the stones. They pulse gently, like a heartbeat. This well was no ordinary spring.",
+    winText: "Runes surface on the stones, pulsing like a heartbeat.",
   },
   {
     title: "The Forgotten Bridge",
-    flavor:
-      "A crossing lost to mist and moss. The path it joined once linked two sacred places.",
+    flavor: "The path it joined once linked two sacred places.",
     prompts: [
       "moss and stone recall the crossing",
       "where old paths meet spirits still walk",
@@ -61,13 +55,11 @@ export const LEVELS: Level[] = [
     scene: "bridge",
     accent: "#7aaa6a",
     bg: "#060a06",
-    winText:
-      "The bridge stands whole again. Spirit-lanterns flicker along its rails, and for a moment you see footprints in the moss — not yours.",
+    winText: "Spirit-lanterns flicker. Footprints in the moss — not yours.",
   },
   {
     title: "The Whispering Library",
-    flavor:
-      "Below the earth, a chamber of crystallized knowledge. Every page holds a sleeping voice.",
+    flavor: "Every page holds a sleeping voice.",
     prompts: [
       "open the pages let wisdom rise",
       "every old word finds its voice again",
@@ -75,14 +67,12 @@ export const LEVELS: Level[] = [
     scene: "library",
     accent: "#c088b0",
     bg: "#0a0608",
-    winText:
-      "The books drift upward, whispering in chorus. Among them, a single tome glows brighter — the Chronicle of the Nexus, its title reads.",
+    winText: "The books whisper in chorus. One tome glows brighter than the rest.",
   },
   // ── Act III: The Nexus ──
   {
     title: "The Spirit Stones",
-    flavor:
-      "A ring of ancient markers, cold and dark. They once guided great powers along hidden paths.",
+    flavor: "They once guided great powers along hidden paths.",
     prompts: [
       "stand tall again guardians of old",
       "the circle remembers what was promised",
@@ -90,13 +80,11 @@ export const LEVELS: Level[] = [
     scene: "stones",
     accent: "#88a8c8",
     bg: "#050608",
-    winText:
-      "Light races between the stones in lines of pale fire. The ley lines are waking. You understand now — these are not monuments. They are conduits.",
+    winText: "Light races between the stones. Not monuments — conduits.",
   },
   {
     title: "The Moonlit Sanctum",
-    flavor:
-      "A clearing where moonlight pools like water. The spirits once gathered here in council.",
+    flavor: "Moonlight pools like water where the spirits once gathered.",
     prompts: [
       "moonlight gathers where spirits convene",
       "the ancient ones return to their seats",
@@ -104,13 +92,11 @@ export const LEVELS: Level[] = [
     scene: "sanctum",
     accent: "#d0b870",
     bg: "#08080a",
-    winText:
-      "Translucent figures stand in the moonlight, tall and gentle. One turns toward you and inclines its head. You are recognized.",
+    winText: "A figure turns toward you and inclines its head. You are recognized.",
   },
   {
     title: "The Great Tree",
-    flavor:
-      "The nexus of all living things. Its roots are the ley lines, its branches hold the sky.",
+    flavor: "Its roots are the ley lines. Its branches hold the sky.",
     prompts: [
       "roots deeper than memory",
       "branches wider than sky",
@@ -119,14 +105,12 @@ export const LEVELS: Level[] = [
     scene: "tree",
     accent: "#b8c8a8",
     bg: "#060806",
-    winText:
-      "The Great Tree blazes with gentle light. Energy flows through its roots to every corner of the land. The nexus breathes again.",
+    winText: "The nexus breathes.",
   },
   // ── Act IV: Restoration ──
   {
     title: "The Waking World",
-    flavor:
-      "All things connected, all things alive. Speak the final words and restore the ancient order.",
+    flavor: "Speak the final words.",
     prompts: [
       "the garden blooms the hearth burns bright",
       "every star remembers every spirit sings",
@@ -135,8 +119,7 @@ export const LEVELS: Level[] = [
     scene: "world",
     accent: "#d8c890",
     bg: "#060808",
-    winText:
-      "Light flows between every place you have touched. Garden, cottage, sky, well, bridge, library, stones, sanctum, tree — all one. The ancient order holds.",
+    winText: "All one.",
   },
 ];
 

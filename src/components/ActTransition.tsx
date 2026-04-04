@@ -363,6 +363,18 @@ export default function ActTransition() {
     return () => clearTimeout(timer);
   }, [advance]);
 
+  // Keyboard: space/enter to skip
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        advance();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [advance]);
+
   return (
     <div className={s.container} onClick={advance} role="button" tabIndex={0} onKeyDown={advance}>
       <AnimatePresence>
