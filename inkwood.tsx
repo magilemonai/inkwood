@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 const LEVELS = [
+  // ── Act I: Awakening ──
   {
     title: "The Sleeping Garden",
     flavor: "Frost clings to every petal. Breathe life back into the garden.",
@@ -8,6 +9,7 @@ const LEVELS = [
     scene: "garden",
     accent: "#6bbf6b",
     bg: "#080e08",
+    winText: "Color returns to the earth. You feel something stir beneath the roots — older than the garden, deeper than the soil.",
   },
   {
     title: "The Dark Cottage",
@@ -16,6 +18,7 @@ const LEVELS = [
     scene: "cottage",
     accent: "#e89a30",
     bg: "#0d0905",
+    winText: "Warmth fills the forgotten rooms. On the shelf, a leather journal falls open — its pages covered in symbols you almost recognize.",
   },
   {
     title: "The Night Sky",
@@ -24,6 +27,73 @@ const LEVELS = [
     scene: "stars",
     accent: "#9090f8",
     bg: "#03030e",
+    winText: "The constellations burn again. Their patterns trace lines across the dark — not random, but deliberate. A map, perhaps, to something below.",
+  },
+  // ── Act II: Discovery ──
+  {
+    title: "The Dry Well",
+    flavor: "An ancient spring, long silent. The stones still remember the sound of water.",
+    prompts: ["deep water remember your name", "rise and carry the old songs home"],
+    scene: "well",
+    accent: "#50b8b8",
+    bg: "#040a0a",
+    winText: "Water fills the well and glowing runes surface on the stones. They pulse gently, like a heartbeat. This well was no ordinary spring.",
+  },
+  {
+    title: "The Forgotten Bridge",
+    flavor: "A crossing lost to mist and moss. The path it joined once linked two sacred places.",
+    prompts: ["moss and stone recall the crossing", "where old paths meet spirits still walk"],
+    scene: "bridge",
+    accent: "#7aaa6a",
+    bg: "#060a06",
+    winText: "The bridge stands whole again. Spirit-lanterns flicker along its rails, and for a moment you see footprints in the moss — not yours.",
+  },
+  {
+    title: "The Whispering Library",
+    flavor: "Below the earth, a chamber of crystallized knowledge. Every page holds a sleeping voice.",
+    prompts: ["open the pages let wisdom rise", "every old word finds its voice again"],
+    scene: "library",
+    accent: "#c088b0",
+    bg: "#0a0608",
+    winText: "The books drift upward, whispering in chorus. Among them, a single tome glows brighter — the Chronicle of the Nexus, its title reads.",
+  },
+  // ── Act III: The Nexus ──
+  {
+    title: "The Spirit Stones",
+    flavor: "A ring of ancient markers, cold and dark. They once guided great powers along hidden paths.",
+    prompts: ["stand tall again guardians of old", "the circle remembers what was promised"],
+    scene: "stones",
+    accent: "#88a8c8",
+    bg: "#050608",
+    winText: "Light races between the stones in lines of pale fire. The ley lines are waking. You understand now — these are not monuments. They are conduits.",
+  },
+  {
+    title: "The Moonlit Sanctum",
+    flavor: "A clearing where moonlight pools like water. The spirits once gathered here in council.",
+    prompts: ["moonlight gathers where spirits convene", "the ancient ones return to their seats"],
+    scene: "sanctum",
+    accent: "#d0b870",
+    bg: "#08080a",
+    winText: "Translucent figures stand in the moonlight, tall and gentle. One turns toward you and inclines its head. You are recognized.",
+  },
+  {
+    title: "The Great Tree",
+    flavor: "The nexus of all living things. Its roots are the ley lines, its branches hold the sky.",
+    prompts: ["roots deeper than memory", "branches wider than sky", "nexus of all living things awaken"],
+    scene: "tree",
+    accent: "#b8c8a8",
+    bg: "#060806",
+    winText: "The Great Tree blazes with gentle light. Energy flows through its roots to every corner of the land. The nexus breathes again.",
+  },
+  // ── Act IV: Restoration ──
+  {
+    title: "The Waking World",
+    flavor: "All things connected, all things alive. Speak the final words and restore the ancient order.",
+    prompts: ["the garden blooms the hearth burns bright", "every star remembers every spirit sings", "the ancient order is restored"],
+    scene: "world",
+    accent: "#d8c890",
+    bg: "#060808",
+    winText: "Light flows between every place you have touched. Garden, cottage, sky, well, bridge, library, stones, sanctum, tree — all one. The ancient order holds.",
   },
 ];
 
@@ -237,7 +307,595 @@ function StarScene({ progress: p }) {
   );
 }
 
-const SCENES = { garden: GardenScene, cottage: CottageScene, stars: StarScene };
+// ─── WELL SCENE ────────────────────────────────────────────
+function WellScene({ progress: p }) {
+  const waterY = 220 - p * 100;
+  const runeGlow = Math.min(1, Math.max(0, (p - 0.4) / 0.3));
+
+  const runes = [
+    { x: 145, y: 140, delay: 0.4 },
+    { x: 255, y: 140, delay: 0.5 },
+    { x: 135, y: 170, delay: 0.6 },
+    { x: 265, y: 170, delay: 0.7 },
+    { x: 150, y: 200, delay: 0.8 },
+    { x: 250, y: 200, delay: 0.85 },
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="wellglow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stopColor="#50b8b8" stopOpacity={p * 0.3} />
+          <stop offset="100%" stopColor="#50b8b8" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(180,18%,${4 + p * 5}%)`} />
+      {/* Well structure */}
+      <rect x="130" y="100" width="140" height="130" fill="#2a2018" rx="3" />
+      <rect x="120" y="95" width="160" height="12" fill="#3a2a18" rx="2" />
+      {/* Inner well */}
+      <rect x="145" y="112" width="110" height="118" fill="#0a0808" rx="2" />
+      {/* Water */}
+      <rect x="145" y={Math.max(112, waterY)} width="110" height={230 - Math.max(112, waterY)} fill={`hsl(190,${40 + p * 20}%,${12 + p * 18}%)`} rx="1" />
+      {/* Water surface shimmer */}
+      {p > 0.15 && (
+        <>
+          <ellipse cx="200" cy={Math.max(115, waterY + 3)} rx={40 * p} ry="2" fill="white" opacity={p * 0.15} />
+          <ellipse cx="185" cy={Math.max(117, waterY + 6)} rx={25 * p} ry="1.5" fill="white" opacity={p * 0.1} />
+        </>
+      )}
+      {/* Runes on stones */}
+      {runes.map((r, i) => {
+        const rp = Math.min(1, Math.max(0, (p - r.delay) / 0.18));
+        return (
+          <g key={i} opacity={rp}>
+            <circle cx={r.x} cy={r.y} r="8" fill="#50b8b8" opacity={rp * 0.15} />
+            <text x={r.x} y={r.y + 4} textAnchor="middle" fontSize="10" fill="#50b8b8" opacity={rp * 0.8}>&#x16A0;</text>
+          </g>
+        );
+      })}
+      {/* Glow from well */}
+      <ellipse cx="200" cy="160" rx="80" ry="60" fill="url(#wellglow)" />
+      {/* Well roof structure */}
+      <rect x="155" y="60" width="6" height="40" fill="#3a2a18" />
+      <rect x="239" y="60" width="6" height="40" fill="#3a2a18" />
+      <rect x="148" y="55" width="104" height="10" fill="#3a2a18" rx="2" />
+      {/* Rope and bucket */}
+      <line x1="200" y1="65" x2="200" y2={90 + p * 30} stroke="#8a7a60" strokeWidth="1.5" />
+      {p < 0.5 && <rect x="193" y={88 + p * 30} width="14" height="12" fill="#6a5a40" rx="1" />}
+      {/* Spirit fish */}
+      {p > 0.7 && (
+        <g opacity={Math.min(1, (p - 0.7) / 0.2)}>
+          <ellipse cx={180 + Math.sin(p * 20) * 15} cy={Math.max(130, waterY + 20)} rx="8" ry="4" fill="#50b8b8" opacity="0.4" />
+          <polygon points={`${188 + Math.sin(p * 20) * 15},${Math.max(130, waterY + 20)} ${193 + Math.sin(p * 20) * 15},${Math.max(127, waterY + 17)} ${193 + Math.sin(p * 20) * 15},${Math.max(133, waterY + 23)}`} fill="#50b8b8" opacity="0.3" />
+        </g>
+      )}
+    </svg>
+  );
+}
+// ─── BRIDGE SCENE ──────────────────────────────────────────
+function BridgeScene({ progress: p }) {
+  const mistY = 185 - p * 10;
+  const carvingGlow = Math.min(1, Math.max(0, (p - 0.35) / 0.3));
+
+  const lanterns = [
+    { x: 120, y: 125, delay: 0.5 },
+    { x: 170, y: 112, delay: 0.6 },
+    { x: 220, y: 108, delay: 0.7 },
+    { x: 270, y: 115, delay: 0.8 },
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="bridgemist" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#a0c8a0" stopOpacity={0.15 + p * 0.1} />
+          <stop offset="100%" stopColor="#a0c8a0" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(140,15%,${5 + p * 4}%)`} />
+      {/* Chasm mist */}
+      <ellipse cx="200" cy={mistY + 30} rx="190" ry="45" fill="url(#bridgemist)" />
+      <ellipse cx="160" cy={mistY + 40} rx="120" ry="30" fill="#304830" opacity={0.15 - p * 0.05} />
+      <ellipse cx="250" cy={mistY + 35} rx="100" ry="25" fill="#304830" opacity={0.12 - p * 0.04} />
+      {/* Cliff left */}
+      <rect x="0" y="135" width="100" height="115" fill="#1a1a12" />
+      <polygon points="60,135 100,135 100,160" fill="#1a1a12" />
+      {/* Cliff right */}
+      <rect x="310" y="140" width="90" height="110" fill="#1a1a12" />
+      <polygon points="310,165 310,140 340,140" fill="#1a1a12" />
+      {/* Bridge arch */}
+      <path d="M80 145 Q200 85 320 150" fill="none" stroke="#3a3228" strokeWidth="18" />
+      <path d="M80 145 Q200 85 320 150" fill="none" stroke="#4a3a28" strokeWidth="12" />
+      {/* Bridge surface */}
+      <path d="M80 140 Q200 80 320 145" fill="none" stroke="#5a4a38" strokeWidth="6" />
+      {/* Railing posts */}
+      {[110, 150, 195, 240, 285].map((x, i) => {
+        const by = 140 - Math.sin(((x - 80) / 240) * Math.PI) * 55;
+        return <line key={i} x1={x} y1={by} x2={x} y2={by - 18} stroke="#4a3a28" strokeWidth="3" />;
+      })}
+      {/* Carvings glow */}
+      {[130, 175, 220, 265].map((x, i) => {
+        const by = 143 - Math.sin(((x - 80) / 240) * Math.PI) * 55;
+        return (
+          <g key={i} opacity={carvingGlow * 0.6}>
+            <circle cx={x} cy={by - 2} r="4" fill="#7aaa6a" opacity={carvingGlow * 0.3} />
+            <circle cx={x} cy={by - 2} r="1.5" fill="#7aaa6a" opacity={carvingGlow * 0.8} />
+          </g>
+        );
+      })}
+      {/* Spirit lanterns */}
+      {lanterns.map((l, i) => {
+        const lp = Math.min(1, Math.max(0, (p - l.delay) / 0.15));
+        const by = 140 - Math.sin(((l.x - 80) / 240) * Math.PI) * 55;
+        return (
+          <g key={i} opacity={lp}>
+            <circle cx={l.x} cy={by - 25} r="12" fill="#7aaa6a" opacity={lp * 0.12} />
+            <circle cx={l.x} cy={by - 25} r="4" fill="#a0d890" opacity={lp * 0.6} />
+            <circle cx={l.x} cy={by - 25} r="1.8" fill="white" opacity={lp * 0.4} />
+          </g>
+        );
+      })}
+      {/* Spirit footprints */}
+      {p > 0.85 && (
+        <g opacity={Math.min(1, (p - 0.85) / 0.12)}>
+          {[160, 185, 210, 235].map((x, i) => {
+            const by = 138 - Math.sin(((x - 80) / 240) * Math.PI) * 55;
+            return <ellipse key={i} cx={x} cy={by + 2} rx="3" ry="1.5" fill="#7aaa6a" opacity="0.3" />;
+          })}
+        </g>
+      )}
+      {/* Moss patches */}
+      {[95, 140, 200, 260, 305].map((x, i) => {
+        const by = 142 - Math.sin(((x - 80) / 240) * Math.PI) * 55;
+        const mp = Math.max(0, 1 - p * 1.2);
+        return <ellipse key={i} cx={x} cy={by} rx="8" ry="3" fill="#2a4a20" opacity={mp * 0.5} />;
+      })}
+    </svg>
+  );
+}
+// ─── LIBRARY SCENE ─────────────────────────────────────────
+function LibraryScene({ progress: p }) {
+  const books = [
+    { x: 80,  y: 180, color: "#7a3020", delay: 0, floatH: 60 },
+    { x: 140, y: 175, color: "#205a78", delay: 0.12, floatH: 80 },
+    { x: 200, y: 185, color: "#6a2060", delay: 0.22, floatH: 70 },
+    { x: 260, y: 178, color: "#1a5a30", delay: 0.32, floatH: 90 },
+    { x: 320, y: 182, color: "#5a4a10", delay: 0.42, floatH: 65 },
+  ];
+
+  const crystals = [
+    { x: 50,  y: 230, h: 25, color: "#c088b0", delay: 0.3 },
+    { x: 75,  y: 235, h: 18, color: "#a070a0", delay: 0.4 },
+    { x: 330, y: 228, h: 30, color: "#c088b0", delay: 0.5 },
+    { x: 355, y: 233, h: 20, color: "#b078a8", delay: 0.55 },
+  ];
+
+  const wisps = [
+    { x: 100, y: 100, delay: 0.5 },
+    { x: 300, y: 80,  delay: 0.6 },
+    { x: 180, y: 60,  delay: 0.7 },
+    { x: 250, y: 120, delay: 0.8 },
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="libglow" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stopColor="#c088b0" stopOpacity={p * 0.2} />
+          <stop offset="100%" stopColor="#c088b0" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(310,12%,${5 + p * 4}%)`} />
+      {/* Chamber walls */}
+      <path d="M0 30 Q200 0 400 30 L400 250 L0 250 Z" fill={`hsl(310,8%,${7 + p * 3}%)`} opacity="0.5" />
+      {/* Central glow */}
+      <ellipse cx="200" cy="140" rx="150" ry="100" fill="url(#libglow)" />
+      {/* Bookshelves on walls */}
+      <rect x="10" y="60" width="45" height="170" fill="#1a1210" rx="2" />
+      {[75, 105, 135, 165, 195].map((y, i) => (
+        <rect key={i} x="14" y={y} width="37" height="3" fill="#2a1a10" />
+      ))}
+      <rect x="345" y="65" width="45" height="165" fill="#1a1210" rx="2" />
+      {[80, 110, 140, 170, 200].map((y, i) => (
+        <rect key={i} x="349" y={y} width="37" height="3" fill="#2a1a10" />
+      ))}
+      {/* Floor */}
+      <rect x="0" y="235" width="400" height="15" fill="#120a0e" />
+      {/* Crystals */}
+      {crystals.map((c, i) => {
+        const cp = Math.min(1, Math.max(0, (p - c.delay) / 0.25));
+        return (
+          <g key={i} opacity={0.3 + cp * 0.7}>
+            <polygon points={`${c.x},${c.y} ${c.x - 6},${c.y + 2} ${c.x - 3},${c.y - c.h * cp} ${c.x + 3},${c.y - c.h * cp} ${c.x + 6},${c.y + 2}`} fill={c.color} opacity={0.4 + cp * 0.4} />
+            <circle cx={c.x} cy={c.y - c.h * cp * 0.6} r={4 * cp} fill={c.color} opacity={cp * 0.15} />
+          </g>
+        );
+      })}
+      {/* Floating books */}
+      {books.map((b, i) => {
+        const bp = Math.min(1, Math.max(0, (p - b.delay) / 0.3));
+        const floatY = b.y - bp * b.floatH;
+        const angle = bp * (i % 2 === 0 ? 12 : -8);
+        return (
+          <g key={i} opacity={0.5 + bp * 0.5} transform={`rotate(${angle},${b.x},${floatY})`}>
+            <rect x={b.x - 10} y={floatY - 7} width="20" height="14" fill={b.color} rx="1" />
+            <line x1={b.x - 9} y1={floatY - 6} x2={b.x - 9} y2={floatY + 6} stroke="white" strokeWidth="0.5" opacity="0.2" />
+            {/* Page glow */}
+            {bp > 0.5 && <rect x={b.x - 7} y={floatY - 4} width="14" height="8" fill="#c088b0" opacity={(bp - 0.5) * 0.2} rx="1" />}
+          </g>
+        );
+      })}
+      {/* Spirit wisps */}
+      {wisps.map((w, i) => {
+        const wp = Math.min(1, Math.max(0, (p - w.delay) / 0.18));
+        return (
+          <g key={i} opacity={wp * 0.7}>
+            <circle cx={w.x} cy={w.y} r="10" fill="#c088b0" opacity={wp * 0.08} />
+            <circle cx={w.x} cy={w.y} r="3" fill="#e0b8d0" opacity={wp * 0.5} />
+            <circle cx={w.x} cy={w.y} r="1.2" fill="white" opacity={wp * 0.6} />
+          </g>
+        );
+      })}
+      {/* Chronicle tome - glows brightest at end */}
+      {p > 0.8 && (
+        <g opacity={Math.min(1, (p - 0.8) / 0.15)}>
+          <rect x="190" y={110 - p * 30} width="24" height="18" fill="#6a2060" rx="2" />
+          <circle cx="202" cy={119 - p * 30} r="18" fill="#c088b0" opacity="0.15" />
+          <rect x="194" y={113 - p * 30} width="16" height="12" fill="#c088b0" opacity="0.25" rx="1" />
+        </g>
+      )}
+    </svg>
+  );
+}
+// ─── SPIRIT STONES SCENE ───────────────────────────────────
+function StonesScene({ progress: p }) {
+  const stones = [
+    { x: 200, y: 90,  h: 55, delay: 0 },
+    { x: 130, y: 110, h: 45, delay: 0.08 },
+    { x: 270, y: 108, h: 48, delay: 0.15 },
+    { x: 85,  y: 145, h: 38, delay: 0.22 },
+    { x: 315, y: 142, h: 40, delay: 0.28 },
+    { x: 75,  y: 185, h: 32, delay: 0.34 },
+    { x: 325, y: 182, h: 35, delay: 0.4 },
+  ];
+
+  const leyLines = [
+    { x1: 200, y1: 118, x2: 130, y2: 133, delay: 0.5 },
+    { x1: 200, y1: 118, x2: 270, y2: 131, delay: 0.55 },
+    { x1: 130, y1: 133, x2: 85,  y2: 163, delay: 0.6 },
+    { x1: 270, y1: 131, x2: 315, y2: 160, delay: 0.65 },
+    { x1: 85,  y1: 163, x2: 75,  y2: 198, delay: 0.7 },
+    { x1: 315, y1: 160, x2: 325, y2: 195, delay: 0.72 },
+    { x1: 75,  y1: 198, x2: 325, y2: 195, delay: 0.78 },
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="stonesglow" cx="50%" cy="45%" r="50%">
+          <stop offset="0%" stopColor="#88a8c8" stopOpacity={p * 0.2} />
+          <stop offset="100%" stopColor="#88a8c8" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(220,15%,${4 + p * 4}%)`} />
+      {/* Ground */}
+      <ellipse cx="200" cy="215" rx="180" ry="35" fill={`hsl(220,10%,${8 + p * 4}%)`} />
+      {/* Central glow */}
+      <ellipse cx="200" cy="150" rx="140" ry="70" fill="url(#stonesglow)" />
+      {/* Ley lines */}
+      {leyLines.map((l, i) => {
+        const lp = Math.min(1, Math.max(0, (p - l.delay) / 0.15));
+        return (
+          <line key={i} x1={l.x1} y1={l.y1} x2={l.x1 + (l.x2 - l.x1) * lp} y2={l.y1 + (l.y2 - l.y1) * lp}
+            stroke="#88a8c8" strokeWidth="1.5" opacity={lp * 0.5} />
+        );
+      })}
+      {/* Stones */}
+      {stones.map((s, i) => {
+        const sp = Math.min(1, Math.max(0, (p - s.delay) / 0.2));
+        const rise = sp * s.h;
+        return (
+          <g key={i}>
+            <rect x={s.x - 10} y={s.y + s.h - rise} width="20" height={rise} fill="#3a3848" rx="2" />
+            <rect x={s.x - 12} y={s.y + s.h - rise} width="24" height="6" fill="#4a4858" rx="2" />
+            {/* Rune on stone */}
+            {sp > 0.6 && (
+              <g opacity={(sp - 0.6) / 0.4}>
+                <circle cx={s.x} cy={s.y + s.h - rise + Math.max(12, rise * 0.4)} r="5" fill="#88a8c8" opacity="0.15" />
+                <circle cx={s.x} cy={s.y + s.h - rise + Math.max(12, rise * 0.4)} r="2" fill="#88a8c8" opacity="0.6" />
+              </g>
+            )}
+          </g>
+        );
+      })}
+      {/* Ground rune circle */}
+      {p > 0.65 && (
+        <ellipse cx="200" cy="195" rx={120 * Math.min(1, (p - 0.65) / 0.2)} ry={25 * Math.min(1, (p - 0.65) / 0.2)}
+          fill="none" stroke="#88a8c8" strokeWidth="1" opacity={(p - 0.65) / 0.35 * 0.35} strokeDasharray="4 6" />
+      )}
+      {/* Energy pulse at full */}
+      {p > 0.9 && (
+        <ellipse cx="200" cy="150" rx={60 * ((p - 0.9) / 0.1)} ry={30 * ((p - 0.9) / 0.1)}
+          fill="#88a8c8" opacity={(1 - (p - 0.9) / 0.1) * 0.2} />
+      )}
+    </svg>
+  );
+}
+// ─── SANCTUM SCENE ─────────────────────────────────────────
+function SanctumScene({ progress: p }) {
+  const beams = [
+    { x: 140, delay: 0 },
+    { x: 200, delay: 0.1 },
+    { x: 260, delay: 0.2 },
+  ];
+
+  const spirits = [
+    { x: 120, y: 145, delay: 0.55 },
+    { x: 200, y: 135, delay: 0.65 },
+    { x: 280, y: 148, delay: 0.75 },
+    { x: 160, y: 155, delay: 0.82 },
+    { x: 240, y: 152, delay: 0.88 },
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="sanctumglow" cx="50%" cy="30%" r="60%">
+          <stop offset="0%" stopColor="#d0b870" stopOpacity={p * 0.25} />
+          <stop offset="100%" stopColor="#d0b870" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#d0b870" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#d0b870" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(240,10%,${4 + p * 3}%)`} />
+      {/* Trees framing the clearing */}
+      {[15, 45, 340, 370].map((x, i) => (
+        <g key={i}>
+          <rect x={x - 4} y="60" width="8" height="190" fill="#0a0c08" />
+          <ellipse cx={x} cy="65" rx="22" ry="35" fill="#0c1008" />
+          <ellipse cx={x} cy="40" rx="16" ry="25" fill="#0a0e08" />
+        </g>
+      ))}
+      {/* Ground - clearing */}
+      <ellipse cx="200" cy="220" rx="160" ry="35" fill={`hsl(45,12%,${8 + p * 5}%)`} />
+      {/* Moon */}
+      <circle cx="200" cy="25" r="22" fill={`hsl(45,30%,${40 + p * 30}%)`} opacity={0.3 + p * 0.7} />
+      <circle cx="200" cy="25" r="35" fill="#d0b870" opacity={p * 0.08} />
+      {/* Moonbeams */}
+      {beams.map((b, i) => {
+        const bp = Math.min(1, Math.max(0, (p - b.delay) / 0.35));
+        return (
+          <polygon key={i}
+            points={`${b.x - 4},0 ${b.x + 4},0 ${b.x + 20},250 ${b.x - 20},250`}
+            fill="url(#beam)" opacity={bp * 0.15} />
+        );
+      })}
+      {/* Sanctum glow */}
+      <ellipse cx="200" cy="180" rx="120" ry="50" fill="url(#sanctumglow)" />
+      {/* Ground mandala circle */}
+      {p > 0.4 && (
+        <g opacity={Math.min(1, (p - 0.4) / 0.25)}>
+          <ellipse cx="200" cy="210" rx="80" ry="18" fill="none" stroke="#d0b870" strokeWidth="0.8" opacity="0.3" />
+          <ellipse cx="200" cy="210" rx="55" ry="12" fill="none" stroke="#d0b870" strokeWidth="0.6" opacity="0.2" strokeDasharray="3 5" />
+          {/* Compass points */}
+          {[0, 90, 180, 270].map((ang, i) => {
+            const rx = 68 * Math.cos((ang * Math.PI) / 180);
+            const ry = 15 * Math.sin((ang * Math.PI) / 180);
+            return <circle key={i} cx={200 + rx} cy={210 + ry} r="2" fill="#d0b870" opacity="0.4" />;
+          })}
+        </g>
+      )}
+      {/* Spirit figures */}
+      {spirits.map((s, i) => {
+        const sp = Math.min(1, Math.max(0, (p - s.delay) / 0.14));
+        return (
+          <g key={i} opacity={sp * 0.45}>
+            {/* Body */}
+            <ellipse cx={s.x} cy={s.y + 15} rx="8" ry="18" fill="#d0b870" opacity="0.25" />
+            {/* Head */}
+            <circle cx={s.x} cy={s.y - 5} r="6" fill="#d0b870" opacity="0.3" />
+            {/* Inner glow */}
+            <ellipse cx={s.x} cy={s.y + 5} rx="4" ry="12" fill="white" opacity="0.08" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+// ─── GREAT TREE SCENE ──────────────────────────────────────
+function TreeScene({ progress: p }) {
+  const roots = [
+    { x1: 200, y1: 210, x2: 60,  y2: 248, delay: 0 },
+    { x1: 200, y1: 210, x2: 100, y2: 245, delay: 0.05 },
+    { x1: 200, y1: 210, x2: 140, y2: 248, delay: 0.08 },
+    { x1: 200, y1: 210, x2: 260, y2: 248, delay: 0.1 },
+    { x1: 200, y1: 210, x2: 300, y2: 245, delay: 0.12 },
+    { x1: 200, y1: 210, x2: 340, y2: 248, delay: 0.15 },
+  ];
+
+  const branches = [
+    { x1: 200, y1: 100, x2: 110, y2: 45,  delay: 0.2 },
+    { x1: 200, y1: 100, x2: 140, y2: 25,  delay: 0.25 },
+    { x1: 200, y1: 100, x2: 200, y2: 15,  delay: 0.3 },
+    { x1: 200, y1: 100, x2: 260, y2: 25,  delay: 0.35 },
+    { x1: 200, y1: 100, x2: 290, y2: 45,  delay: 0.4 },
+  ];
+
+  const spiritLights = [
+    { x: 100, y: 50,  delay: 0.55 },
+    { x: 150, y: 30,  delay: 0.6 },
+    { x: 210, y: 20,  delay: 0.65 },
+    { x: 260, y: 35,  delay: 0.7 },
+    { x: 295, y: 52,  delay: 0.75 },
+    { x: 130, y: 55,  delay: 0.8 },
+    { x: 270, y: 48,  delay: 0.83 },
+  ];
+
+  const leafClusters = [
+    { x: 105, y: 40, r: 28, delay: 0.3 },
+    { x: 150, y: 22, r: 25, delay: 0.35 },
+    { x: 200, y: 12, r: 30, delay: 0.38 },
+    { x: 250, y: 22, r: 25, delay: 0.42 },
+    { x: 295, y: 42, r: 28, delay: 0.45 },
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="treeglow" cx="50%" cy="55%" r="50%">
+          <stop offset="0%" stopColor="#b8c8a8" stopOpacity={p * 0.25} />
+          <stop offset="100%" stopColor="#b8c8a8" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(120,10%,${4 + p * 3}%)`} />
+      {/* Ground */}
+      <rect x="0" y="225" width="400" height="25" fill={`hsl(120,12%,${7 + p * 5}%)`} />
+      {/* Root glow on ground */}
+      <ellipse cx="200" cy="235" rx="160" ry="15" fill="url(#treeglow)" />
+      {/* Roots */}
+      {roots.map((r, i) => {
+        const rp = Math.min(1, Math.max(0, (p - r.delay) / 0.2));
+        const glowP = Math.min(1, Math.max(0, (p - 0.5) / 0.3));
+        return (
+          <g key={i}>
+            <line x1={r.x1} y1={r.y1} x2={r.x1 + (r.x2 - r.x1) * rp} y2={r.y1 + (r.y2 - r.y1) * rp}
+              stroke="#3a2a18" strokeWidth="5" strokeLinecap="round" />
+            {/* Ley line glow through roots */}
+            <line x1={r.x1} y1={r.y1} x2={r.x1 + (r.x2 - r.x1) * rp} y2={r.y1 + (r.y2 - r.y1) * rp}
+              stroke="#b8c8a8" strokeWidth="2" strokeLinecap="round" opacity={glowP * 0.4} />
+          </g>
+        );
+      })}
+      {/* Trunk */}
+      <rect x="185" y="95" width="30" height="120" fill="#3a2a18" rx="4" />
+      <rect x="180" y="105" width="40" height="100" fill="#2a1a10" rx="6" />
+      {/* Trunk energy flow */}
+      {p > 0.45 && (
+        <g opacity={Math.min(1, (p - 0.45) / 0.25)}>
+          <line x1="195" y1="210" x2="195" y2={210 - 110 * Math.min(1, (p - 0.45) / 0.3)} stroke="#b8c8a8" strokeWidth="1.5" opacity="0.35" />
+          <line x1="205" y1="210" x2="205" y2={210 - 115 * Math.min(1, (p - 0.45) / 0.3)} stroke="#b8c8a8" strokeWidth="1" opacity="0.25" />
+        </g>
+      )}
+      {/* Branches */}
+      {branches.map((b, i) => {
+        const bp = Math.min(1, Math.max(0, (p - b.delay) / 0.2));
+        return (
+          <line key={i} x1={b.x1} y1={b.y1}
+            x2={b.x1 + (b.x2 - b.x1) * bp} y2={b.y1 + (b.y2 - b.y1) * bp}
+            stroke="#3a2a18" strokeWidth="4" strokeLinecap="round" />
+        );
+      })}
+      {/* Leaf canopy */}
+      {leafClusters.map((l, i) => {
+        const lp = Math.min(1, Math.max(0, (p - l.delay) / 0.2));
+        return (
+          <ellipse key={i} cx={l.x} cy={l.y} rx={l.r * lp} ry={l.r * 0.7 * lp}
+            fill={`hsl(120,${25 + p * 15}%,${12 + p * 10}%)`} opacity={lp * 0.8} />
+        );
+      })}
+      {/* Spirit lights in canopy */}
+      {spiritLights.map((s, i) => {
+        const sp = Math.min(1, Math.max(0, (p - s.delay) / 0.12));
+        return (
+          <g key={i} opacity={sp}>
+            <circle cx={s.x} cy={s.y} r="8" fill="#b8c8a8" opacity={sp * 0.1} />
+            <circle cx={s.x} cy={s.y} r="2.5" fill="#d8e8c8" opacity={sp * 0.6} />
+            <circle cx={s.x} cy={s.y} r="1" fill="white" opacity={sp * 0.5} />
+          </g>
+        );
+      })}
+      {/* Crown glow at completion */}
+      {p > 0.85 && (
+        <ellipse cx="200" cy="30" rx={80 * Math.min(1, (p - 0.85) / 0.1)} ry={35 * Math.min(1, (p - 0.85) / 0.1)}
+          fill="#b8c8a8" opacity={Math.min(1, (p - 0.85) / 0.1) * 0.12} />
+      )}
+    </svg>
+  );
+}
+// ─── WAKING WORLD SCENE ────────────────────────────────────
+function WorldScene({ progress: p }) {
+  // Miniature versions of all previous scenes connected by ley lines
+  const locations = [
+    { x: 70,  y: 60,  label: "garden",  color: "#6bbf6b", delay: 0 },
+    { x: 170, y: 40,  label: "cottage", color: "#e89a30", delay: 0.06 },
+    { x: 290, y: 55,  label: "stars",   color: "#9090f8", delay: 0.12 },
+    { x: 40,  y: 140, label: "well",    color: "#50b8b8", delay: 0.18 },
+    { x: 350, y: 130, label: "bridge",  color: "#7aaa6a", delay: 0.24 },
+    { x: 120, y: 175, label: "library", color: "#c088b0", delay: 0.3 },
+    { x: 300, y: 185, label: "stones",  color: "#88a8c8", delay: 0.36 },
+    { x: 200, y: 130, label: "sanctum", color: "#d0b870", delay: 0.42 },
+    { x: 200, y: 210, label: "tree",    color: "#b8c8a8", delay: 0.48 },
+  ];
+
+  const connections = [
+    [0, 1], [1, 2], [0, 3], [2, 4], [3, 5], [4, 6],
+    [5, 7], [6, 7], [7, 8], [1, 7], [3, 7], [4, 7],
+  ];
+
+  return (
+    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+      <defs>
+        <radialGradient id="worldglow" cx="50%" cy="55%" r="50%">
+          <stop offset="0%" stopColor="#d8c890" stopOpacity={p * 0.2} />
+          <stop offset="100%" stopColor="#d8c890" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="250" fill={`hsl(180,6%,${4 + p * 3}%)`} />
+      {/* Central nexus glow */}
+      <ellipse cx="200" cy="170" rx={180 * p} ry={90 * p} fill="url(#worldglow)" />
+      {/* Ley line connections */}
+      {connections.map(([a, b], i) => {
+        const la = locations[a];
+        const lb = locations[b];
+        const maxDelay = Math.max(la.delay, lb.delay);
+        const cp = Math.min(1, Math.max(0, (p - maxDelay - 0.05) / 0.12));
+        return (
+          <line key={i} x1={la.x} y1={la.y}
+            x2={la.x + (lb.x - la.x) * cp} y2={la.y + (lb.y - la.y) * cp}
+            stroke="#d8c890" strokeWidth="1" opacity={cp * 0.3} />
+        );
+      })}
+      {/* Location nodes */}
+      {locations.map((loc, i) => {
+        const lp = Math.min(1, Math.max(0, (p - loc.delay) / 0.15));
+        return (
+          <g key={i} opacity={lp}>
+            {/* Outer glow */}
+            <circle cx={loc.x} cy={loc.y} r={18 * lp} fill={loc.color} opacity={lp * 0.1} />
+            {/* Inner ring */}
+            <circle cx={loc.x} cy={loc.y} r={8 * lp} fill="none" stroke={loc.color} strokeWidth="1.2" opacity={lp * 0.5} />
+            {/* Core */}
+            <circle cx={loc.x} cy={loc.y} r={3.5 * lp} fill={loc.color} opacity={lp * 0.8} />
+            {/* Center bright */}
+            <circle cx={loc.x} cy={loc.y} r={1.5 * lp} fill="white" opacity={lp * 0.5} />
+          </g>
+        );
+      })}
+      {/* Energy flow pulses along connections at high progress */}
+      {p > 0.7 && connections.map(([a, b], i) => {
+        const la = locations[a];
+        const lb = locations[b];
+        const pulseT = ((p - 0.7) * 8 + i * 0.3) % 1;
+        const px = la.x + (lb.x - la.x) * pulseT;
+        const py = la.y + (lb.y - la.y) * pulseT;
+        return (
+          <circle key={`pulse${i}`} cx={px} cy={py} r="2"
+            fill="#d8c890" opacity={Math.min(1, (p - 0.7) / 0.15) * 0.4 * (1 - Math.abs(pulseT - 0.5) * 2)} />
+        );
+      })}
+      {/* Final radiance */}
+      {p > 0.9 && (
+        <ellipse cx="200" cy="170" rx={100 * ((p - 0.9) / 0.1)} ry={50 * ((p - 0.9) / 0.1)}
+          fill="#d8c890" opacity={(1 - (p - 0.9) / 0.1) * 0.15} />
+      )}
+    </svg>
+  );
+}
+
+const SCENES = { garden: GardenScene, cottage: CottageScene, stars: StarScene, well: WellScene, bridge: BridgeScene, library: LibraryScene, stones: StonesScene, sanctum: SanctumScene, tree: TreeScene, world: WorldScene };
 
 // ─── MAIN GAME ──────────────────────────────────────────────
 export default function Inkwood() {
@@ -258,19 +916,19 @@ export default function Inkwood() {
   const levelProgress = (promptIdx + promptProgress) / totalPrompts;
 
   useEffect(() => {
-    if (isComplete && !completing) {
-      setCompleting(true);
-      setTimeout(() => {
-        if (promptIdx + 1 < totalPrompts) {
-          setPromptIdx((p) => p + 1);
-          setTyped("");
-          setCompleting(false);
-        } else {
-          if (lvl + 1 < LEVELS.length) setScreen("levelWin");
-          else setScreen("gameWin");
-        }
-      }, 700);
-    }
+    if (!isComplete || completing) return;
+    setCompleting(true);
+    const timer = setTimeout(() => {
+      if (promptIdx + 1 < totalPrompts) {
+        setPromptIdx((p) => p + 1);
+        setTyped("");
+        setCompleting(false);
+      } else {
+        if (lvl + 1 < LEVELS.length) setScreen("levelWin");
+        else setScreen("gameWin");
+      }
+    }, 700);
+    return () => clearTimeout(timer);
   }, [isComplete, completing, promptIdx, totalPrompts, lvl]);
 
   useEffect(() => {
@@ -299,18 +957,36 @@ export default function Inkwood() {
   const SceneComp = SCENES[level.scene];
   const { accent, bg } = level;
 
+  const ACT_LABELS = ["Awakening", "Discovery", "The Nexus", "Restoration"];
+  const ACT_RANGES = [[0,2],[3,5],[6,8],[9,9]];
+
   // ── Title ──
   if (screen === "title") return (
     <div style={{ background: "#090e09", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#d8c8a0", padding: "2rem", gap: "1.25rem", textAlign: "center" }}>
-      <div style={{ fontSize: "3rem" }}>🌿</div>
+      <svg viewBox="0 0 60 60" width="52" height="52" style={{ display: "block" }}>
+        <circle cx="30" cy="30" r="28" fill="none" stroke="#3a5a2a" strokeWidth="1.5" />
+        <line x1="30" y1="42" x2="30" y2="18" stroke="#4a7a3a" strokeWidth="2" />
+        <line x1="30" y1="28" x2="20" y2="20" stroke="#4a7a3a" strokeWidth="1.5" />
+        <line x1="30" y1="32" x2="40" y2="24" stroke="#4a7a3a" strokeWidth="1.5" />
+        <line x1="30" y1="42" x2="22" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
+        <line x1="30" y1="42" x2="38" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
+        <circle cx="30" cy="15" r="3" fill="#6bbf6b" opacity="0.6" />
+      </svg>
       <h1 style={{ fontSize: "2.6rem", fontWeight: "normal", letterSpacing: "0.12em", margin: 0, color: "#eaddb0" }}>Inkwood</h1>
-      <p style={{ fontSize: "0.95rem", maxWidth: "380px", lineHeight: "1.85", color: "#9a8868", margin: 0 }}>
-        You are the forest scribe. Your words have power here.<br />Type each phrase and watch the world come alive.
+      <p style={{ fontSize: "0.95rem", maxWidth: "400px", lineHeight: "1.85", color: "#9a8868", margin: 0 }}>
+        You are the forest scribe. Your words have power here.<br />An ancient nexus sleeps beneath the land. Type each phrase and restore what was lost.
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem", fontSize: "0.82rem", color: "#6a5a3a" }}>
-        <div>🌱 &nbsp;The Sleeping Garden</div>
-        <div>🕯️ &nbsp;The Dark Cottage</div>
-        <div>🌙 &nbsp;The Night Sky</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem", marginTop: "0.5rem", fontSize: "0.78rem", color: "#5a4a2a", width: "280px" }}>
+        {ACT_LABELS.map((act, ai) => (
+          <div key={ai}>
+            <div style={{ color: "#7a6a4a", letterSpacing: "0.1em", marginBottom: "0.25rem", fontSize: "0.68rem" }}>ACT {ai + 1}: {act.toUpperCase()}</div>
+            {LEVELS.slice(ACT_RANGES[ai][0], ACT_RANGES[ai][1] + 1).map((l, li) => (
+              <div key={li} style={{ paddingLeft: "0.8rem", color: "#5a4a2a", lineHeight: "1.6" }}>
+                <span style={{ color: l.accent, opacity: 0.5, marginRight: "0.4rem" }}>&#x25C6;</span>{l.title}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
       <button onClick={() => setScreen("playing")} style={{ marginTop: "1.25rem", padding: "0.7rem 2.8rem", background: "transparent", border: "1px solid #4a7a3a", color: "#80c860", fontFamily: "Georgia, serif", fontSize: "1rem", cursor: "pointer", borderRadius: "4px", letterSpacing: "0.1em" }}>
         Begin
@@ -321,9 +997,12 @@ export default function Inkwood() {
   // ── Level Win ──
   if (screen === "levelWin") return (
     <div style={{ background: bg, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#d8c8a0", gap: "1.5rem", textAlign: "center", padding: "2rem" }}>
-      <div style={{ fontSize: "2.5rem" }}>✨</div>
+      <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent, boxShadow: `0 0 18px 6px ${accent}40` }} />
       <h2 style={{ fontWeight: "normal", fontSize: "1.75rem", margin: 0, color: "#eaddb0" }}>{level.title}</h2>
-      <p style={{ color: "#9a8868", maxWidth: "360px", lineHeight: "1.85", margin: 0 }}>The scene is alive. Your words worked their magic.</p>
+      <p style={{ color: "#9a8868", maxWidth: "380px", lineHeight: "1.85", margin: 0, fontStyle: "italic" }}>{level.winText}</p>
+      <div style={{ fontSize: "0.72rem", color: "#4a3a2a", letterSpacing: "0.1em" }}>
+        {lvl < 3 ? "ACT I" : lvl < 6 ? "ACT II" : lvl < 9 ? "ACT III" : "ACT IV"} — {Math.round(((lvl + 1) / LEVELS.length) * 100)}% COMPLETE
+      </div>
       <button onClick={nextLevel} style={{ padding: "0.7rem 2.8rem", background: "transparent", border: `1px solid ${accent}`, color: accent, fontFamily: "Georgia, serif", fontSize: "1rem", cursor: "pointer", borderRadius: "4px", letterSpacing: "0.1em" }}>
         Continue →
       </button>
@@ -332,12 +1011,30 @@ export default function Inkwood() {
 
   // ── Game Win ──
   if (screen === "gameWin") return (
-    <div style={{ background: "#03030e", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#d0c8f0", gap: "1.5rem", textAlign: "center", padding: "2rem" }}>
-      <div style={{ fontSize: "3rem" }}>🌙</div>
-      <h2 style={{ fontWeight: "normal", fontSize: "2rem", margin: 0 }}>The world is awake.</h2>
-      <p style={{ color: "#9090c0", maxWidth: "380px", lineHeight: "1.85", margin: 0 }}>Garden, hearth, and sky — all restored by your careful hand. The scribe's work is done... for now.</p>
-      <button onClick={restart} style={{ padding: "0.7rem 2.8rem", background: "transparent", border: "1px solid #7070d0", color: "#9898f0", fontFamily: "Georgia, serif", fontSize: "1rem", cursor: "pointer", borderRadius: "4px", letterSpacing: "0.1em", marginTop: "0.5rem" }}>
-        Play Again
+    <div style={{ background: "#060808", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#d8c890", gap: "1.5rem", textAlign: "center", padding: "2rem" }}>
+      <svg viewBox="0 0 120 120" width="80" height="80" style={{ display: "block" }}>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#d8c890" strokeWidth="1" opacity="0.3" />
+        <circle cx="60" cy="60" r="35" fill="none" stroke="#d8c890" strokeWidth="0.8" opacity="0.2" strokeDasharray="3 5" />
+        {LEVELS.map((l, i) => {
+          const ang = (i / LEVELS.length) * Math.PI * 2 - Math.PI / 2;
+          const x = 60 + Math.cos(ang) * 42;
+          const y = 60 + Math.sin(ang) * 42;
+          return <circle key={i} cx={x} cy={y} r="3" fill={l.accent} opacity="0.7" />;
+        })}
+        <circle cx="60" cy="60" r="6" fill="#d8c890" opacity="0.4" />
+        <circle cx="60" cy="60" r="2.5" fill="white" opacity="0.5" />
+      </svg>
+      <h2 style={{ fontWeight: "normal", fontSize: "2rem", margin: 0 }}>The Ancient Order Holds</h2>
+      <p style={{ color: "#9a8868", maxWidth: "400px", lineHeight: "1.85", margin: 0, fontStyle: "italic" }}>
+        Ten places, once forgotten, now alive with spirit and purpose. The ley lines hum, the Great Tree breathes, and the nexus pulses with quiet power. You have written the world back into being, scribe. The spirits will remember your name.
+      </p>
+      <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+        {LEVELS.map((l, i) => (
+          <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: l.accent, opacity: 0.6 }} />
+        ))}
+      </div>
+      <button onClick={restart} style={{ padding: "0.7rem 2.8rem", background: "transparent", border: "1px solid #6a6040", color: "#d8c890", fontFamily: "Georgia, serif", fontSize: "1rem", cursor: "pointer", borderRadius: "4px", letterSpacing: "0.1em", marginTop: "0.5rem" }}>
+        Begin Again
       </button>
     </div>
   );
@@ -346,11 +1043,11 @@ export default function Inkwood() {
   return (
     <div onClick={() => inputRef.current?.focus()} style={{ background: bg, minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", color: "#d8c8a0", userSelect: "none" }}>
       {/* Header */}
-      <div style={{ padding: "0.85rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1c2a1c" }}>
-        <span style={{ fontSize: "0.82rem", color: "#4a7a3a", letterSpacing: "0.12em" }}>INKWOOD</span>
-        <span style={{ fontSize: "0.82rem", color: "#6a5a3a" }}>{level.title}</span>
-        <span style={{ fontSize: "0.82rem", color: "#3a4a3a" }}>
-          {LEVELS.map((_, i) => <span key={i} style={{ margin: "0 2px", color: i <= lvl ? accent : "#2a3a2a" }}>{i <= lvl ? "◆" : "◇"}</span>)}
+      <div style={{ padding: "0.85rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${accent}18` }}>
+        <span style={{ fontSize: "0.82rem", color: accent, opacity: 0.6, letterSpacing: "0.12em" }}>INKWOOD</span>
+        <span style={{ fontSize: "0.82rem", color: "#8a7a5a" }}>{level.title}</span>
+        <span style={{ fontSize: "0.82rem" }}>
+          {LEVELS.map((l, i) => <span key={i} style={{ margin: "0 1px", color: i < lvl ? l.accent : i === lvl ? accent : "#1a1a1a", fontSize: "0.55rem" }}>{i <= lvl ? "◆" : "◇"}</span>)}
         </span>
       </div>
 
@@ -365,14 +1062,14 @@ export default function Inkwood() {
       </div>
 
       {/* Typing area */}
-      <div style={{ padding: "1.25rem 1.5rem 1.5rem", background: `${bg}ee`, borderTop: "1px solid #1c2a1c" }}>
+      <div style={{ padding: "1.25rem 1.5rem 1.5rem", background: bg, borderTop: `1px solid ${accent}18` }}>
         <p style={{ margin: "0 0 1rem", fontSize: "0.82rem", color: "#6a5238", textAlign: "center", fontStyle: "italic", lineHeight: "1.7" }}>
           {level.flavor}
         </p>
 
         {/* Prompt display */}
         <div
-          style={{ background: "#0d140d", border: "1px solid #253525", borderRadius: "6px", padding: "0.9rem 1.2rem", marginBottom: "0.6rem", fontSize: "1.18rem", letterSpacing: "0.06em", lineHeight: "1.7", minHeight: "3.6rem", display: "flex", flexWrap: "wrap", alignItems: "center", cursor: "text" }}
+          style={{ background: "#0a0a0a", border: `1px solid ${accent}20`, borderRadius: "6px", padding: "0.9rem 1.2rem", marginBottom: "0.6rem", fontSize: "1.18rem", letterSpacing: "0.06em", lineHeight: "1.7", minHeight: "3.6rem", display: "flex", flexWrap: "wrap", alignItems: "center", cursor: "text" }}
           onClick={() => inputRef.current?.focus()}
         >
           {target.split("").map((ch, i) => {
