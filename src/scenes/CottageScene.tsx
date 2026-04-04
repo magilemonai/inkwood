@@ -203,42 +203,51 @@ function CottageScene({ progress: p }: SceneProps) {
       <rect x="0" y="190" width="400" height="60"
         fill={`rgb(${r + 3},${g + 2},${b})`} />
 
-      {/* ── CAT — sitting on floor below window, recognizable silhouette ── */}
+      {/* ── CAT — sitting on floor below window, silhouette in profile ── */}
       {catP > 0 && (
         <g opacity={catP * 0.9}>
-          {/* Body — sitting cat in profile, facing right. Round haunches,
-              upright posture, pointy ears, long curved tail */}
+          {/* A sitting cat seen from the side:
+              Round haunches, chest rising to a small round head,
+              two triangular ears, front paws visible, tail curls
+              around on the floor in front */}
           <path d={`
-            M55 190
-            C55 180, 58 172, 64 168
-            C67 166, 68 164, 68 160
-            C68 157, 66 154, 65 152
-            L63 148
-            C63 145, 66 144, 67 146
-            L68 150
-            C70 148, 72 145, 72 147
-            L71 150
-            C72 152, 74 155, 74 158
-            C74 161, 73 164, 72 166
-            C76 167, 80 170, 82 174
-            C84 178, 84 184, 82 190
+            M50 190
+            C50 182, 52 175, 56 170
+            C60 164, 64 160, 66 156
+            C67 154, 68 152, 69 150
+            C70 148, 72 148, 72 150
+            C72 151, 71 153, 70 154
+            C72 152, 74 150, 75 150
+            C76 150, 76 152, 75 154
+            C74 155, 72 156, 72 158
+            C72 160, 72 162, 74 164
+            C76 166, 78 170, 78 175
+            C78 180, 78 186, 76 190
             Z
           `} fill={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`} />
-          {/* Tail — arches up and curves back, clearly a tail */}
-          <path d="M82 186 C90 180, 98 170, 96 160 C94 154, 88 156, 90 162 C92 168, 88 174, 84 178"
+          {/* Tail — curls forward along the floor, not up */}
+          <path d="M50 188 C44 186, 36 184, 30 186 C26 188, 28 190, 32 189 C36 188, 40 190, 44 190"
             fill="none" stroke={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`}
-            strokeWidth="3.5" strokeLinecap="round" />
+            strokeWidth="3" strokeLinecap="round" />
           {/* Eyes — amber glints */}
-          <circle cx="66" cy="155" r="1.3" fill="#e89a30" opacity={catP * 0.7} />
-          <circle cx="71" cy="155.5" r="1.1" fill="#e89a30" opacity={catP * 0.6} />
-          {/* Whiskers — very subtle */}
-          <g opacity={catP * 0.2}>
-            <line x1="74" y1="157" x2="82" y2="155" stroke="#e89a30" strokeWidth="0.4" />
-            <line x1="74" y1="158" x2="82" y2="159" stroke="#e89a30" strokeWidth="0.4" />
-            <line x1="63" y1="157" x2="55" y2="155" stroke="#e89a30" strokeWidth="0.4" />
-            <line x1="63" y1="158" x2="55" y2="159" stroke="#e89a30" strokeWidth="0.4" />
+          <circle cx="70" cy="152" r="1.2" fill="#e89a30" opacity={catP * 0.7} />
+          {/* Whiskers */}
+          <g opacity={catP * 0.25}>
+            <line x1="74" y1="155" x2="82" y2="153" stroke="#c8a870" strokeWidth="0.4" />
+            <line x1="74" y1="156" x2="82" y2="157" stroke="#c8a870" strokeWidth="0.4" />
           </g>
         </g>
+      )}
+
+      {/* ── FLOOR WARMTH — candlelight reflections on floorboards ── */}
+      {c1 > 0.3 && (
+        <ellipse cx="210" cy="198" rx="35" ry="8" fill="#e89a30" opacity={c1 * 0.04} />
+      )}
+      {c2 > 0.3 && (
+        <ellipse cx="262" cy="198" rx="38" ry="9" fill="#e89a30" opacity={c2 * 0.05} />
+      )}
+      {c3 > 0.3 && (
+        <ellipse cx="318" cy="198" rx="32" ry="7" fill="#e89a30" opacity={c3 * 0.04} />
       )}
 
       {/* ── WARM LIGHT OVERLAY — covering layer, fades in ── */}
