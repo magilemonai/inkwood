@@ -1,0 +1,51 @@
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  background: #060806;
+  color: #d8c8a0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Cursor blink animation ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Button base ── */
+button {
+  font-family: Georgia, "Times New Roman", serif;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(107, 191, 107, 0.3);
+}
