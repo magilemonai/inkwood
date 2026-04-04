@@ -25,14 +25,14 @@ export default function LibraryScene({ progress: p }: SceneProps) {
 
   // ── Crystal formations ──
   const crystals = [
-    { x: 50,  y: 230, h: 28, w: 8,  angle: -8,  delay: 0.05, from: "floor" },
-    { x: 85,  y: 230, h: 22, w: 6,  angle: 5,   delay: 0.12, from: "floor" },
-    { x: 310, y: 230, h: 32, w: 9,  angle: 8,   delay: 0.08, from: "floor" },
-    { x: 345, y: 230, h: 20, w: 7,  angle: -5,  delay: 0.18, from: "floor" },
-    { x: 370, y: 230, h: 25, w: 6,  angle: 12,  delay: 0.15, from: "floor" },
-    { x: 100, y: 20,  h: 20, w: 7,  angle: 175, delay: 0.1,  from: "ceil" },
-    { x: 280, y: 18,  h: 24, w: 8,  angle: -170,delay: 0.14, from: "ceil" },
-    { x: 180, y: 15,  h: 18, w: 5,  angle: 168, delay: 0.2,  from: "ceil" },
+    { x: 50,  y: 230, h: 28, w: 8,  angle: -8,  delay: 0.05, from: "floor" as const },
+    { x: 85,  y: 230, h: 22, w: 6,  angle: 5,   delay: 0.12, from: "floor" as const },
+    { x: 310, y: 230, h: 32, w: 9,  angle: 8,   delay: 0.08, from: "floor" as const },
+    { x: 345, y: 230, h: 20, w: 7,  angle: -5,  delay: 0.18, from: "floor" as const },
+    { x: 370, y: 230, h: 25, w: 6,  angle: 12,  delay: 0.15, from: "floor" as const },
+    { x: 100, y: 20,  h: 20, w: 7,  angle: 175, delay: 0.1,  from: "ceil" as const },
+    { x: 280, y: 18,  h: 24, w: 8,  angle: -170,delay: 0.14, from: "ceil" as const },
+    { x: 180, y: 15,  h: 18, w: 5,  angle: 168, delay: 0.2,  from: "ceil" as const },
   ];
 
   // ── Dust motes / sparkles ──
@@ -275,7 +275,7 @@ export default function LibraryScene({ progress: p }: SceneProps) {
         const h = c.h * cp;
         const w = c.w * (0.6 + cp * 0.4);
         const brightness = 40 + p * 30;
-        const baseY = c.from === "floor" ? c.y : c.y;
+        const baseY = c.y;
         const tipY = c.from === "floor" ? baseY - h : baseY + h;
 
         return (
