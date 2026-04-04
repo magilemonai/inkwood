@@ -1,16 +1,32 @@
 .container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  position: relative;
   user-select: none;
+  overflow: hidden;
 }
 
-/* ── Header ── */
+/* ── Scene fills entire viewport ── */
+.sceneContainer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.sceneContainer svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Header floats on top ── */
 .header {
+  position: relative;
+  z-index: 10;
   padding: 0.85rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
 }
 
 .headerLogo {
@@ -20,7 +36,7 @@
 
 .headerTitle {
   font-size: 0.82rem;
-  color: #8a7a5a;
+  color: #c0b090;
 }
 
 .headerDots {
@@ -29,19 +45,12 @@
   gap: 2px;
 }
 
-/* ── Scene viewport ── */
-.sceneContainer {
-  flex: 1;
-  min-height: 200px;
-  max-height: 340px;
-  overflow: hidden;
-  position: relative;
-}
-
-/* ── Progress bar ── */
+/* ── Progress bar pinned at bottom of scene area ── */
 .progressTrack {
   height: 2px;
-  background: #0a0a0a;
+  background: rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 10;
 }
 
 .progressFill {
@@ -49,29 +58,37 @@
   transition: width 0.18s ease;
 }
 
-/* ── Typing area ── */
+/* ── Typing area docked at bottom, semi-transparent ── */
 .typingArea {
-  padding: 1.25rem 1.5rem 1.5rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 1rem 1.5rem 1.5rem;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.88) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .flavor {
-  margin: 0 0 1rem;
-  font-size: 0.82rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
   text-align: center;
   font-style: italic;
   line-height: 1.7;
-  color: #6a5238;
+  color: #b8a878;
 }
 
 .promptBox {
-  background: #0a0a0a;
+  background: rgba(10, 10, 10, 0.7);
   border-radius: 6px;
   padding: 0.9rem 1.2rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
   font-size: 1.18rem;
   letter-spacing: 0.06em;
   line-height: 1.7;
-  min-height: 3.6rem;
+  min-height: 3.2rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -81,6 +98,10 @@
 .char {
   white-space: pre;
   transition: color 0.08s;
+}
+
+.charPending {
+  color: #50504a;
 }
 
 .cursor {
@@ -97,8 +118,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.72rem;
-  color: #3a4a3a;
-  margin-bottom: 0.5rem;
+  color: #807868;
   padding: 0 0.1rem;
 }
 
@@ -111,18 +131,14 @@
   height: 1px;
 }
 
-/* ── Mobile: tap overlay ── */
+/* ── Mobile ── */
 @media (max-width: 640px) {
   .typingArea {
-    padding: 1rem 1rem 1.25rem;
+    padding: 0.8rem 1rem 1.25rem;
   }
 
   .promptBox {
     font-size: 1.05rem;
     padding: 0.8rem 1rem;
-  }
-
-  .sceneContainer {
-    max-height: 45vh;
   }
 }

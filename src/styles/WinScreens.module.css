@@ -18,11 +18,11 @@
 .heading {
   font-weight: normal;
   font-size: 1.75rem;
-  color: #eaddb0;
+  color: #f0e8c8;
 }
 
 .winText {
-  color: #9a8868;
+  color: #b8a880;
   max-width: 380px;
   line-height: 1.85;
   font-style: italic;
@@ -30,7 +30,7 @@
 
 .actLabel {
   font-size: 0.72rem;
-  color: #4a3a2a;
+  color: #8a7a5a;
   letter-spacing: 0.1em;
 }
 
@@ -43,18 +43,18 @@
 }
 
 .continueBtn:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ── Game win specific ── */
 .gameWinHeading {
   font-weight: normal;
   font-size: 2rem;
-  color: #eaddb0;
+  color: #f0e8c8;
 }
 
 .gameWinText {
-  color: #9a8868;
+  color: #b8a880;
   max-width: 400px;
   line-height: 1.85;
   font-style: italic;
@@ -70,7 +70,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .logo {

@@ -14,14 +14,14 @@
   font-size: 2.6rem;
   font-weight: normal;
   letter-spacing: 0.12em;
-  color: #eaddb0;
+  color: #f0e8c8;
 }
 
 .subtitle {
   font-size: 0.95rem;
   max-width: 400px;
   line-height: 1.85;
-  color: #9a8868;
+  color: #b8a880;
 }
 
 .acts {
@@ -30,12 +30,11 @@
   gap: 0.7rem;
   margin-top: 0.5rem;
   font-size: 0.78rem;
-  color: #5a4a2a;
   width: 280px;
 }
 
 .actLabel {
-  color: #7a6a4a;
+  color: #98886a;
   letter-spacing: 0.1em;
   margin-bottom: 0.25rem;
   font-size: 0.68rem;
@@ -43,12 +42,12 @@
 
 .levelItem {
   padding-left: 0.8rem;
-  color: #5a4a2a;
+  color: #8a7a5a;
   line-height: 1.6;
 }
 
 .levelDiamond {
-  opacity: 0.5;
+  opacity: 0.6;
   margin-right: 0.4rem;
 }
 
@@ -56,18 +55,17 @@
   margin-top: 1.25rem;
   padding: 0.7rem 2.8rem;
   background: transparent;
-  border: 1px solid #4a7a3a;
-  color: #80c860;
+  border: 1px solid #5a9a4a;
+  color: #90d870;
   font-size: 1rem;
   border-radius: 4px;
   letter-spacing: 0.1em;
 }
 
 .beginBtn:hover {
-  background: rgba(74, 122, 58, 0.1);
+  background: rgba(74, 122, 58, 0.12);
 }
 
-/* ── Logo SVG ── */
 .logo {
   display: block;
 }

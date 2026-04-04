@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useGameStore } from "./store";
-import TitleScreen from "./components/TitleScreen";
+import IntroSequence from "./components/IntroSequence";
 import PlayingScreen from "./components/PlayingScreen";
 import LevelWinScreen from "./components/LevelWinScreen";
-import GameWinScreen from "./components/GameWinScreen";
+import ActTransition from "./components/ActTransition";
+import OutroSequence from "./components/OutroSequence";
 
 const screenVariants = {
   initial: { opacity: 0 },
@@ -24,10 +25,11 @@ export default function App() {
         exit="exit"
         style={{ minHeight: "100vh" }}
       >
-        {screen === "title" && <TitleScreen />}
+        {screen === "intro" && <IntroSequence />}
         {screen === "playing" && <PlayingScreen />}
         {screen === "levelWin" && <LevelWinScreen />}
-        {screen === "gameWin" && <GameWinScreen />}
+        {screen === "actTransition" && <ActTransition />}
+        {screen === "outro" && <OutroSequence />}
       </motion.div>
     </AnimatePresence>
   );

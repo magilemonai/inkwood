@@ -32,9 +32,9 @@ export default function PlayingScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
   const completingRef = useRef(false);
 
-  const { accent, bg } = level;
+  const { accent } = level;
   const charStates = getCharStates(typed, target);
-  const hasError = charStates.some((s) => s === "error");
+  const hasError = charStates.some((st) => st === "error");
 
   // ── Completion timer (strict-mode safe) ──
   useEffect(() => {
@@ -62,10 +62,15 @@ export default function PlayingScreen() {
   const SceneComp = getSceneComponent(level.scene);
 
   return (
-    <div className={s.container} style={{ background: bg }} onClick={focusInput}>
-      {/* Header */}
-      <div className={s.header} style={{ borderBottom: `1px solid ${accent}18` }}>
-        <span className={s.headerLogo} style={{ color: accent, opacity: 0.6 }}>
+    <div className={s.container} onClick={focusInput}>
+      {/* Scene fills entire viewport */}
+      <div className={s.sceneContainer}>
+        <SceneComp progress={levelProgress} />
+      </div>
+
+      {/* Header floats on top */}
+      <div className={s.header}>
+        <span className={s.headerLogo} style={{ color: accent, opacity: 0.7 }}>
           INKWOOD
         </span>
         <span className={s.headerTitle}>{level.title}</span>
@@ -74,7 +79,7 @@ export default function PlayingScreen() {
             <span
               key={i}
               style={{
-                color: i < lvl ? l.accent : i === lvl ? accent : "#1a1a1a",
+                color: i < lvl ? l.accent : i === lvl ? accent : "#333",
               }}
             >
               {i <= lvl ? "\u25C6" : "\u25C7"}
@@ -83,27 +88,22 @@ export default function PlayingScreen() {
         </span>
       </div>
 
-      {/* Scene */}
-      <div className={s.sceneContainer}>
-        <SceneComp progress={levelProgress} />
-      </div>
+      {/* Typing area docked at bottom with gradient overlay */}
+      <div className={s.typingArea}>
+        {/* Progress bar */}
+        <div className={s.progressTrack} style={{ marginBottom: "0.75rem" }}>
+          <div
+            className={s.progressFill}
+            style={{ width: `${levelProgress * 100}%`, background: accent }}
+          />
+        </div>
 
-      {/* Progress bar */}
-      <div className={s.progressTrack}>
-        <div
-          className={s.progressFill}
-          style={{ width: `${levelProgress * 100}%`, background: accent }}
-        />
-      </div>
-
-      {/* Typing area */}
-      <div className={s.typingArea} style={{ borderTop: `1px solid ${accent}18` }}>
         <p className={s.flavor}>{level.flavor}</p>
 
         {/* Prompt display */}
         <div
           className={s.promptBox}
-          style={{ border: `1px solid ${accent}20` }}
+          style={{ border: `1px solid ${accent}30` }}
           onClick={focusInput}
         >
           {target.split("").map((ch, i) => {
@@ -119,11 +119,15 @@ export default function PlayingScreen() {
                       ? accent
                       : state === "error"
                         ? "#e05050"
-                        : "#2e3e2e",
+                        : undefined,
                   borderLeft: isCursor ? `2px solid ${accent}` : "none",
                 }}
               >
-                {ch}
+                {state === "pending" ? (
+                  <span className={s.charPending}>{ch}</span>
+                ) : (
+                  ch
+                )}
               </span>
             );
           })}
@@ -141,7 +145,7 @@ export default function PlayingScreen() {
         <div className={s.subInfo}>
           <span
             style={{
-              color: isComplete ? accent : hasError ? "#884040" : "#3a4a3a",
+              color: isComplete ? accent : hasError ? "#c06060" : "#807868",
             }}
           >
             {isComplete

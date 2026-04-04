@@ -20,7 +20,14 @@ export type SceneKey =
   | "tree"
   | "world";
 
-export type Screen = "title" | "playing" | "levelWin" | "gameWin";
+export type Screen =
+  | "intro"
+  | "title"
+  | "playing"
+  | "levelWin"
+  | "actTransition"
+  | "gameWin"
+  | "outro";
 
 export type CharState = "correct" | "error" | "pending";
 

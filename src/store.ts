@@ -1,6 +1,11 @@
 import { create } from "zustand";
-import { LEVELS } from "./levels";
+import { LEVELS, ACT_RANGES } from "./levels";
 import type { Screen } from "./types";
+
+/** Check if completing this level ends an act (i.e., next level is in a new act) */
+function isActBoundary(lvl: number): boolean {
+  return ACT_RANGES.some(([, end]) => lvl === end) && lvl + 1 < LEVELS.length;
+}
 
 interface GameState {
   screen: Screen;
@@ -22,11 +27,12 @@ interface GameState {
   startCompletion: () => void;
   advancePrompt: () => void;
   advanceLevel: () => void;
+  startGame: () => void;
   restart: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  screen: "title",
+  screen: "intro",
   lvl: 0,
   promptIdx: 0,
   typed: "",
@@ -70,9 +76,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (promptIdx + 1 < total) {
       set({ promptIdx: promptIdx + 1, typed: "", completing: false });
     } else if (lvl + 1 < LEVELS.length) {
-      set({ screen: "levelWin" });
+      // Check if this is an act boundary → show act transition instead of level win
+      if (isActBoundary(lvl)) {
+        set({ screen: "actTransition" });
+      } else {
+        set({ screen: "levelWin" });
+      }
     } else {
-      set({ screen: "gameWin" });
+      set({ screen: "outro" });
     }
   },
 
@@ -87,12 +98,21 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  startGame: () =>
+    set({
+      lvl: 0,
+      promptIdx: 0,
+      typed: "",
+      completing: false,
+      screen: "playing",
+    }),
+
   restart: () =>
     set({
       lvl: 0,
       promptIdx: 0,
       typed: "",
       completing: false,
-      screen: "title",
+      screen: "intro",
     }),
 }));
