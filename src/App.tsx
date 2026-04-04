@@ -34,7 +34,7 @@ export default function App() {
           {screen === "outro" && <OutroSequence />}
         </motion.div>
       </AnimatePresence>
-      {import.meta.env.DEV && <DevPanel />}
+      <DevPanel />
     </>
   );
 }
