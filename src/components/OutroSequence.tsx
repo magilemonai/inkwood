@@ -193,40 +193,20 @@ export default function OutroSequence() {
         )}
       </svg>
 
-      {/* Text overlay */}
+      {/* Minimal text overlay — let the animation speak */}
       <AnimatePresence>
         {showText && (
           <motion.div
             className={s.textOverlay}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 2 }}
+            transition={{ duration: 2.5 }}
           >
-            <motion.h2
-              className={s.heading}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 0.3 }}
-            >
-              The Ancient Order Holds
-            </motion.h2>
-
-            <motion.p
-              className={s.body}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.2, delay: 1 }}
-            >
-              Ten places, once forgotten, now alive with spirit and purpose.
-              You have written the world back into being, scribe. The spirits
-              will remember your name.
-            </motion.p>
-
             <motion.div
               className={s.dotRow}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 1.8 }}
+              transition={{ duration: 1.5, delay: 0.5 }}
             >
               {LEVELS.map((l, i) => (
                 <div key={i} className={s.dot} style={{ background: l.accent }} />
@@ -237,7 +217,7 @@ export default function OutroSequence() {
               className={s.restartBtn}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 2.5 }}
+              transition={{ duration: 1, delay: 3 }}
               onClick={restart}
             >
               Begin Again

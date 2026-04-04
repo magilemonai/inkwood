@@ -13,7 +13,7 @@
 
 .actTitle {
   position: absolute;
-  bottom: 45%;
+  top: 8vh;
   left: 50%;
   transform: translateX(-50%);
   color: #d0b870;

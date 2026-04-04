@@ -100,9 +100,9 @@ export default function PlayingScreen() {
 
         <p className={s.flavor}>{level.flavor}</p>
 
-        {/* Prompt display */}
+        {/* Prompt display — pulses golden until the user starts typing */}
         <div
-          className={s.promptBox}
+          className={`${s.promptBox} ${typed.length === 0 && promptIdx === 0 && !completing ? s.promptBoxPulsing : ""}`}
           style={{ border: `1px solid ${accent}30` }}
           onClick={focusInput}
         >

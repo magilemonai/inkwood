@@ -14,25 +14,25 @@ import s from "../styles/Intro.module.css";
 function DormantGarden({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      {/* Grey sky */}
-      <rect width="400" height="250" fill="hsl(0, 0%, 6%)" />
+      {/* Grey sky — must be visibly different from black */}
+      <rect width="400" height="250" fill="hsl(120, 5%, 8%)" />
       {/* Dead hills */}
-      <path d="M0 200 Q100 170 200 195 Q300 210 400 185 L400 250 L0 250Z" fill="hsl(0, 0%, 8%)" />
-      <path d="M0 215 Q80 195 180 210 Q280 225 400 205 L400 250 L0 250Z" fill="hsl(0, 0%, 9%)" />
+      <path d="M0 200 Q100 170 200 195 Q300 210 400 185 L400 250 L0 250Z" fill="hsl(120, 4%, 10%)" />
+      <path d="M0 215 Q80 195 180 210 Q280 225 400 205 L400 250 L0 250Z" fill="hsl(120, 3%, 11%)" />
       {/* Dead tree silhouettes */}
-      <line x1="80" y1="210" x2="80" y2="150" stroke="hsl(0,0%,7%)" strokeWidth="3" />
-      <line x1="80" y1="170" x2="60" y2="145" stroke="hsl(0,0%,7%)" strokeWidth="2" />
-      <line x1="80" y1="175" x2="100" y2="150" stroke="hsl(0,0%,7%)" strokeWidth="2" />
-      <line x1="300" y1="200" x2="300" y2="140" stroke="hsl(0,0%,7%)" strokeWidth="3" />
-      <line x1="300" y1="165" x2="280" y2="140" stroke="hsl(0,0%,7%)" strokeWidth="2" />
-      <line x1="300" y1="160" x2="320" y2="135" stroke="hsl(0,0%,7%)" strokeWidth="2" />
+      <line x1="80" y1="210" x2="80" y2="150" stroke="hsl(120,3%,12%)" strokeWidth="3" />
+      <line x1="80" y1="170" x2="60" y2="145" stroke="hsl(120,3%,12%)" strokeWidth="2" />
+      <line x1="80" y1="175" x2="100" y2="150" stroke="hsl(120,3%,12%)" strokeWidth="2" />
+      <line x1="300" y1="200" x2="300" y2="140" stroke="hsl(120,3%,12%)" strokeWidth="3" />
+      <line x1="300" y1="165" x2="280" y2="140" stroke="hsl(120,3%,12%)" strokeWidth="2" />
+      <line x1="300" y1="160" x2="320" y2="135" stroke="hsl(120,3%,12%)" strokeWidth="2" />
       {/* Dead flower stems — bare, no blooms */}
       {[120, 170, 220, 270].map((x, i) => (
-        <line key={i} x1={x} y1="215" x2={x + (i % 2 === 0 ? 2 : -2)} y2="195" stroke="hsl(0,0%,10%)" strokeWidth="1.2" />
+        <line key={i} x1={x} y1="215" x2={x + (i % 2 === 0 ? 2 : -2)} y2="195" stroke="hsl(120,3%,14%)" strokeWidth="1.2" />
       ))}
       {/* Cracked ground lines */}
-      <path d="M50 230 L80 225 L90 240" fill="none" stroke="hsl(0,0%,7%)" strokeWidth="0.5" />
-      <path d="M250 235 L280 228 L300 238" fill="none" stroke="hsl(0,0%,7%)" strokeWidth="0.5" />
+      <path d="M50 230 L80 225 L90 240" fill="none" stroke="hsl(0,0%,13%)" strokeWidth="0.8" />
+      <path d="M250 235 L280 228 L300 238" fill="none" stroke="hsl(0,0%,13%)" strokeWidth="0.8" />
     </g>
   );
 }
@@ -89,13 +89,13 @@ function Spark({ opacity }: { opacity: number }) {
   );
 }
 
-// Phases: garden → cottage → sky → spark → title
+// Phases: black beat → garden → cottage → sky → spark → title
 const PHASES = [
-  { start: 0, end: 4 },      // dormant garden
-  { start: 3.5, end: 7.5 },  // dormant cottage
-  { start: 7, end: 11 },     // dormant sky
-  { start: 10.5, end: 14 },  // spark
-  { start: 13, end: 99 },    // title
+  { start: 0.8, end: 4.5 },  // dormant garden (starts after a beat of black)
+  { start: 4, end: 8 },      // dormant cottage
+  { start: 7.5, end: 11.5 }, // dormant sky
+  { start: 11, end: 14.5 },  // spark
+  { start: 14, end: 99 },    // title
 ];
 
 export default function IntroSequence() {
@@ -109,10 +109,10 @@ export default function IntroSequence() {
     const tick = () => {
       const elapsed = (performance.now() - start) / 1000;
       setTime(elapsed);
-      if (elapsed >= 13.5 && !showTitle) {
+      if (elapsed >= 14 && !showTitle) {
         setShowTitle(true);
       }
-      if (elapsed < 16) {
+      if (elapsed < 18) {
         frame = requestAnimationFrame(tick);
       }
     };

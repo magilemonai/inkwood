@@ -1,12 +1,18 @@
+import { useRef } from "react";
 import { useGameStore } from "../store";
 import { LEVELS, getActLabel } from "../levels";
 import s from "../styles/WinScreens.module.css";
 
 export default function LevelWinScreen() {
   const { lvl, advanceLevel } = useGameStore();
-  const level = LEVELS[lvl];
+
+  // Capture level data at mount — prevents flash of next level during exit animation
+  const snapshotRef = useRef({ lvl, level: LEVELS[lvl] });
+  const { level } = snapshotRef.current;
+  const snappedLvl = snapshotRef.current.lvl;
+
   const { accent, bg } = level;
-  const pct = Math.round(((lvl + 1) / LEVELS.length) * 100);
+  const pct = Math.round(((snappedLvl + 1) / LEVELS.length) * 100);
 
   return (
     <div className={s.container} style={{ background: bg }}>
@@ -20,7 +26,7 @@ export default function LevelWinScreen() {
       <h2 className={s.heading}>{level.title}</h2>
       <p className={s.winText}>{level.winText}</p>
       <div className={s.actLabel}>
-        {getActLabel(lvl)} — {pct}% COMPLETE
+        {getActLabel(snappedLvl)} — {pct}% COMPLETE
       </div>
       <button
         className={s.continueBtn}
