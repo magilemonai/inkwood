@@ -1,222 +1,335 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
-import { GlowFilter, MistFilter, TextureFilter } from "../svg/filters";
-import { Hill, Cloud, Flower, Rain, GrassRow, TreeSilhouette } from "../svg/primitives";
+import { GlowFilter } from "../svg/filters";
+import { Flower } from "../svg/primitives";
 
-/** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
+// ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
+// Every major element is a single complex bezier path, designed
+// to look organic as a solid-color silhouette.
+
+/** Gnarled oak trunk — asymmetric, with a visible burl on the left side */
+const TRUNK = `
+  M107 195
+  C106 190, 104 185, 103 179
+  C102 173, 100 169, 98 164
+  C95 158, 93 153, 95 148
+  C97 143, 100 140, 99 135
+  C98 128, 95 123, 97 118
+  C99 113, 103 109, 108 106
+  C112 103, 116 101, 120 100
+  L126 100
+  C130 101, 134 104, 136 107
+  C139 112, 141 118, 141 125
+  C141 132, 143 138, 142 145
+  C141 152, 144 158, 143 164
+  C142 170, 140 176, 139 182
+  C138 188, 137 192, 136 195
+  Z`;
+
+/** Canopy — irregular leafy silhouette with ~30 curves */
+const CANOPY = `
+  M28 92
+  C24 86, 26 78, 34 72
+  C40 67, 35 60, 42 54
+  C47 49, 52 46, 58 43
+  C63 40, 59 35, 66 32
+  C71 29, 78 34, 84 30
+  C89 27, 84 21, 92 19
+  C98 17, 104 22, 110 18
+  C116 15, 120 20, 128 17
+  C134 14, 130 19, 138 17
+  C145 15, 150 20, 158 22
+  C164 24, 160 18, 170 22
+  C178 25, 184 30, 190 33
+  C196 36, 192 42, 200 44
+  C206 47, 212 52, 216 58
+  C220 64, 224 72, 222 78
+  C220 84, 226 90, 222 95
+  C218 99, 212 96, 206 100
+  C198 104, 190 100, 182 104
+  C174 108, 166 103, 158 106
+  C150 109, 142 105, 134 108
+  C126 110, 118 106, 110 109
+  C102 112, 94 107, 86 110
+  C78 112, 70 107, 62 109
+  C54 110, 46 106, 38 102
+  C32 98, 28 94, 28 92
+  Z`;
+
+/** Branch paths — each curves organically from trunk crown outward */
+const BRANCHES = [
+  // far left — sweeps down and left
+  "M108 106 C98 98, 82 90, 68 86 C56 83, 44 80, 34 78",
+  // up-left
+  "M114 102 C106 90, 94 76, 86 66 C80 58, 74 50, 68 44",
+  // up-center (slightly right of center)
+  "M122 100 C121 88, 124 74, 122 62 C120 52, 122 44, 120 36",
+  // up-right
+  "M130 102 C138 90, 148 78, 158 68 C166 60, 174 54, 180 48",
+  // far right
+  "M136 107 C146 100, 162 94, 178 90 C190 87, 202 86, 214 85",
+];
+
+/** Tree roots — thick curves spreading from the trunk base into the earth */
+const ROOTS = [
+  "M104 194 C94 197, 76 200, 56 199 C40 198, 22 201, 5 200",
+  "M108 195 C100 199, 82 204, 62 206 C46 208, 28 207, 10 210",
+  "M136 195 C148 199, 168 203, 190 205 C208 207, 228 206, 250 209",
+  "M134 194 C144 197, 164 200, 186 199 C202 198, 220 201, 240 200",
+];
+
+/** Rolling terrain — hand-drawn with natural undulation, not sine waves */
+const HILL_FAR = `
+  M-10 182 C15 178, 38 170, 65 173 C85 175, 100 168, 128 166
+  C150 164, 172 170, 198 168 C220 166, 242 162, 268 165
+  C290 167, 312 173, 338 170 C358 168, 378 174, 410 172
+  L410 250 L-10 250 Z`;
+
+const HILL_MID = `
+  M-10 192 C12 189, 36 183, 62 186 C82 188, 96 182, 122 180
+  C142 178, 162 184, 190 182 C212 180, 234 186, 262 184
+  C284 182, 306 178, 332 181 C352 183, 372 188, 410 186
+  L410 250 L-10 250 Z`;
+
+const GROUND = `
+  M-10 200 C18 198, 44 194, 75 196 C100 198, 118 192, 148 194
+  C172 196, 192 191, 220 193 C248 195, 268 190, 298 192
+  C322 194, 344 198, 378 196 C398 195, 408 198, 420 200
+  L420 250 L-10 250 Z`;
+
+/** A few hand-placed grass tufts — organic clumps, not lines */
+const GRASS_TUFTS = [
+  // each is a small cluster of curved blades
+  { x: 168, paths: [
+    "M168 196 Q166 188 164 178", "M170 196 Q169 186 170 176",
+    "M172 196 Q174 187 176 179", "M167 196 Q163 190 160 184",
+  ]},
+  { x: 255, paths: [
+    "M255 194 Q253 186 250 177", "M257 194 Q257 184 258 175",
+    "M259 194 Q262 186 264 178", "M254 194 Q250 188 247 182",
+  ]},
+  { x: 330, paths: [
+    "M330 196 Q328 189 326 181", "M332 196 Q332 187 333 179",
+    "M334 196 Q337 189 339 182",
+  ]},
+  { x: 50, paths: [
+    "M50 198 Q48 191 46 183", "M52 198 Q52 189 53 181",
+    "M54 198 Q56 191 58 184",
+  ]},
+  { x: 380, paths: [
+    "M380 197 Q378 190 375 182", "M382 197 Q383 188 384 180",
+  ]},
+];
+
+/** Small stones near the tree base */
+const STONES = [
+  "M92 198 C90 196, 88 194, 86 195 C84 196, 83 198, 85 199 C87 200, 90 200, 92 198 Z",
+  "M145 197 C148 195, 152 194, 154 196 C155 198, 153 200, 150 200 C147 200, 144 199, 145 197 Z",
+  "M75 200 C74 198, 72 197, 70 198 C68 199, 69 201, 71 202 C73 202, 76 201, 75 200 Z",
+];
+
+// ─── SCENE COMPONENT ───────────────────────────────────────
+
 function GardenScene({ progress: p }: SceneProps) {
-  // ── Sky transitions ──
-  const skyH = 110 + p * 18;
-  const skyS = 15 + p * 33;
-  const skyL = 5 + p * 22;
+  // Color transitions: dormant grey-brown → alive green-gold
+  const skyH = 180 + p * 30;     // blue-grey → green-teal
+  const skyS = 8 + p * 30;
+  const skyL = 12 + p * 22;
 
-  // ── Sun ──
-  const sunY = 95 - p * 65;
-  const sunGlow = p;
+  const groundS = 8 + p * 32;
+  const groundL = 10 + p * 12;
 
-  // ── Rain fades in mid-progress, fades out ──
-  const rainIntensity =
-    p < 0.15 ? 0 : p < 0.35 ? (p - 0.15) / 0.2 : p < 0.6 ? 1 : Math.max(0, (0.75 - p) / 0.15);
+  const trunkS = 6 + p * 14;
+  const trunkL = 12 + p * 8;
 
-  // ── Flowers stagger ──
+  const canopyS = 5 + p * 35;
+  const canopyL = 10 + p * 16;
+
+  const sunY = 95 - p * 60;
+
+  // Phase: roots wake (0-0.5), flowers bloom (0.4-1.0)
+  const rootGlow = sub(p, 0.05, 0.4);
+  const canopyLife = sub(p, 0.1, 0.5);
+
   const flowers = [
-    { x: 55,  stemH: 38, color: "#e87090", size: 9,  delay: 0.15 },
-    { x: 105, stemH: 44, color: "#f0c050", size: 10, delay: 0.25 },
-    { x: 155, stemH: 35, color: "#a070e0", size: 8,  delay: 0.35 },
-    { x: 210, stemH: 42, color: "#e8a0c0", size: 9,  delay: 0.42 },
-    { x: 260, stemH: 48, color: "#60c888", size: 11, delay: 0.52 },
-    { x: 310, stemH: 36, color: "#f08050", size: 8,  delay: 0.6 },
-    { x: 355, stemH: 40, color: "#70a0e8", size: 9,  delay: 0.7 },
-  ];
-
-  // ── Background trees silhouette — appear in mid-distance ──
-  const treeSilhouettes = [
-    { x: 25,  h: 68, s: 22 },
-    { x: 72,  h: 80, s: 28 },
-    { x: 130, h: 55, s: 20 },
-    { x: 280, h: 62, s: 24 },
-    { x: 340, h: 75, s: 26 },
-    { x: 388, h: 58, s: 20 },
-  ];
-
-  // ── Fireflies / pollen motes — appear late ──
-  const motes = [
-    { x: 80,  y: 110, delay: 0.65 },
-    { x: 190, y: 90,  delay: 0.72 },
-    { x: 290, y: 105, delay: 0.78 },
-    { x: 140, y: 130, delay: 0.82 },
-    { x: 350, y: 95,  delay: 0.88 },
-    { x: 60,  y: 145, delay: 0.92 },
+    { x: 200, stemH: 34, color: "#e87090", size: 8,  delay: 0.35 },
+    { x: 230, stemH: 40, color: "#f0c050", size: 9,  delay: 0.42 },
+    { x: 265, stemH: 36, color: "#a070e0", size: 8,  delay: 0.5 },
+    { x: 300, stemH: 42, color: "#e8a0c0", size: 9,  delay: 0.58 },
+    { x: 340, stemH: 38, color: "#60c888", size: 10, delay: 0.66 },
+    { x: 370, stemH: 32, color: "#f08050", size: 8,  delay: 0.75 },
   ];
 
   return (
     <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
-        {/* Filters */}
-        <GlowFilter id="sunGlow" radius={20} color="#f5e060" opacity={0.4} />
-        <GlowFilter id="flowerGlow" radius={3} color="#f5e060" opacity={0.2} />
-        <MistFilter id="groundMist" scale={0.012} opacity={0.25} />
-        <TextureFilter id="groundTex" scale={0.06} intensity={0.1} seed={3} />
+        <GlowFilter id="sunGlow" radius={18} color="#f5e060" opacity={0.35} />
+        <GlowFilter id="rootGlow" radius={4} color="#6bbf6b" opacity={0.5} />
 
-        {/* Parallax animations */}
-        <style>{`
-          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
-          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
-          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
-          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
-          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
-          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
-        `}</style>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={`hsl(${skyH}, ${skyS}%, ${skyL + 10}%)`} />
+          <stop offset="100%" stopColor={`hsl(${skyH - 20}, ${skyS + 5}%, ${skyL}%)`} />
+        </linearGradient>
 
-        {/* Sun radial gradient */}
         <radialGradient id="sunRadial" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#f5e060" stopOpacity={sunGlow * 0.5} />
-          <stop offset="40%" stopColor="#f5d030" stopOpacity={sunGlow * 0.2} />
+          <stop offset="0%" stopColor="#f5e060" stopOpacity={p * 0.45} />
+          <stop offset="40%" stopColor="#f5d030" stopOpacity={p * 0.18} />
           <stop offset="100%" stopColor="#f5e060" stopOpacity={0} />
         </radialGradient>
-
-        {/* Sky gradient — vertical */}
-        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={`hsl(${skyH + 10}, ${skyS - 5}%, ${skyL + 8}%)`} />
-          <stop offset="100%" stopColor={`hsl(${skyH}, ${skyS}%, ${skyL}%)`} />
-        </linearGradient>
       </defs>
 
-      {/* ── Sky ── */}
+      {/* ── SKY ── */}
       <rect width="400" height="250" fill="url(#skyGrad)" />
 
-      <g className="bgLayer">
-      {/* ── Distant hills (background layer) ── */}
-      <Hill y={185} height={25} color={`hsl(130, ${15 + p * 12}%, ${8 + p * 5}%)`} seed={0.3} />
-      <Hill y={195} height={20} color={`hsl(125, ${18 + p * 15}%, ${9 + p * 6}%)`} seed={1.8} />
+      {/* ── SUN ── */}
+      <circle cx="345" cy={sunY} r={55} fill="url(#sunRadial)" />
+      <circle cx="345" cy={sunY} r={16} fill="#f5d860" opacity={p * 0.85}
+        filter={p > 0.3 ? "url(#sunGlow)" : undefined} />
 
-      {/* ── Background tree silhouettes ── */}
-      {treeSilhouettes.map((t, i) => (
-        <TreeSilhouette
-          key={i}
-          x={t.x}
-          y={195}
-          height={t.h * (0.3 + p * 0.7)}
-          spread={t.s}
-          color={`hsl(120, ${12 + p * 8}%, ${6 + p * 3}%)`}
-          opacity={0.3 + p * 0.5}
-        />
-      ))}
-
-      {/* ── Clouds — appear after 30% ── */}
-      {p > 0.3 && (
-        <>
-          <Cloud x={75}  y={45} scale={1.1} opacity={sub(p, 0.3, 0.25) * 0.4} />
-          <Cloud x={220} y={35} scale={0.8} opacity={sub(p, 0.38, 0.25) * 0.35} />
-          <Cloud x={330} y={50} scale={0.9} opacity={sub(p, 0.45, 0.25) * 0.3} />
-        </>
+      {/* ── CLOUDS — soft shapes are appropriate for clouds ── */}
+      {p > 0.35 && (
+        <g opacity={sub(p, 0.35, 0.3) * 0.35}>
+          <ellipse cx={80} cy={42} rx={35} ry={10} fill="white" />
+          <ellipse cx={62} cy={38} rx={22} ry={8} fill="white" />
+          <ellipse cx={100} cy={39} rx={25} ry={9} fill="white" />
+          <ellipse cx={280} cy={48} rx={30} ry={9} fill="white" opacity={0.7} />
+          <ellipse cx={300} cy={45} rx={22} ry={7} fill="white" opacity={0.7} />
+        </g>
       )}
 
-      {/* ── Sun ── */}
-      <circle cx="340" cy={sunY} r={60} fill="url(#sunRadial)" />
-      <circle
-        cx="340"
-        cy={sunY}
-        r={18}
-        fill="#f5d860"
-        opacity={p * 0.9}
-        filter={p > 0.3 ? "url(#sunGlow)" : undefined}
-      />
+      {/* ── FAR HILL ── */}
+      <path d={HILL_FAR}
+        fill={`hsl(120, ${groundS - 4}%, ${groundL - 3}%)`}
+        opacity={0.5 + p * 0.3} />
+
+      {/* ── MID HILL ── */}
+      <path d={HILL_MID}
+        fill={`hsl(125, ${groundS - 2}%, ${groundL - 1}%)`}
+        opacity={0.6 + p * 0.3} />
+
+      {/* ── TREE — the hero element ── */}
+
+      {/* Canopy — transitions from grey to green */}
+      <path d={CANOPY}
+        fill={`hsl(${110 + p * 15}, ${canopyS}%, ${canopyL}%)`}
+        opacity={0.3 + canopyLife * 0.6} />
+      {/* Canopy highlight — lighter inner shape suggesting sunlit leaves */}
+      <path d={CANOPY}
+        fill={`hsl(${115 + p * 10}, ${canopyS + 8}%, ${canopyL + 5}%)`}
+        opacity={canopyLife * 0.25}
+        transform="translate(3, 2) scale(0.88)"
+        style={{ transformOrigin: "125px 65px" }} />
+
+      {/* Branches — visible through gaps in dormant canopy, fade as canopy fills */}
+      <g opacity={0.4 + p * 0.3}>
+        {BRANCHES.map((d, i) => (
+          <path key={i} d={d}
+            fill="none"
+            stroke={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`}
+            strokeWidth={4.5 - i * 0.5}
+            strokeLinecap="round" />
+        ))}
       </g>
 
-      <g className="midLayer">
+      {/* Trunk — complex gnarled path */}
+      <path d={TRUNK}
+        fill={`hsl(30, ${trunkS}%, ${trunkL}%)`} />
+      {/* Bark highlight — one side catching light */}
+      <path d={TRUNK}
+        fill={`hsl(35, ${trunkS + 4}%, ${trunkL + 6}%)`}
+        opacity={p * 0.3}
+        clipPath="inset(0 50% 0 0)" />
 
-      {/* ── Rain ── */}
-      {rainIntensity > 0.05 && (
-        <Rain intensity={rainIntensity} opacity={rainIntensity * 0.55} />
+      {/* Roots — emerge from trunk base, glow as they wake */}
+      <g opacity={0.3 + rootGlow * 0.7}>
+        {ROOTS.map((d, i) => (
+          <path key={i} d={d}
+            fill="none"
+            stroke={`hsl(30, ${trunkS + rootGlow * 10}%, ${trunkL + rootGlow * 5}%)`}
+            strokeWidth={3.5 - i * 0.4}
+            strokeLinecap="round" />
+        ))}
+      </g>
+      {/* Root glow — ley-energy hint, subtle */}
+      {rootGlow > 0.3 && (
+        <g opacity={(rootGlow - 0.3) * 0.5}>
+          {ROOTS.map((d, i) => (
+            <path key={i} d={d}
+              fill="none"
+              stroke="#6bbf6b"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              filter="url(#rootGlow)" />
+          ))}
+        </g>
       )}
 
-      {/* ── Ground (foreground) ── */}
-      <Hill y={210} height={15} color={`hsl(120, ${22 + p * 25}%, ${9 + p * 10}%)`} seed={0.7} />
-      <rect
-        x={0} y={218} width={400} height={32}
-        fill={`hsl(120, ${25 + p * 22}%, ${10 + p * 9}%)`}
-        filter="url(#groundTex)"
-      />
+      {/* ── NEAR GROUND ── */}
+      <path d={GROUND}
+        fill={`hsl(120, ${groundS}%, ${groundL}%)`} />
+      {/* Earth below ground line */}
+      <rect x={0} y={200} width={400} height={50}
+        fill={`hsl(30, ${10 + p * 8}%, ${10 + p * 6}%)`} />
 
-      {/* ── Ground mist — fades with progress (dormant garden has mist) ── */}
-      <rect
-        x={0} y={180} width={400} height={70}
-        fill="white"
-        opacity={(1 - p) * 0.08}
-        filter="url(#groundMist)"
-      />
+      {/* ── STONES near tree base ── */}
+      <g opacity={0.3 + p * 0.4}>
+        {STONES.map((d, i) => (
+          <path key={i} d={d}
+            fill={`hsl(30, ${6 + p * 4}%, ${18 + p * 5}%)`} />
+        ))}
+      </g>
 
-      {/* ── Grass rows ── */}
-      <GrassRow
-        y={215}
-        color={`hsl(120, ${35 + p * 20}%, ${18 + p * 14}%)`}
-        count={40}
-        maxHeight={16}
-        progress={p}
-      />
-      <GrassRow
-        y={222}
-        color={`hsl(115, ${30 + p * 18}%, ${15 + p * 12}%)`}
-        count={25}
-        maxHeight={10}
-        progress={p * 0.8}
-      />
+      {/* ── GRASS TUFTS — organic hand-placed clumps ── */}
+      <g opacity={0.2 + p * 0.7}>
+        {GRASS_TUFTS.map((tuft, ti) =>
+          tuft.paths.map((d, pi) => (
+            <path key={`${ti}-${pi}`} d={d}
+              fill="none"
+              stroke={`hsl(${115 + ti * 5}, ${20 + p * 25}%, ${15 + p * 15}%)`}
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              opacity={sub(p, 0.05 + ti * 0.04, 0.3)} />
+          ))
+        )}
+      </g>
 
-      {/* ── Flowers ── */}
+      {/* ── FLOWERS — bloom during second phrase ── */}
       {flowers.map((f, i) => (
         <Flower
           key={i}
           x={f.x}
-          y={218}
+          y={196 + (i % 2) * 2}
           stemHeight={f.stemH}
           petalColor={f.color}
           petalSize={f.size}
-          progress={sub(p, f.delay, 0.25)}
+          progress={sub(p, f.delay, 0.22)}
         />
       ))}
-      </g>
 
-      {/* ── Pollen motes / fireflies — appear late ── */}
-      {motes.map((m, i) => {
-        const mp = sub(p, m.delay, 0.1);
+      {/* ── POLLEN MOTES — appear late, very subtle ── */}
+      {p > 0.6 && Array.from({ length: 20 }).map((_, i) => {
+        const mx = 35 + (i * 53 + 17) % 350;
+        const my = 50 + (i * 37 + 11) % 140;
+        const mp = sub(p, 0.6 + i * 0.015, 0.15);
+        const drift = Math.sin(p * Math.PI * 3 + i * 1.2) * 5;
         return mp > 0 ? (
-          <g key={i} opacity={mp * 0.6}>
-            <circle cx={m.x} cy={m.y} r={6} fill="#f5e060" opacity={0.06} />
-            <circle cx={m.x} cy={m.y} r={2} fill="#f5e890" opacity={0.4} />
-            <circle cx={m.x} cy={m.y} r={0.8} fill="white" opacity={0.5} />
-          </g>
+          <circle key={i} cx={mx + drift} cy={my - mp * 10}
+            r={0.8 + (i % 3) * 0.3}
+            fill="#f0e870" opacity={mp * 0.25} />
         ) : null;
       })}
 
-      <g className="fgLayer">
-      {/* ── Foreground grass blades (closest layer, slight overlay) ── */}
-      <GrassRow
-        y={240}
-        color={`hsl(118, ${28 + p * 22}%, ${13 + p * 10}%)`}
-        count={15}
-        maxHeight={20}
-        progress={p}
-      />
-      </g>
-
-      {/* Atmospheric particles */}
-      {Array.from({ length: 40 }).map((_, i) => {
-        const px = (i * 47 + 13) % 400;
-        const baseY = (i * 71 + 29) % 220 + 15;
-        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
-        const py = baseY - p * 30 * ((i % 5) / 5);
-        const size = 0.6 + (i % 4) * 0.3;
-        const opacity = (0.1 + (i % 3) * 0.08) * (0.3 + p * 0.7);
-        return (
-          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
-            fill="#c8d870" opacity={opacity} />
-        );
-      })}
+      {/* ── A small bird silhouette — reward for completion ── */}
+      {p > 0.9 && (
+        <g opacity={sub(p, 0.9, 0.1) * 0.5}>
+          <path d="M290 55 C288 52, 284 50, 280 52 C282 50, 286 48, 290 50 C294 48, 298 50, 300 52 C296 50, 292 52, 290 55 Z"
+            fill={`hsl(30, 10%, ${15 + p * 10}%)`} />
+        </g>
+      )}
     </svg>
   );
 }
