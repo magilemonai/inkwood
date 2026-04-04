@@ -26,9 +26,9 @@ const BRACKET_R = "M328 123 L328 138 Q328 140 326 140 L321 140 L328 123";
 // ─── SCENE COMPONENT ───────────────────────────────────────
 
 function CottageScene({ progress: p }: SceneProps) {
-  // Color temperature: cold blue-grey → warm amber
-  const coldR = 14, coldG = 14, coldB = 20;
-  const warmR = 42, warmG = 28, warmB = 16;
+  // Color temperature: cold blue → warm amber (more dramatic shift)
+  const coldR = 10, coldG = 12, coldB = 28;
+  const warmR = 44, warmG = 28, warmB = 14;
   const r = Math.round(coldR + (warmR - coldR) * p);
   const g = Math.round(coldG + (warmG - coldG) * p);
   const b = Math.round(coldB + (warmB - coldB) * p);
@@ -101,7 +101,7 @@ function CottageScene({ progress: p }: SceneProps) {
       {/* Panes — cold blue → warm amber */}
       {[[52, 30, 38, 46], [100, 30, 38, 46], [52, 80, 38, 48], [100, 80, 38, 48]].map(([x, y, w, h], i) => (
         <rect key={i} x={x} y={y} width={w} height={h} rx="1"
-          fill={`rgb(${16 + Math.round(windowWarm * 150)},${16 + Math.round(windowWarm * 85)},${28 + Math.round(windowWarm * 10)})`} />
+          fill={`rgb(${10 + Math.round(windowWarm * 160)},${12 + Math.round(windowWarm * 88)},${35 + Math.round(windowWarm * 5)})`} />
       ))}
       {/* Window glow into room */}
       {windowWarm > 0.1 && (
