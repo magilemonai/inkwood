@@ -10,73 +10,82 @@ import s from "../styles/Intro.module.css";
  * Zero text until the title. Pure visual storytelling.
  */
 
-/** Dormant Garden — grey, desaturated, clearly visible but lifeless */
+/** Dormant Garden — grey, washed out, clearly lifeless but VERY visible */
 function DormantGarden({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      <rect width="400" height="250" fill="hsl(200, 3%, 15%)" />
-      {/* Overcast sky hint */}
-      <rect width="400" height="130" fill="hsl(210, 4%, 18%)" />
-      {/* Dead hills */}
-      <path d="M0 190 Q100 162 200 185 Q300 200 400 175 L400 250 L0 250Z" fill="hsl(120, 3%, 13%)" />
-      <path d="M0 210 Q80 192 180 205 Q280 218 400 200 L400 250 L0 250Z" fill="hsl(120, 2%, 14%)" />
-      {/* Dead tree silhouettes */}
-      <path d="M80 205 L80 140 M80 165 Q65 148 55 138 M80 158 Q95 145 105 140" fill="none" stroke="hsl(120,3%,20%)" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M300 195 L300 130 M300 160 Q283 140 275 130 M300 152 Q318 138 325 130" fill="none" stroke="hsl(120,3%,20%)" strokeWidth="2.5" strokeLinecap="round" />
-      {/* Dead flower stems — bare, no blooms */}
-      {[120, 170, 220, 270].map((x, i) => (
-        <line key={i} x1={x} y1="210" x2={x + (i % 2 === 0 ? 2 : -2)} y2="190" stroke="hsl(120,3%,20%)" strokeWidth="1.5" />
+      {/* Overcast grey sky */}
+      <rect width="400" height="250" fill="hsl(200, 5%, 25%)" />
+      <rect width="400" height="120" fill="hsl(210, 6%, 30%)" />
+      {/* Dead hills — grey-brown */}
+      <path d="M0 185 Q100 155 200 178 Q300 195 400 170 L400 250 L0 250Z" fill="hsl(40, 4%, 20%)" />
+      <path d="M0 205 Q80 188 180 200 Q280 215 400 195 L400 250 L0 250Z" fill="hsl(40, 3%, 22%)" />
+      {/* Dead bare trees — prominent */}
+      <path d="M80 200 L80 130 M80 160 Q60 140 50 125 M80 155 Q100 138 110 128 M80 145 Q68 132 62 122" fill="none" stroke="hsl(30,5%,30%)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M310 190 L310 120 M310 155 Q288 132 278 118 M310 148 Q332 130 340 120 M310 140 Q300 125 295 115" fill="none" stroke="hsl(30,5%,28%)" strokeWidth="3" strokeLinecap="round" />
+      {/* Dead flower stems — bare, prominent */}
+      {[130, 175, 220, 265].map((x, i) => (
+        <line key={i} x1={x} y1="205" x2={x + (i % 2 === 0 ? 3 : -3)} y2="180" stroke="hsl(30,5%,28%)" strokeWidth="1.8" />
       ))}
-      {/* Cracked dry ground */}
-      <path d="M50 225 L85 218 L95 232" fill="none" stroke="hsl(30,4%,18%)" strokeWidth="0.8" />
-      <path d="M250 228 L285 220 L305 232" fill="none" stroke="hsl(30,4%,18%)" strokeWidth="0.8" />
-      <path d="M160 235 L185 230 L200 240" fill="none" stroke="hsl(30,4%,17%)" strokeWidth="0.6" />
+      {/* Cracked dry ground — visible */}
+      <path d="M40 225 L80 215 L100 230" fill="none" stroke="hsl(30,5%,25%)" strokeWidth="1" />
+      <path d="M200 232 L240 222 L270 235" fill="none" stroke="hsl(30,5%,25%)" strokeWidth="1" />
+      <path d="M330 228 L360 220 L380 232" fill="none" stroke="hsl(30,5%,24%)" strokeWidth="0.8" />
     </g>
   );
 }
 
-/** Dormant Cottage — cold, dark interior but visible structure */
+/** Dormant Cottage — cold, blue-grey interior, visible structure */
 function DormantCottage({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      <rect width="400" height="250" fill="hsl(30, 4%, 12%)" />
-      {/* Dark room walls */}
-      <rect x="0" y="0" width="400" height="200" fill="hsl(30, 5%, 10%)" />
-      <rect x="0" y="200" width="400" height="50" fill="hsl(25, 6%, 13%)" />
-      {/* Window — dark blue, cold moonlight hint */}
-      <rect x="158" y="28" width="84" height="72" fill="hsl(220,10%,10%)" rx="4" />
-      <line x1="200" y1="28" x2="200" y2="100" stroke="hsl(30,8%,16%)" strokeWidth="3" />
-      <line x1="158" y1="64" x2="242" y2="64" stroke="hsl(30,8%,16%)" strokeWidth="3" />
-      <rect x="153" y="23" width="94" height="82" fill="none" stroke="hsl(30,8%,16%)" strokeWidth="5" rx="4" />
-      {/* Cold shelf */}
-      <rect x="48" y="173" width="304" height="7" fill="hsl(30,5%,14%)" rx="2" />
-      {/* Unlit candles — visible wax */}
+      <rect width="400" height="250" fill="hsl(220, 8%, 18%)" />
+      {/* Walls — cold blue-grey */}
+      <rect x="0" y="0" width="400" height="195" fill="hsl(220, 6%, 16%)" />
+      <rect x="0" y="195" width="400" height="55" fill="hsl(25, 8%, 20%)" />
+      {/* Window — cold blue moonlight clearly visible */}
+      <rect x="155" y="25" width="90" height="78" fill="hsl(220,18%,18%)" rx="4" />
+      <line x1="200" y1="25" x2="200" y2="103" stroke="hsl(30,10%,25%)" strokeWidth="4" />
+      <line x1="155" y1="64" x2="245" y2="64" stroke="hsl(30,10%,25%)" strokeWidth="4" />
+      <rect x="150" y="20" width="100" height="88" fill="none" stroke="hsl(30,10%,25%)" strokeWidth="6" rx="4" />
+      {/* Shelf — clearly visible */}
+      <rect x="45" y="170" width="310" height="8" fill="hsl(30,8%,22%)" rx="2" />
+      {/* Unlit candles — visible pale wax */}
       {[95, 200, 305].map((x, i) => (
-        <rect key={i} x={x - 5} y={148} width="10" height="25" fill="hsl(40,8%,18%)" rx="2" />
+        <rect key={i} x={x - 6} y={144} width="12" height="26" fill="hsl(45,12%,28%)" rx="3" />
       ))}
-      {/* Floor boards hint */}
-      {[0, 60, 120, 180, 240, 300, 360].map((x, i) => (
-        <line key={i} x1={x} y1="200" x2={x} y2="250" stroke="hsl(30,5%,11%)" strokeWidth="0.5" />
+      {/* Floor boards — visible grain */}
+      {[0, 55, 110, 165, 220, 275, 330, 385].map((x, i) => (
+        <line key={i} x1={x} y1="195" x2={x} y2="250" stroke="hsl(30,6%,17%)" strokeWidth="0.8" />
+      ))}
+      {/* Books on shelf */}
+      {[60, 75, 88, 100].map((x, i) => (
+        <rect key={i} x={x} y={170 - 12 - i * 2} width={8 + i} height={12 + i * 2} fill={`hsl(${[0,120,220,300][i]},12%,22%)`} rx="1" />
       ))}
     </g>
   );
 }
 
-/** Dormant Sky — deep blue void, cold and empty */
+/** Dormant Sky — deep blue-grey, empty but visible */
 function DormantSky({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
-      <rect width="400" height="250" fill="hsl(232, 15%, 10%)" />
-      {/* Faint horizon glow */}
-      <rect x="0" y="180" width="400" height="52" fill="hsl(232, 8%, 12%)" />
-      {/* Bare treeline — visible silhouettes */}
-      <rect x="0" y="232" width="400" height="18" fill="hsl(232,10%,6%)" />
+      {/* Dark blue sky — clearly different from black */}
+      <rect width="400" height="250" fill="hsl(225, 18%, 16%)" />
+      {/* Horizon slightly lighter */}
+      <rect x="0" y="175" width="400" height="57" fill="hsl(225, 12%, 19%)" />
+      {/* Treeline silhouettes — prominent */}
+      <rect x="0" y="232" width="400" height="18" fill="hsl(225,12%,10%)" />
       {[0, 28, 55, 90, 128, 168, 205, 242, 278, 312, 348, 378].map((x, i) => (
-        <polygon key={i} points={`${x},232 ${x + 14},${216 - (i % 3) * 6} ${x + 28},232`} fill="hsl(232,10%,6%)" />
+        <polygon key={i} points={`${x},232 ${x + 14},${214 - (i % 3) * 7} ${x + 28},232`} fill="hsl(225,12%,10%)" />
       ))}
-      {/* Moon — dead crescent, but visible */}
-      <circle cx="342" cy="45" r="20" fill="hsl(232,12%,14%)" opacity="0.5" />
-      <circle cx="334" cy="42" r="17" fill="hsl(232,15%,10%)" />
+      {/* Moon — dead crescent, clearly visible */}
+      <circle cx="342" cy="42" r="22" fill="hsl(225,15%,25%)" opacity="0.6" />
+      <circle cx="333" cy="39" r="18" fill="hsl(225,18%,16%)" />
+      {/* A few barely-there star positions — empty, waiting */}
+      {[{ x: 80, y: 40 }, { x: 180, y: 60 }, { x: 260, y: 35 }].map((s, i) => (
+        <circle key={i} cx={s.x} cy={s.y} r="1.5" fill="hsl(225,10%,22%)" opacity="0.4" />
+      ))}
     </g>
   );
 }

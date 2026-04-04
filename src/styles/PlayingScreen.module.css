@@ -1,41 +1,15 @@
 .container {
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  position: relative;
   user-select: none;
   overflow: hidden;
 }
 
-/* ── Header ── */
-.header {
-  flex-shrink: 0;
-  padding: 0.6rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.headerLogo {
-  font-size: 0.82rem;
-  letter-spacing: 0.12em;
-}
-
-.headerTitle {
-  font-size: 0.82rem;
-  color: #c0b090;
-}
-
-.headerDots {
-  font-size: 0.55rem;
-  display: flex;
-  gap: 2px;
-}
-
-/* ── Scene — takes remaining space above typing area ── */
+/* ── Scene fills entire viewport ── */
 .sceneContainer {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .sceneContainer svg {
@@ -53,9 +27,36 @@
   }
 }
 
+/* ── Header floats on top ── */
+.header {
+  position: relative;
+  z-index: 10;
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%);
+}
+
+.headerLogo {
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+}
+
+.headerTitle {
+  font-size: 1.1rem;
+  color: #d8c8a0;
+  letter-spacing: 0.06em;
+}
+
+.headerDots {
+  font-size: 0.55rem;
+  display: flex;
+  gap: 2px;
+}
+
 /* ── Progress bar ── */
 .progressTrack {
-  flex-shrink: 0;
   height: 2px;
   background: rgba(255,255,255,0.04);
 }
@@ -65,12 +66,23 @@
   transition: width 0.18s ease;
 }
 
-/* ── Typing area — fixed height at bottom ── */
+/* ── Typing area — overlaid at bottom of scene ── */
 .typingArea {
-  flex-shrink: 0;
-  padding: 0.8rem 1.5rem 1.2rem;
-  max-width: 680px;
-  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 0.8rem 1.5rem 1.4rem;
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.55) 15%,
+    rgba(0,0,0,0.82) 45%,
+    rgba(0,0,0,0.92) 100%
+  );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  max-width: 720px;
   margin: 0 auto;
 }
 
@@ -85,7 +97,7 @@
 
 /* ── Prompt box — large and prominent ── */
 .promptBox {
-  background: rgba(10, 10, 10, 0.6);
+  background: rgba(10, 10, 10, 0.65);
   border-radius: 8px;
   padding: 1rem 1.3rem;
   margin-bottom: 0.5rem;
@@ -169,7 +181,7 @@
 /* ── Mobile ── */
 @media (max-width: 640px) {
   .typingArea {
-    padding: 0.7rem 1rem 1rem;
+    padding: 0.7rem 1rem 1.2rem;
   }
 
   .promptBox {

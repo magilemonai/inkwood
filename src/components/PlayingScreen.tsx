@@ -33,7 +33,7 @@ export default function PlayingScreen() {
   const completingRef = useRef(false);
   const [inputFocused, setInputFocused] = useState(false);
 
-  const { accent, bg } = level;
+  const { accent } = level;
   const charStates = getCharStates(typed, target);
   const hasError = charStates.some((st) => st === "error");
 
@@ -48,7 +48,7 @@ export default function PlayingScreen() {
     }, 1500);
   }, [isComplete, promptIdx, lvl, startCompletion, advancePrompt]);
 
-  // ── Focus management — attempt programmatic focus, but don't rely on it ──
+  // ── Focus management ──
   useEffect(() => {
     const timer = setTimeout(() => {
       inputRef.current?.focus();
@@ -61,21 +61,23 @@ export default function PlayingScreen() {
     typeChar(e.target.value);
   };
 
-  // Real user gesture → focus (critical for mobile)
   const focusInput = () => {
     inputRef.current?.focus();
     setInputFocused(true);
   };
 
   const SceneComp = getSceneComponent(level.scene);
-
-  // Show tap overlay when input isn't focused and nothing typed yet
   const showTapOverlay = !inputFocused && typed.length === 0;
 
   return (
-    <div className={s.container} style={{ background: bg }} onClick={focusInput}>
-      {/* Header */}
-      <div className={s.header} style={{ borderBottom: `1px solid ${accent}15` }}>
+    <div className={s.container} onClick={focusInput}>
+      {/* Scene fills entire viewport */}
+      <div className={s.sceneContainer}>
+        <SceneComp progress={levelProgress} />
+      </div>
+
+      {/* Header floats on top */}
+      <div className={s.header}>
         <span className={s.headerLogo} style={{ color: accent, opacity: 0.7 }}>
           INKWOOD
         </span>
@@ -94,30 +96,24 @@ export default function PlayingScreen() {
         </span>
       </div>
 
-      {/* Scene — fills remaining space */}
-      <div className={s.sceneContainer}>
-        <SceneComp progress={levelProgress} />
-      </div>
+      {/* Typing area — overlaid at bottom */}
+      <div className={s.typingArea}>
+        {/* Progress bar */}
+        <div className={s.progressTrack} style={{ marginBottom: "0.6rem" }}>
+          <div
+            className={s.progressFill}
+            style={{ width: `${levelProgress * 100}%`, background: accent }}
+          />
+        </div>
 
-      {/* Progress bar */}
-      <div className={s.progressTrack}>
-        <div
-          className={s.progressFill}
-          style={{ width: `${levelProgress * 100}%`, background: accent }}
-        />
-      </div>
-
-      {/* Typing area — fixed at bottom */}
-      <div className={s.typingArea} style={{ borderTop: `1px solid ${accent}15` }}>
         <p className={s.flavor}>{level.flavor}</p>
 
-        {/* Prompt display — pulses golden until user types */}
+        {/* Prompt display */}
         <div
           className={`${s.promptBox} ${typed.length === 0 && promptIdx === 0 && !completing ? s.promptBoxPulsing : ""}`}
           style={{ border: `1px solid ${accent}25` }}
           onClick={focusInput}
         >
-          {/* Mobile tap overlay */}
           {showTapOverlay && (
             <div className={s.tapOverlay} onClick={focusInput}>
               tap here to begin typing
@@ -179,7 +175,7 @@ export default function PlayingScreen() {
           </span>
         </div>
 
-        {/* Hidden input — positioned inside the prompt box area for mobile focus */}
+        {/* Hidden input */}
         <input
           ref={inputRef}
           className={s.hiddenInput}

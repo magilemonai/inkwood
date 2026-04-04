@@ -5,33 +5,18 @@ import { LEVELS } from "../levels";
 import s from "../styles/Outro.module.css";
 
 /**
- * Outro: a 25-second animated sequence.
- * Phase 1 (0-12s): Location nodes bloom one by one, ley lines connect them,
- *   energy pulses flow. The world map comes alive.
- * Phase 2 (12-18s): The Great Tree grows at center, its canopy spreads over everything.
- * Phase 3 (18-25s): Full radiance, text fades in, "Begin Again" button.
+ * Outro: a quiet, warm aftermath. NOT a repeat of the WorldScene map.
+ *
+ * The player just finished typing the world back into being.
+ * The outro should feel like stepping outside after the ritual is complete.
+ * A single, still image that slowly fills with life — then one line, then rest.
+ *
+ * Phase 1 (0-5s): Dark. A horizon. Dawn light begins.
+ * Phase 2 (5-15s): A landscape warms — golden dawn breaks, the Great Tree
+ *   silhouette stands at center, light radiates from behind it. Simple.
+ *   Color accents from each level drift upward like fireflies or embers.
+ * Phase 3 (15-22s): Full warmth. Text fades in. "The forest remembers."
  */
-
-const LOCATIONS = LEVELS.slice(0, 9).map((l, i) => {
-  // Arrange in a pleasing arc pattern
-  const positions = [
-    { x: 70,  y: 65 },
-    { x: 165, y: 45 },
-    { x: 280, y: 55 },
-    { x: 45,  y: 135 },
-    { x: 350, y: 125 },
-    { x: 110, y: 175 },
-    { x: 300, y: 180 },
-    { x: 200, y: 120 },
-    { x: 200, y: 215 },
-  ];
-  return { ...positions[i], color: l.accent, title: l.title };
-});
-
-const CONNECTIONS = [
-  [0, 1], [1, 2], [0, 3], [2, 4], [3, 5], [4, 6],
-  [5, 7], [6, 7], [7, 8], [1, 7], [3, 7], [4, 7],
-];
 
 function sub(t: number, start: number, dur: number): number {
   return Math.min(1, Math.max(0, (t - start) / dur));
@@ -42,7 +27,7 @@ export default function OutroSequence() {
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
 
-  // Keyboard: space/enter to restart when text is showing
+  // Keyboard: space/enter to restart when text showing
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.key === " " || e.key === "Enter") && showText) {
@@ -61,22 +46,34 @@ export default function OutroSequence() {
     const tick = () => {
       const now = performance.now();
       const elapsed = (now - start) / 1000;
-      // Throttle state updates to ~15 Hz
       if (now - lastUpdate > 66) {
         lastUpdate = now;
         setTime(elapsed);
-        if (elapsed >= 19 && !showText) setShowText(true);
+        if (elapsed >= 16 && !showText) setShowText(true);
       }
-      if (elapsed < 28) frame = requestAnimationFrame(tick);
+      if (elapsed < 25) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [showText]);
 
   // Phase calculations
-  const nodeStagger = 1.0; // seconds between each node
-  const treeGrow = sub(time, 12, 5);
-  const radiance = sub(time, 17, 3);
+  const dawn = sub(time, 2, 8);       // 0→1 over 2s-10s
+  const treeFade = sub(time, 4, 6);   // tree appears 4-10s
+  const embers = sub(time, 7, 5);     // colored embers 7-12s
+  const fullWarm = sub(time, 10, 5);  // full warmth 10-15s
+
+  // Sky color shifts from deep blue-black to warm golden dawn
+  const skyTop = `hsl(${225 - dawn * 20}, ${15 + dawn * 10}%, ${6 + dawn * 18}%)`;
+  const skyBot = `hsl(${30 + (1 - dawn) * 190}, ${10 + dawn * 25}%, ${8 + dawn * 28}%)`;
+
+  // Ember particles — one per level, drifting upward in their accent color
+  const emberData = LEVELS.map((l, i) => ({
+    x: 40 + (i / (LEVELS.length - 1)) * 320,
+    startY: 200 - (i % 3) * 20,
+    color: l.accent,
+    delay: 7 + i * 0.5,
+  }));
 
   return (
     <div className={s.container}>
@@ -87,131 +84,93 @@ export default function OutroSequence() {
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          <radialGradient id="outroGlow" cx="50%" cy="55%" r="50%">
-            <stop offset="0%" stopColor="#d8c890" stopOpacity={radiance * 0.2} />
-            <stop offset="100%" stopColor="#d8c890" stopOpacity={0} />
-          </radialGradient>
-          <radialGradient id="treeRadiance" cx="50%" cy="85%" r="50%">
-            <stop offset="0%" stopColor="#b8c8a8" stopOpacity={treeGrow * 0.15} />
-            <stop offset="100%" stopColor="#b8c8a8" stopOpacity={0} />
+          {/* Sky gradient */}
+          <linearGradient id="outroDawn" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={skyTop} />
+            <stop offset="60%" stopColor={skyBot} />
+            <stop offset="100%" stopColor={`hsl(30, ${15 + dawn * 20}%, ${6 + dawn * 12}%)`} />
+          </linearGradient>
+
+          {/* Sun glow behind tree */}
+          <radialGradient id="sunGlow" cx="50%" cy="72%" r="40%">
+            <stop offset="0%" stopColor="#f5d860" stopOpacity={dawn * 0.4} />
+            <stop offset="50%" stopColor="#e8a030" stopOpacity={dawn * 0.15} />
+            <stop offset="100%" stopColor="#e8a030" stopOpacity={0} />
           </radialGradient>
         </defs>
 
-        {/* Background */}
-        <rect width="400" height="250" fill={`hsl(180, 6%, ${4 + radiance * 3}%)`} />
+        {/* Sky */}
+        <rect width="400" height="250" fill="url(#outroDawn)" />
 
-        {/* Central glow */}
-        <ellipse cx="200" cy="170" rx={180 * Math.min(1, time / 10)} ry={90 * Math.min(1, time / 10)} fill="url(#outroGlow)" />
+        {/* Dawn glow on horizon */}
+        <ellipse
+          cx="200" cy="185"
+          rx={180 * dawn} ry={60 * dawn}
+          fill="url(#sunGlow)"
+        />
 
-        {/* Ley line connections */}
-        {CONNECTIONS.map(([a, b], i) => {
-          const la = LOCATIONS[a];
-          const lb = LOCATIONS[b];
-          const delay = Math.max(a, b) * nodeStagger + 1;
-          const lp = sub(time, delay, 1.5);
-          if (lp <= 0) return null;
-          return (
-            <line
-              key={i}
-              x1={la.x} y1={la.y}
-              x2={la.x + (lb.x - la.x) * lp} y2={la.y + (lb.y - la.y) * lp}
-              stroke="#d8c890" strokeWidth="1.2" opacity={lp * 0.35}
+        {/* Distant hills — dark silhouettes */}
+        <path
+          d="M0 195 Q60 175 120 185 Q200 168 280 180 Q350 172 400 188 L400 250 L0 250Z"
+          fill={`hsl(30, ${8 + dawn * 5}%, ${5 + dawn * 6}%)`}
+        />
+        <path
+          d="M0 205 Q100 190 200 198 Q300 188 400 200 L400 250 L0 250Z"
+          fill={`hsl(30, ${6 + dawn * 4}%, ${4 + dawn * 5}%)`}
+        />
+
+        {/* The Great Tree — a silhouette against the dawn */}
+        {treeFade > 0 && (
+          <g opacity={treeFade}>
+            {/* Trunk */}
+            <path
+              d="M190 250 C186 220, 182 190, 186 155 C188 145, 195 138, 200 135 C205 138, 212 145, 214 155 C218 190, 214 220, 210 250 Z"
+              fill={`hsl(30, ${8 + fullWarm * 8}%, ${5 + fullWarm * 4}%)`}
             />
-          );
-        })}
+            {/* Major branches */}
+            <path d="M200 155 Q170 130 130 105" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="5" strokeLinecap="round" />
+            <path d="M200 155 Q185 120 160 90" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="4.5" strokeLinecap="round" />
+            <path d="M200 148 Q200 110 200 75" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="4" strokeLinecap="round" />
+            <path d="M200 155 Q215 120 240 90" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="4.5" strokeLinecap="round" />
+            <path d="M200 155 Q230 130 270 105" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="5" strokeLinecap="round" />
+            {/* Canopy — large organic shape */}
+            <ellipse cx="200" cy="85" rx={75 * treeFade} ry={50 * treeFade}
+              fill={`hsl(130, ${12 + fullWarm * 18}%, ${6 + fullWarm * 8}%)`} opacity={treeFade * 0.8} />
+            <ellipse cx="160" cy="95" rx={45 * treeFade} ry={35 * treeFade}
+              fill={`hsl(125, ${10 + fullWarm * 15}%, ${7 + fullWarm * 7}%)`} opacity={treeFade * 0.7} />
+            <ellipse cx="240" cy="95" rx={45 * treeFade} ry={35 * treeFade}
+              fill={`hsl(125, ${10 + fullWarm * 15}%, ${7 + fullWarm * 7}%)`} opacity={treeFade * 0.7} />
+            {/* Roots spreading along ground */}
+            <path d="M190 250 Q160 245 100 240" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="3" strokeLinecap="round" />
+            <path d="M210 250 Q240 245 300 240" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="3" strokeLinecap="round" />
+            <path d="M195 250 Q175 248 130 248" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="2" strokeLinecap="round" />
+            <path d="M205 250 Q225 248 270 248" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="2" strokeLinecap="round" />
+          </g>
+        )}
 
-        {/* Location nodes */}
-        {LOCATIONS.map((loc, i) => {
-          const np = sub(time, i * nodeStagger, 1.5);
-          if (np <= 0) return null;
+        {/* Accent-colored embers drifting upward — one per level */}
+        {emberData.map((e, i) => {
+          const ep = sub(time, e.delay, 8);
+          if (ep <= 0) return null;
+          const y = e.startY - ep * 140;
+          const x = e.x + Math.sin(ep * Math.PI * 2 + i) * 12;
           return (
-            <g key={i} opacity={np}>
-              <circle cx={loc.x} cy={loc.y} r={20 * np} fill={loc.color} opacity={np * 0.08} />
-              <circle cx={loc.x} cy={loc.y} r={10 * np} fill="none" stroke={loc.color} strokeWidth="1" opacity={np * 0.4} />
-              <circle cx={loc.x} cy={loc.y} r={4 * np} fill={loc.color} opacity={np * 0.7} />
-              <circle cx={loc.x} cy={loc.y} r={1.5 * np} fill="white" opacity={np * 0.5} />
+            <g key={i} opacity={ep < 0.8 ? ep * 0.7 : (1 - ep) * 3.5}>
+              <circle cx={x} cy={y} r="6" fill={e.color} opacity={0.06} />
+              <circle cx={x} cy={y} r="2" fill={e.color} opacity={0.4} />
+              <circle cx={x} cy={y} r="0.8" fill="white" opacity={0.5} />
             </g>
           );
         })}
 
-        {/* Energy pulses along connections */}
-        {time > 8 && CONNECTIONS.map(([a, b], i) => {
-          const la = LOCATIONS[a];
-          const lb = LOCATIONS[b];
-          const pulseT = ((time - 8) * 0.4 + i * 0.25) % 1;
-          const px = la.x + (lb.x - la.x) * pulseT;
-          const py = la.y + (lb.y - la.y) * pulseT;
-          return (
-            <circle
-              key={`p${i}`}
-              cx={px} cy={py} r="2"
-              fill="#d8c890"
-              opacity={sub(time, 8, 2) * 0.4 * (1 - Math.abs(pulseT - 0.5) * 2)}
-            />
-          );
-        })}
-
-        {/* Great Tree grows from center-bottom */}
-        {treeGrow > 0 && (
-          <g opacity={treeGrow}>
-            {/* Trunk */}
-            <path
-              d={`M${192} ${240}
-                  C${188} ${240 - 50 * treeGrow}, ${184} ${240 - 90 * treeGrow}, ${190} ${240 - 120 * treeGrow}
-                  L${210} ${240 - 120 * treeGrow}
-                  C${216} ${240 - 90 * treeGrow}, ${212} ${240 - 50 * treeGrow}, ${208} ${240}
-                  Z`}
-              fill="hsl(30, 15%, 14%)"
-            />
-            {/* Canopy */}
-            {[
-              { x: 160, y: 105, rx: 30, ry: 20 },
-              { x: 200, y: 95,  rx: 35, ry: 25 },
-              { x: 240, y: 105, rx: 30, ry: 20 },
-              { x: 180, y: 100, rx: 25, ry: 18 },
-              { x: 220, y: 100, rx: 25, ry: 18 },
-            ].map((c, i) => (
-              <ellipse
-                key={i}
-                cx={c.x} cy={c.y}
-                rx={c.rx * treeGrow}
-                ry={c.ry * treeGrow}
-                fill={`hsl(125, ${20 + radiance * 15}%, ${12 + radiance * 8}%)`}
-                opacity={treeGrow * 0.75}
-              />
-            ))}
-            {/* Tree glow */}
-            <ellipse cx="200" cy="120" rx={80 * treeGrow} ry={50 * treeGrow} fill="url(#treeRadiance)" />
-            {/* Spirit lights in canopy */}
-            {[
-              { x: 170, y: 100 }, { x: 200, y: 90 }, { x: 230, y: 98 },
-              { x: 185, y: 108 }, { x: 215, y: 105 },
-            ].map((sl, i) => {
-              const sp = sub(treeGrow, 0.5, 0.3);
-              return sp > 0 ? (
-                <g key={i} opacity={sp * 0.5}>
-                  <circle cx={sl.x} cy={sl.y} r="5" fill="#b8c8a8" opacity={0.1} />
-                  <circle cx={sl.x} cy={sl.y} r="1.8" fill="#d8e8c8" opacity={0.5} />
-                  <circle cx={sl.x} cy={sl.y} r="0.7" fill="white" opacity={0.5} />
-                </g>
-              ) : null;
-            })}
-          </g>
-        )}
-
-        {/* Final radiance burst */}
-        {radiance > 0.5 && (
-          <ellipse
-            cx="200" cy="160"
-            rx={120 * (radiance - 0.5) * 2}
-            ry={60 * (radiance - 0.5) * 2}
-            fill="#d8c890"
-            opacity={(1 - (radiance - 0.5) * 2) * 0.1}
-          />
-        )}
+        {/* Warm haze at horizon */}
+        <rect x="0" y="170" width="400" height="80"
+          fill={`hsl(35, ${20 + dawn * 15}%, ${12 + dawn * 15}%)`}
+          opacity={dawn * 0.15}
+        />
       </svg>
 
-      {/* Minimal text overlay — let the animation speak */}
+      {/* Text overlay */}
       <AnimatePresence>
         {showText && (
           <motion.div
@@ -244,7 +203,7 @@ export default function OutroSequence() {
               className={s.restartBtn}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 3 }}
+              transition={{ duration: 1, delay: 3.5 }}
               onClick={restart}
             >
               Begin Again
