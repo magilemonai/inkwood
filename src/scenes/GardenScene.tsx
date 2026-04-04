@@ -60,77 +60,70 @@ const CANOPY = `
   C32 98, 28 94, 28 92
   Z`;
 
-/** Branch paths — each is a CLOSED TAPERED SHAPE, wide at trunk, thin at tip */
+/** Branch paths — CLOSED TAPERED SHAPES, trimmed to stay inside canopy */
 const BRANCHES = [
-  // far left — sweeps down-left, wide at trunk (~6px), thin at tip (~1.5px)
+  // far left — shortened to end inside canopy (~x:48)
   `M106 103
-   C96 95, 78 87, 62 83 C50 80, 38 77, 28 75
-   L29 78
-   C39 80, 51 83, 64 86 C80 90, 98 98, 110 108 Z`,
-  // up-left — curves up and left with a slight bend
+   C96 95, 78 87, 62 83 C55 81, 50 80, 46 79
+   L47 82
+   C52 83, 57 84, 64 86 C80 90, 98 98, 110 108 Z`,
+  // up-left — shortened to end around x:72, y:52
   `M112 100
-   C104 88, 90 72, 82 62 C76 54, 70 47, 64 42
-   L67 44
-   C73 50, 80 58, 86 66 C96 78, 108 92, 116 104 Z`,
-  // up-center — rises with a gentle S-curve, slight rightward lean
+   C104 88, 92 74, 84 66 C80 60, 76 56, 72 52
+   L75 54
+   C78 58, 82 62, 88 68 C96 78, 108 92, 116 104 Z`,
+  // up-center — shortened to end around y:42
   `M119 99
-   C118 86, 120 72, 118 58 C117 48, 118 40, 117 33
-   L121 33
-   C122 40, 123 48, 124 58 C126 72, 124 86, 125 100 Z`,
-  // up-right — curves right with a wider spread
+   C118 86, 120 72, 118 58 C117 50, 118 44, 118 42
+   L122 42
+   C122 44, 123 50, 124 58 C126 72, 124 86, 125 100 Z`,
+  // up-right — shortened to end around x:168, y:56
   `M128 100
-   C136 88, 146 74, 156 64 C164 56, 172 50, 180 45
-   L182 48
-   C175 54, 167 60, 159 68 C149 78, 140 92, 132 104 Z`,
-  // far right — sweeps right, the longest branch
+   C136 88, 148 76, 158 66 C163 60, 166 58, 168 56
+   L170 59
+   C168 61, 165 64, 160 68 C150 78, 140 92, 132 104 Z`,
+  // far right — shortened to end inside canopy (~x:205)
   `M134 105
-   C144 98, 160 92, 178 88 C192 85, 206 84, 220 83
-   L220 86
-   C207 87, 193 89, 180 92 C162 96, 148 102, 138 109 Z`,
+   C144 98, 162 92, 180 88 C190 86, 198 85, 205 85
+   L205 88
+   C199 88, 192 89, 182 92 C164 96, 148 102, 138 109 Z`,
 ];
 
-/** Sub-branches — medium forking branches off the main ones, tapered closed paths */
+/** Sub-branches — forking off main branches, all inside canopy bounds */
 const SUB_BRANCHES = [
-  // off far-left branch, forks upward around midpoint
-  `M72 86 C66 78, 56 72, 48 65 L50 67 C58 74, 68 80, 76 89 Z`,
-  // off up-left, forks further left near top
-  `M86 64 C78 56, 66 52, 56 46 L58 48 C68 54, 80 60, 90 68 Z`,
-  // off up-left, smaller fork downward-left at midpoint
-  `M96 78 C88 80, 78 78, 68 80 L69 82 C79 81, 90 82, 98 82 Z`,
-  // off center, forks right in upper section
-  `M121 55 C128 48, 136 44, 144 38 L145 41 C138 46, 130 52, 124 58 Z`,
-  // off center, forks left lower down
-  `M119 70 C112 66, 104 62, 96 60 L97 62 C105 65, 114 70, 122 74 Z`,
-  // off up-right, forks further right near top
-  `M160 62 C168 54, 178 50, 188 44 L189 47 C180 52, 170 58, 163 66 Z`,
-  // off far-right, forks upward at midpoint
-  `M182 88 C190 80, 198 76, 208 70 L209 73 C200 78, 192 84, 185 92 Z`,
-  // off far-right, smaller drooping fork
-  `M200 86 C208 90, 216 88, 226 92 L225 94 C216 91, 209 92, 202 90 Z`,
+  // off far-left, forks upward — stays inside canopy
+  `M68 84 C64 78, 58 74, 52 68 L54 70 C60 76, 66 80, 72 87 Z`,
+  // off up-left, forks left
+  `M86 66 C80 60, 72 56, 66 52 L68 54 C74 58, 82 62, 90 70 Z`,
+  // off up-left, smaller fork
+  `M96 78 C90 78, 82 76, 76 78 L77 80 C83 79, 92 80, 98 82 Z`,
+  // off center, forks right — keep inside canopy top
+  `M120 52 C126 46, 134 42, 140 38 L141 41 C136 44, 128 50, 123 56 Z`,
+  // off center, forks left
+  `M119 68 C114 65, 108 62, 102 61 L103 63 C109 65, 116 70, 122 74 Z`,
+  // off up-right, forks right — stays inside
+  `M160 64 C166 58, 172 54, 178 50 L179 53 C174 56, 168 60, 163 68 Z`,
+  // off far-right, forks upward
+  `M186 88 C192 82, 196 80, 200 76 L201 79 C198 82, 194 85, 189 91 Z`,
 ];
 
-/** Fine twigs — thin stroked tips at the ends of branches */
+/** Fine twigs — short thin tips, all inside canopy */
 const TWIGS = [
-  // tips of far-left sub-branch
-  "M48 65 C42 60, 36 56, 30 54",
-  "M50 67 C44 64, 38 62, 34 58",
-  // tips of up-left
-  "M56 46 C50 40, 44 36, 38 32",
-  "M68 44 C62 38, 58 34, 52 30",
-  // tips of center forks
-  "M144 38 C150 32, 154 28, 160 24",
-  "M96 60 C90 56, 84 54, 78 52",
-  // tips of up-right
-  "M188 44 C194 38, 200 36, 206 32",
-  "M180 48 C186 42, 190 38, 196 34",
-  // tips of far-right
-  "M208 70 C214 64, 220 62, 226 58",
-  "M226 92 C232 90, 238 92, 244 90",
-  // a few wispy tips at very ends
-  "M30 54 C26 50, 22 48, 18 46",
-  "M38 32 C34 26, 30 24, 26 22",
-  "M160 24 C164 18, 168 16, 172 14",
-  "M206 32 C212 26, 216 24, 222 22",
+  // off far-left area
+  "M52 68 C48 64, 44 62, 40 60",
+  "M56 72 C50 68, 46 66, 42 64",
+  // off up-left area
+  "M66 52 C62 48, 58 44, 54 42",
+  "M72 52 C68 46, 64 44, 60 40",
+  // off center-top
+  "M140 38 C144 34, 146 30, 150 28",
+  "M102 61 C98 58, 94 56, 90 55",
+  // off up-right area
+  "M178 50 C182 46, 186 44, 190 42",
+  "M170 54 C174 50, 178 48, 182 46",
+  // off far-right area
+  "M200 76 C204 72, 208 70, 210 68",
+  "M198 80 C204 78, 208 76, 212 75",
 ];
 
 /** Tree roots — thick curves spreading from the trunk base into the earth */
