@@ -5,21 +5,37 @@ import { LEVELS } from "../levels";
 import s from "../styles/Outro.module.css";
 
 /**
- * Outro: a quiet, warm aftermath. NOT a repeat of the WorldScene map.
- *
- * The player just finished typing the world back into being.
- * The outro should feel like stepping outside after the ritual is complete.
- * A single, still image that slowly fills with life — then one line, then rest.
- *
- * Phase 1 (0-5s): Dark. A horizon. Dawn light begins.
- * Phase 2 (5-15s): A landscape warms — golden dawn breaks, the Great Tree
- *   silhouette stands at center, light radiates from behind it. Simple.
- *   Color accents from each level drift upward like fireflies or embers.
- * Phase 3 (15-22s): Full warmth. Text fades in. "The forest remembers."
+ * Outro: a ~25-second animated panoramic landscape sequence.
+ * Phase 1 (0-3s):   Dark. A horizon line draws itself across the middle.
+ * Phase 2 (3-12s):  Landscape features bloom one by one from left to right.
+ * Phase 3 (12-18s): The Great Tree grows from center, roots spread to connect all locations.
+ * Phase 4 (18-25s): Golden ley-line energy flows through roots. Full radiance. Text + button.
  */
+
+// Location vignettes arranged left-to-right across the panorama
+const VIGNETTES = [
+  { name: "Garden",  color: "#6bbf6b", x: 30  },
+  { name: "Cottage", color: "#e89a30", x: 80  },
+  { name: "Stars",   color: "#9090f8", x: 130 },
+  { name: "Well",    color: "#50b8b8", x: 180 },
+  { name: "Bridge",  color: "#7aaa6a", x: 230 },
+  { name: "Library", color: "#c088b0", x: 280 },
+  { name: "Stones",  color: "#88a8c8", x: 330 },
+  { name: "Sanctum", color: "#d0b870", x: 380 },
+];
+
+const VIGNETTE_DUR = 1.1; // seconds each vignette takes to bloom
 
 function sub(t: number, start: number, dur: number): number {
   return Math.min(1, Math.max(0, (t - start) / dur));
+}
+
+function easeOut(t: number): number {
+  return 1 - (1 - t) * (1 - t);
+}
+
+function easeInOut(t: number): number {
+  return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
 }
 
 export default function OutroSequence() {
@@ -27,7 +43,7 @@ export default function OutroSequence() {
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
 
-  // Keyboard: space/enter to restart when text showing
+  // Keyboard: space/enter to restart when text is showing
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.key === " " || e.key === "Enter") && showText) {
@@ -46,128 +62,521 @@ export default function OutroSequence() {
     const tick = () => {
       const now = performance.now();
       const elapsed = (now - start) / 1000;
+      // Throttle state updates to ~15 Hz
       if (now - lastUpdate > 66) {
         lastUpdate = now;
         setTime(elapsed);
-        if (elapsed >= 16 && !showText) setShowText(true);
+        if (elapsed >= 19 && !showText) setShowText(true);
       }
-      if (elapsed < 25) frame = requestAnimationFrame(tick);
+      if (elapsed < 28) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [showText]);
 
   // Phase calculations
-  const dawn = sub(time, 2, 8);       // 0→1 over 2s-10s
-  const treeFade = sub(time, 4, 6);   // tree appears 4-10s
-  // embers phase: individual particles use their own delays in emberData
-  const fullWarm = sub(time, 10, 5);  // full warmth 10-15s
+  const horizonDraw = sub(time, 0, 3);
+  const treeGrow = sub(time, 12, 5);
+  const rootSpread = sub(time, 13, 4);
+  const canopyLight = sub(time, 15, 3);
+  const radiance = sub(time, 18, 4);
+  const leyFlow = sub(time, 18, 3);
+  const skyBright = sub(time, 0, 25);
 
-  // Sky color shifts from deep blue-black to warm golden dawn
-  const skyTop = `hsl(${225 - dawn * 20}, ${15 + dawn * 10}%, ${6 + dawn * 18}%)`;
-  const skyBot = `hsl(${30 + (1 - dawn) * 190}, ${10 + dawn * 25}%, ${8 + dawn * 28}%)`;
-
-  // Ember particles — one per level, drifting upward in their accent color
-  const emberData = LEVELS.map((l, i) => ({
-    x: 40 + (i / (LEVELS.length - 1)) * 320,
-    startY: 200 - (i % 3) * 20,
-    color: l.accent,
-    delay: 7 + i * 0.5,
-  }));
+  // Sky color shifts from near-black to deep twilight blue to warm
+  const skyLightness = 4 + skyBright * 5 + radiance * 3;
+  const skySaturation = 6 + radiance * 8;
 
   return (
     <div className={s.container}>
       <svg
-        viewBox="0 0 400 250"
+        viewBox="0 0 420 260"
         className={s.sceneWrap}
         style={{ width: "100%", height: "100%" }}
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          {/* Sky gradient */}
-          <linearGradient id="outroDawn" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={skyTop} />
-            <stop offset="60%" stopColor={skyBot} />
-            <stop offset="100%" stopColor={`hsl(30, ${15 + dawn * 20}%, ${6 + dawn * 12}%)`} />
-          </linearGradient>
-
-          {/* Sun glow behind tree */}
-          <radialGradient id="sunGlow" cx="50%" cy="72%" r="40%">
-            <stop offset="0%" stopColor="#f5d860" stopOpacity={dawn * 0.4} />
-            <stop offset="50%" stopColor="#e8a030" stopOpacity={dawn * 0.15} />
-            <stop offset="100%" stopColor="#e8a030" stopOpacity={0} />
+          {/* Glow filters for each vignette */}
+          {VIGNETTES.map((v, i) => (
+            <radialGradient key={i} id={`vGlow${i}`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={v.color} stopOpacity="0.35" />
+              <stop offset="70%" stopColor={v.color} stopOpacity="0.08" />
+              <stop offset="100%" stopColor={v.color} stopOpacity="0" />
+            </radialGradient>
+          ))}
+          {/* Tree canopy gradient */}
+          <radialGradient id="canopyGrad" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stopColor="#a8d898" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#6aaa58" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#4a8a40" stopOpacity="0.1" />
           </radialGradient>
+          {/* Golden radiance */}
+          <radialGradient id="goldenRadiance" cx="50%" cy="60%" r="55%">
+            <stop offset="0%" stopColor="#d8c890" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#d8c890" stopOpacity="0" />
+          </radialGradient>
+          {/* Star twinkle filter */}
+          <filter id="starGlow">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* Sky */}
-        <rect width="400" height="250" fill="url(#outroDawn)" />
-
-        {/* Dawn glow on horizon */}
-        <ellipse
-          cx="200" cy="185"
-          rx={180 * dawn} ry={60 * dawn}
-          fill="url(#sunGlow)"
+        {/* Sky background */}
+        <rect
+          width="420" height="260"
+          fill={`hsl(210, ${skySaturation}%, ${skyLightness}%)`}
         />
 
-        {/* Distant hills — dark silhouettes */}
-        <path
-          d="M0 195 Q60 175 120 185 Q200 168 280 180 Q350 172 400 188 L400 250 L0 250Z"
-          fill={`hsl(30, ${8 + dawn * 5}%, ${5 + dawn * 6}%)`}
-        />
-        <path
-          d="M0 205 Q100 190 200 198 Q300 188 400 200 L400 250 L0 250Z"
-          fill={`hsl(30, ${6 + dawn * 4}%, ${4 + dawn * 5}%)`}
-        />
+        {/* ═══ Phase 1: Horizon line ═══ */}
+        {horizonDraw > 0 && (
+          <line
+            x1={210 - 210 * easeOut(horizonDraw)}
+            y1="155"
+            x2={210 + 210 * easeOut(horizonDraw)}
+            y2="155"
+            stroke="#3a4a3a"
+            strokeWidth="1.5"
+            opacity={0.5 + horizonDraw * 0.3}
+          />
+        )}
 
-        {/* The Great Tree — a silhouette against the dawn */}
-        {treeFade > 0 && (
-          <g opacity={treeFade}>
+        {/* Ground fill below horizon — fades in with horizon */}
+        {horizonDraw > 0.3 && (
+          <rect
+            x="0" y="155" width="420" height="105"
+            fill={`hsl(140, ${8 + radiance * 6}%, ${6 + radiance * 3}%)`}
+            opacity={sub(horizonDraw, 0.3, 0.7) * 0.8}
+          />
+        )}
+
+        {/* ═══ Phase 2: Landscape vignettes bloom left to right ═══ */}
+
+        {/* — Garden: rolling green hills — */}
+        {(() => {
+          const p = easeOut(sub(time, 3, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[0];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x + 15} cy="155" rx={28 * p} ry={14 * p} fill="url(#vGlow0)" />
+              {/* Hill shapes */}
+              <path
+                d={`M${v.x - 15} 158 Q${v.x} ${158 - 22 * p} ${v.x + 18} 158
+                    Q${v.x + 30} ${158 - 14 * p} ${v.x + 45} 158`}
+                fill="none" stroke={v.color} strokeWidth="1.8" opacity={p * 0.7}
+              />
+              <path
+                d={`M${v.x - 10} 158 Q${v.x + 5} ${158 - 18 * p} ${v.x + 22} 158`}
+                fill={v.color} opacity={p * 0.12}
+              />
+              {/* Tiny flowers */}
+              {[0, 8, 16, 25].map((dx, fi) => {
+                const fp = sub(p, 0.5 + fi * 0.1, 0.3);
+                return fp > 0 ? (
+                  <circle key={fi} cx={v.x - 5 + dx} cy={153 - Math.sin(dx * 0.4) * 4}
+                    r={1.2 * fp} fill={v.color} opacity={fp * 0.6} />
+                ) : null;
+              })}
+            </g>
+          );
+        })()}
+
+        {/* — Cottage: small house with glowing windows — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[1];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x} cy="155" rx={18 * p} ry={10 * p} fill="url(#vGlow1)" />
+              {/* Walls */}
+              <rect x={v.x - 8} y={148 - 12 * p} width={16 * p} height={12 * p}
+                fill="hsl(25, 12%, 14%)" opacity={p * 0.85} rx="1" />
+              {/* Roof */}
+              <path
+                d={`M${v.x - 10} ${148 - 12 * p} L${v.x} ${148 - 20 * p} L${v.x + 10} ${148 - 12 * p} Z`}
+                fill="hsl(15, 15%, 18%)" opacity={p * 0.8}
+              />
+              {/* Windows — warm glow */}
+              {[-3, 3].map((wx, wi) => (
+                <g key={wi}>
+                  <rect x={v.x + wx - 1.5} y={149 - 8 * p} width={3 * p} height={3 * p}
+                    fill={v.color} opacity={p * 0.8} rx="0.5" />
+                  <rect x={v.x + wx - 1.5} y={149 - 8 * p} width={3 * p} height={3 * p}
+                    fill="white" opacity={p * 0.15} rx="0.5" />
+                </g>
+              ))}
+              {/* Chimney smoke */}
+              {p > 0.7 && (
+                <path
+                  d={`M${v.x + 5} ${148 - 20 * p} Q${v.x + 7} ${138 - 20 * p} ${v.x + 4} ${130 - 20 * p}`}
+                  fill="none" stroke="#888" strokeWidth="0.8" opacity={(p - 0.7) * 0.3}
+                />
+              )}
+            </g>
+          );
+        })()}
+
+        {/* — Stars: appearing in the sky — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR * 2, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[2];
+          const stars = [
+            { x: v.x - 15, y: 30 }, { x: v.x + 5, y: 18 }, { x: v.x + 20, y: 38 },
+            { x: v.x - 8, y: 50 }, { x: v.x + 12, y: 55 }, { x: v.x - 20, y: 65 },
+            { x: v.x + 25, y: 25 }, { x: v.x, y: 42 },
+          ];
+          return (
+            <g filter="url(#starGlow)">
+              {stars.map((st, si) => {
+                const sp = sub(p, si * 0.08, 0.3);
+                if (sp <= 0) return null;
+                const twinkle = 0.5 + 0.5 * Math.sin(time * 2 + si * 1.3);
+                return (
+                  <circle key={si} cx={st.x} cy={st.y}
+                    r={1 + twinkle * 0.5} fill={v.color}
+                    opacity={sp * (0.4 + twinkle * 0.3)}
+                  />
+                );
+              })}
+            </g>
+          );
+        })()}
+
+        {/* — Well: stone well with glowing water — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR * 3, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[3];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x} cy="155" rx={14 * p} ry={8 * p} fill="url(#vGlow3)" />
+              {/* Well base — stone ring */}
+              <ellipse cx={v.x} cy={152} rx={7 * p} ry={3 * p}
+                fill="none" stroke="#8a9a8a" strokeWidth="1.5" opacity={p * 0.6} />
+              <ellipse cx={v.x} cy={148} rx={7 * p} ry={3 * p}
+                fill="none" stroke="#8a9a8a" strokeWidth="1.5" opacity={p * 0.6} />
+              {/* Side walls */}
+              <line x1={v.x - 7 * p} y1={148} x2={v.x - 7 * p} y2={152}
+                stroke="#8a9a8a" strokeWidth="1.5" opacity={p * 0.5} />
+              <line x1={v.x + 7 * p} y1={148} x2={v.x + 7 * p} y2={152}
+                stroke="#8a9a8a" strokeWidth="1.5" opacity={p * 0.5} />
+              {/* Glowing water inside */}
+              <ellipse cx={v.x} cy={150} rx={5 * p} ry={2 * p}
+                fill={v.color} opacity={p * 0.4} />
+              <ellipse cx={v.x} cy={150} rx={3 * p} ry={1.2 * p}
+                fill="white" opacity={p * 0.15} />
+              {/* Roof beam */}
+              <line x1={v.x - 5 * p} y1={142} x2={v.x + 5 * p} y2={142}
+                stroke="#7a6a5a" strokeWidth="1" opacity={p * 0.5} />
+              <line x1={v.x} y1={142} x2={v.x} y2={148}
+                stroke="#7a6a5a" strokeWidth="0.8" opacity={p * 0.4} />
+            </g>
+          );
+        })()}
+
+        {/* — Bridge: arched bridge over a gap — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR * 4, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[4];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x} cy="155" rx={18 * p} ry={10 * p} fill="url(#vGlow4)" />
+              {/* Gap/ravine */}
+              <path
+                d={`M${v.x - 14} 158 L${v.x - 6} 170 L${v.x + 6} 170 L${v.x + 14} 158`}
+                fill="hsl(200, 8%, 5%)" opacity={p * 0.5}
+              />
+              {/* Arch */}
+              <path
+                d={`M${v.x - 14} 155 Q${v.x} ${155 - 16 * p} ${v.x + 14} 155`}
+                fill="none" stroke={v.color} strokeWidth="2" opacity={p * 0.6}
+              />
+              {/* Bridge deck */}
+              <path
+                d={`M${v.x - 14} 155 Q${v.x} ${155 - 4 * p} ${v.x + 14} 155`}
+                fill="none" stroke="#8a9a7a" strokeWidth="1.5" opacity={p * 0.5}
+              />
+              {/* Railings */}
+              {[-10, -5, 0, 5, 10].map((rx, ri) => {
+                const ry = -2 * Math.cos((rx / 14) * Math.PI * 0.5) * p;
+                return (
+                  <line key={ri}
+                    x1={v.x + rx} y1={155 + ry}
+                    x2={v.x + rx} y2={150 + ry}
+                    stroke="#8a9a7a" strokeWidth="0.6" opacity={p * 0.3}
+                  />
+                );
+              })}
+            </g>
+          );
+        })()}
+
+        {/* — Library: column with floating book shapes — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR * 5, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[5];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x} cy="155" rx={14 * p} ry={8 * p} fill="url(#vGlow5)" />
+              {/* Column */}
+              <rect x={v.x - 3} y={140 - 10 * p} width={6 * p} height={18 * p}
+                fill="hsl(280, 8%, 16%)" opacity={p * 0.7} rx="1" />
+              {/* Column capital */}
+              <rect x={v.x - 5} y={138 - 10 * p} width={10 * p} height={3 * p}
+                fill="hsl(280, 8%, 18%)" opacity={p * 0.6} rx="0.5" />
+              {/* Floating books */}
+              {[
+                { dx: -8, dy: -20, rot: -15 },
+                { dx: 6, dy: -25, rot: 10 },
+                { dx: -4, dy: -32, rot: -5 },
+                { dx: 8, dy: -18, rot: 20 },
+              ].map((bk, bi) => {
+                const bp = sub(p, 0.4 + bi * 0.12, 0.3);
+                if (bp <= 0) return null;
+                const floatY = Math.sin(time * 1.2 + bi * 1.8) * 2;
+                return (
+                  <rect key={bi}
+                    x={v.x + bk.dx - 3} y={148 + bk.dy * p + floatY}
+                    width={6} height={4}
+                    fill={v.color} opacity={bp * 0.4}
+                    rx="0.5"
+                    transform={`rotate(${bk.rot * p}, ${v.x + bk.dx}, ${148 + bk.dy * p + floatY})`}
+                  />
+                );
+              })}
+            </g>
+          );
+        })()}
+
+        {/* — Standing Stones: with ley glow — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR * 6, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[6];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x} cy="155" rx={18 * p} ry={10 * p} fill="url(#vGlow6)" />
+              {/* Stones */}
+              {[-12, -4, 4, 12].map((sx, si) => {
+                const h = (10 + si * si * 0.3) * p;
+                return (
+                  <rect key={si}
+                    x={v.x + sx - 2} y={155 - h}
+                    width={4 * p} height={h}
+                    fill="hsl(210, 10%, 18%)" opacity={p * 0.7}
+                    rx="1"
+                  />
+                );
+              })}
+              {/* Ley glow between stones */}
+              {p > 0.6 && (
+                <path
+                  d={`M${v.x - 12} ${148} Q${v.x} ${140} ${v.x + 12} ${148}`}
+                  fill="none" stroke={v.color} strokeWidth="1.2"
+                  opacity={(p - 0.6) * 0.5}
+                />
+              )}
+            </g>
+          );
+        })()}
+
+        {/* — Sanctum: moonbeam shafts in a clearing — */}
+        {(() => {
+          const p = easeOut(sub(time, 3 + VIGNETTE_DUR * 7, VIGNETTE_DUR));
+          if (p <= 0) return null;
+          const v = VIGNETTES[7];
+          return (
+            <g opacity={p}>
+              <ellipse cx={v.x} cy="150" rx={16 * p} ry={12 * p} fill="url(#vGlow7)" />
+              {/* Moon beams */}
+              {[-8, 0, 8].map((bx, bi) => {
+                const bp = sub(p, 0.3 + bi * 0.15, 0.4);
+                if (bp <= 0) return null;
+                return (
+                  <g key={bi} opacity={bp * 0.35}>
+                    <line
+                      x1={v.x + bx + 2} y1={80}
+                      x2={v.x + bx - 2} y2={155}
+                      stroke={v.color} strokeWidth={3 * bp}
+                      opacity={0.3}
+                    />
+                    <line
+                      x1={v.x + bx + 1} y1={85}
+                      x2={v.x + bx - 1} y2={155}
+                      stroke="white" strokeWidth={1 * bp}
+                      opacity={0.15}
+                    />
+                  </g>
+                );
+              })}
+              {/* Ground clearing glow */}
+              <ellipse cx={v.x} cy="155" rx={10 * p} ry={3 * p}
+                fill={v.color} opacity={p * 0.15} />
+            </g>
+          );
+        })()}
+
+        {/* ═══ Phase 3: Great Tree grows from center ═══ */}
+        {treeGrow > 0 && (
+          <g>
+            {/* Roots spreading to connect locations */}
+            {rootSpread > 0 && VIGNETTES.map((v, i) => {
+              const rp = easeInOut(sub(rootSpread, i * 0.08, 0.5));
+              if (rp <= 0) return null;
+              const cx = 210;
+              const cy = 200;
+              // Bezier root from tree base toward each vignette
+              const dx = v.x - cx;
+              const midX = cx + dx * 0.5;
+              const midY = cy + 8 + Math.abs(dx) * 0.04;
+              const endX = cx + dx * rp;
+              const endY = 155 + (cy - 155) * (1 - rp);
+              return (
+                <g key={`root${i}`}>
+                  <path
+                    d={`M${cx} ${cy} Q${midX} ${midY} ${endX} ${endY}`}
+                    fill="none" stroke="hsl(30, 18%, 16%)" strokeWidth="2"
+                    opacity={rp * 0.6}
+                  />
+                  {/* Ley energy on root */}
+                  {leyFlow > 0 && (
+                    <path
+                      d={`M${cx} ${cy} Q${midX} ${midY} ${endX} ${endY}`}
+                      fill="none" stroke="#d8c890" strokeWidth="1.2"
+                      opacity={leyFlow * 0.25 * (0.5 + 0.5 * Math.sin(time * 3 + i * 0.8))}
+                    />
+                  )}
+                </g>
+              );
+            })}
+
             {/* Trunk */}
             <path
-              d="M190 250 C186 220, 182 190, 186 155 C188 145, 195 138, 200 135 C205 138, 212 145, 214 155 C218 190, 214 220, 210 250 Z"
-              fill={`hsl(30, ${8 + fullWarm * 8}%, ${5 + fullWarm * 4}%)`}
+              d={`M${202} ${220}
+                  C${198} ${220 - 40 * treeGrow}, ${195} ${220 - 70 * treeGrow}, ${200} ${220 - 100 * treeGrow}
+                  L${220} ${220 - 100 * treeGrow}
+                  C${225} ${220 - 70 * treeGrow}, ${222} ${220 - 40 * treeGrow}, ${218} ${220}
+                  Z`}
+              fill={`hsl(30, ${15 + radiance * 5}%, ${12 + radiance * 3}%)`}
+              opacity={treeGrow}
             />
+
             {/* Major branches */}
-            <path d="M200 155 Q170 130 130 105" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="5" strokeLinecap="round" />
-            <path d="M200 155 Q185 120 160 90" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="4.5" strokeLinecap="round" />
-            <path d="M200 148 Q200 110 200 75" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="4" strokeLinecap="round" />
-            <path d="M200 155 Q215 120 240 90" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="4.5" strokeLinecap="round" />
-            <path d="M200 155 Q230 130 270 105" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="5" strokeLinecap="round" />
-            {/* Canopy — large organic shape */}
-            <ellipse cx="200" cy="85" rx={75 * treeFade} ry={50 * treeFade}
-              fill={`hsl(130, ${12 + fullWarm * 18}%, ${6 + fullWarm * 8}%)`} opacity={treeFade * 0.8} />
-            <ellipse cx="160" cy="95" rx={45 * treeFade} ry={35 * treeFade}
-              fill={`hsl(125, ${10 + fullWarm * 15}%, ${7 + fullWarm * 7}%)`} opacity={treeFade * 0.7} />
-            <ellipse cx="240" cy="95" rx={45 * treeFade} ry={35 * treeFade}
-              fill={`hsl(125, ${10 + fullWarm * 15}%, ${7 + fullWarm * 7}%)`} opacity={treeFade * 0.7} />
-            {/* Roots spreading along ground */}
-            <path d="M190 250 Q160 245 100 240" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="3" strokeLinecap="round" />
-            <path d="M210 250 Q240 245 300 240" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="3" strokeLinecap="round" />
-            <path d="M195 250 Q175 248 130 248" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="2" strokeLinecap="round" />
-            <path d="M205 250 Q225 248 270 248" fill="none" stroke={`hsl(30, 8%, ${5 + fullWarm * 4}%)`} strokeWidth="2" strokeLinecap="round" />
+            {[
+              { bx: -30, by: -85, cx1: -10, cy1: -70 },
+              { bx: 30, by: -85, cx1: 10, cy1: -70 },
+              { bx: -45, by: -65, cx1: -20, cy1: -55 },
+              { bx: 45, by: -65, cx1: 20, cy1: -55 },
+              { bx: -15, by: -95, cx1: -5, cy1: -80 },
+              { bx: 15, by: -95, cx1: 5, cy1: -80 },
+            ].map((br, bi) => {
+              const bp = sub(treeGrow, 0.3 + bi * 0.05, 0.5);
+              if (bp <= 0) return null;
+              return (
+                <path key={bi}
+                  d={`M210 ${220 - 80 * treeGrow} Q${210 + br.cx1 * bp} ${220 + br.cy1 * bp} ${210 + br.bx * bp} ${220 + br.by * bp}`}
+                  fill="none" stroke={`hsl(30, 15%, ${13 + radiance * 3}%)`}
+                  strokeWidth={2 - bi * 0.15} opacity={bp * 0.7}
+                />
+              );
+            })}
+
+            {/* Canopy clusters */}
+            {[
+              { cx: 170, cy: 115, rx: 28, ry: 18 },
+              { cx: 210, cy: 100, rx: 35, ry: 22 },
+              { cx: 250, cy: 115, rx: 28, ry: 18 },
+              { cx: 190, cy: 108, rx: 22, ry: 16 },
+              { cx: 230, cy: 108, rx: 22, ry: 16 },
+              { cx: 210, cy: 118, rx: 18, ry: 12 },
+            ].map((c, i) => {
+              const cp = easeOut(sub(treeGrow, 0.4 + i * 0.06, 0.4));
+              if (cp <= 0) return null;
+              return (
+                <ellipse key={i}
+                  cx={c.cx} cy={c.cy}
+                  rx={c.rx * cp} ry={c.ry * cp}
+                  fill={`hsl(125, ${20 + canopyLight * 18}%, ${10 + canopyLight * 10}%)`}
+                  opacity={cp * 0.75}
+                />
+              );
+            })}
+
+            {/* Canopy highlight glow */}
+            {canopyLight > 0 && (
+              <ellipse cx="210" cy="110"
+                rx={60 * canopyLight} ry={35 * canopyLight}
+                fill="url(#canopyGrad)" opacity={canopyLight * 0.5}
+              />
+            )}
+
+            {/* Spirit lights in canopy */}
+            {[
+              { x: 180, y: 108 }, { x: 210, y: 98 }, { x: 240, y: 106 },
+              { x: 195, y: 115 }, { x: 225, y: 112 }, { x: 210, y: 105 },
+            ].map((sl, i) => {
+              const sp = sub(treeGrow, 0.7, 0.3);
+              if (sp <= 0) return null;
+              const twinkle = 0.4 + 0.6 * Math.sin(time * 2.5 + i * 1.7);
+              return (
+                <g key={i} opacity={sp * twinkle * 0.6}>
+                  <circle cx={sl.x} cy={sl.y} r="4" fill="#b8d8a8" opacity={0.1} />
+                  <circle cx={sl.x} cy={sl.y} r="1.8" fill="#d8e8c8" opacity={0.5} />
+                  <circle cx={sl.x} cy={sl.y} r="0.6" fill="white" opacity={0.6} />
+                </g>
+              );
+            })}
           </g>
         )}
 
-        {/* Accent-colored embers drifting upward — one per level */}
-        {emberData.map((e, i) => {
-          const ep = sub(time, e.delay, 8);
-          if (ep <= 0) return null;
-          const y = e.startY - ep * 140;
-          const x = e.x + Math.sin(ep * Math.PI * 2 + i) * 12;
-          return (
-            <g key={i} opacity={ep < 0.8 ? ep * 0.7 : (1 - ep) * 3.5}>
-              <circle cx={x} cy={y} r="6" fill={e.color} opacity={0.06} />
-              <circle cx={x} cy={y} r="2" fill={e.color} opacity={0.4} />
-              <circle cx={x} cy={y} r="0.8" fill="white" opacity={0.5} />
-            </g>
-          );
-        })}
+        {/* ═══ Phase 4: Golden radiance + ley energy ═══ */}
+        {radiance > 0 && (
+          <g>
+            {/* Overall golden glow */}
+            <ellipse cx="210" cy="155"
+              rx={180 * radiance} ry={90 * radiance}
+              fill="url(#goldenRadiance)"
+            />
 
-        {/* Warm haze at horizon */}
-        <rect x="0" y="170" width="400" height="80"
-          fill={`hsl(35, ${20 + dawn * 15}%, ${12 + dawn * 15}%)`}
-          opacity={dawn * 0.15}
-        />
+            {/* Pulsing energy dots along roots */}
+            {leyFlow > 0 && VIGNETTES.map((v, i) => {
+              const pulseT = ((time - 18) * 0.5 + i * 0.35) % 1;
+              const cx = 210;
+              const cy = 200;
+              const dx = v.x - cx;
+              const px = cx + dx * pulseT;
+              const py = cy + (155 - cy) * pulseT + 8 * Math.sin(pulseT * Math.PI) * (1 + Math.abs(dx) * 0.003);
+              return (
+                <g key={`pulse${i}`}>
+                  <circle cx={px} cy={py} r="3"
+                    fill="#d8c890"
+                    opacity={leyFlow * 0.3 * (1 - Math.abs(pulseT - 0.5) * 2)}
+                  />
+                  <circle cx={px} cy={py} r="1.2"
+                    fill="white"
+                    opacity={leyFlow * 0.2 * (1 - Math.abs(pulseT - 0.5) * 2)}
+                  />
+                </g>
+              );
+            })}
+
+            {/* Gentle world pulse */}
+            <ellipse cx="210" cy="140"
+              rx={100 + Math.sin(time * 1.5) * 10}
+              ry={50 + Math.sin(time * 1.5) * 5}
+              fill="#d8c890"
+              opacity={radiance * 0.03 * (0.7 + 0.3 * Math.sin(time * 1.5))}
+            />
+          </g>
+        )}
       </svg>
 
       {/* Text overlay */}
@@ -203,7 +612,7 @@ export default function OutroSequence() {
               className={s.restartBtn}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 3.5 }}
+              transition={{ duration: 1, delay: 4 }}
               onClick={restart}
             >
               Begin Again
