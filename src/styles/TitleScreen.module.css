@@ -1,0 +1,73 @@
+.container {
+  background: #090e09;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.6rem;
+  font-weight: normal;
+  letter-spacing: 0.12em;
+  color: #eaddb0;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  max-width: 400px;
+  line-height: 1.85;
+  color: #9a8868;
+}
+
+.acts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: #5a4a2a;
+  width: 280px;
+}
+
+.actLabel {
+  color: #7a6a4a;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+  font-size: 0.68rem;
+}
+
+.levelItem {
+  padding-left: 0.8rem;
+  color: #5a4a2a;
+  line-height: 1.6;
+}
+
+.levelDiamond {
+  opacity: 0.5;
+  margin-right: 0.4rem;
+}
+
+.beginBtn {
+  margin-top: 1.25rem;
+  padding: 0.7rem 2.8rem;
+  background: transparent;
+  border: 1px solid #4a7a3a;
+  color: #80c860;
+  font-size: 1rem;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+}
+
+.beginBtn:hover {
+  background: rgba(74, 122, 58, 0.1);
+}
+
+/* ── Logo SVG ── */
+.logo {
+  display: block;
+}

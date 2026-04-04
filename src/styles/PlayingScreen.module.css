@@ -1,0 +1,128 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+/* ── Header ── */
+.header {
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerLogo {
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+}
+
+.headerTitle {
+  font-size: 0.82rem;
+  color: #8a7a5a;
+}
+
+.headerDots {
+  font-size: 0.55rem;
+  display: flex;
+  gap: 2px;
+}
+
+/* ── Scene viewport ── */
+.sceneContainer {
+  flex: 1;
+  min-height: 200px;
+  max-height: 340px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Progress bar ── */
+.progressTrack {
+  height: 2px;
+  background: #0a0a0a;
+}
+
+.progressFill {
+  height: 100%;
+  transition: width 0.18s ease;
+}
+
+/* ── Typing area ── */
+.typingArea {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.flavor {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  text-align: center;
+  font-style: italic;
+  line-height: 1.7;
+  color: #6a5238;
+}
+
+.promptBox {
+  background: #0a0a0a;
+  border-radius: 6px;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 0.6rem;
+  font-size: 1.18rem;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  min-height: 3.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  cursor: text;
+}
+
+.char {
+  white-space: pre;
+  transition: color 0.08s;
+}
+
+.cursor {
+  padding-left: 1px;
+  animation: blink 1.1s step-end infinite;
+}
+
+.endCursor {
+  animation: blink 1.1s step-end infinite;
+}
+
+/* ── Sub-info ── */
+.subInfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #3a4a3a;
+  margin-bottom: 0.5rem;
+  padding: 0 0.1rem;
+}
+
+/* ── Hidden input ── */
+.hiddenInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+
+/* ── Mobile: tap overlay ── */
+@media (max-width: 640px) {
+  .typingArea {
+    padding: 1rem 1rem 1.25rem;
+  }
+
+  .promptBox {
+    font-size: 1.05rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .sceneContainer {
+    max-height: 45vh;
+  }
+}
