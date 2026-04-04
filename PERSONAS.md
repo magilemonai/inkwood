@@ -1,8 +1,18 @@
-# Inkwood — Persona Review Panel v3
+# Inkwood — Persona Review Panel v4
 
-Brutal, honest critique. The user says: *"the art is still very lacking. the narrative can be cleaner, tighter. we should be a LOT more creative with assets, art, and animation."*
+The user's verdict: *"The art is still pretty limited to simple shapes. That tree at the end was not stunning, it looked kind of silly."* They are right. This document is a reckoning with why.
 
 Thematic watchwords: **numinous** and **nourishing**.
+
+---
+
+## The Core Problem
+
+We have been polishing a fundamentally limited approach. Adding particles to simple shapes gives you simple shapes with particles. Adding parallax to flat ellipses gives you flat ellipses that drift. The problem is not missing features — it's that **the shapes themselves are not beautiful**.
+
+Every scene is built from the same toolkit: `<ellipse>`, `<rect>`, `<circle>`, `<line>`, and basic `<path>`. We use these to approximate real things (trees, stones, candles, buildings) but they never stop looking like approximations. The Tree — the visual climax of the entire game — is 5 `strokeLinecap="round"` lines radiating from a rectangle, topped with overlapping ellipses. That is what a child draws when you say "draw a tree." It is not what an artist draws.
+
+**What we need is not more SVG elements. It is better SVG paths.** A single hand-crafted bezier path with 30 control points can look more beautiful than 200 circles and ellipses. The difference between "SVG art" and "SVG illustration" is path complexity and intentionality.
 
 ---
 
@@ -10,61 +20,42 @@ Thematic watchwords: **numinous** and **nourishing**.
 
 ### Assessment
 
-The architecture is sound. Real issues are subtle.
+The code is now solid. Quantized progress, React.memo, error boundary, custom hook, localStorage save — all good engineering. No bugs found.
 
-| Issue | Severity | Notes |
-|---|---|---|
-| `React.memo` on scenes is likely a no-op — `progress` is `typed.length / target.length`, which changes on EVERY keystroke | High | Fix: quantize progress to 0.01 increments before passing to scene |
-| Store derived values (`level()`, `target()`) are functions, not selectors — forces callers to call them per render | Medium | Consider zustand `subscribe` with shallow equality |
-| `completingRef` guard is correct but fragile — a future refactor could easily break it | Low | Extract to a `useCompletionTimer` hook |
-| No error boundaries — a scene crash kills the entire app | Medium | Wrap `SceneComp` in an error boundary |
+| Remaining Issue | Severity |
+|---|---|
+| The `useCompletionTimer` hook calls both `startCompletion()` AND has a separate useEffect for it — double state update on completion | Low |
+| Parallax CSS animations add constant GPU compositing cost even when scene isn't changing | Low |
+| 40 particle circles per scene × 10 scenes in memory (even if only 1 rendered) due to static imports in SceneRenderer | Low |
 
-### Top 3
-
-1. Quantize progress: `Math.round(rawProgress * 100) / 100` before passing to scenes. This makes `React.memo` actually work.
-2. Error boundary around scene rendering.
-3. Extract completion timer to a custom hook.
+### Verdict
+Code is not the bottleneck. Art is.
 
 ---
 
 ## 2. Narrative Director
 
-### Prompt Power Rating (1-5)
+### Assessment
 
-Every prompt should feel like **casting a spell** — a command the world obeys. Not a fortune cookie.
+The prompt rewrites were a significant improvement. "speak again, forgotten words" and "spirits, walk the old paths" feel like incantations. The one-sentence flavor texts are clean.
 
-| Level | Prompt | Rating | Problem | Proposed Rewrite |
-|---|---|---|---|---|
-| Garden | "green returns to sleeping roots" | 3 | Passive. Describes what happens, doesn't command it. | **"wake now, sleeping roots"** |
-| Garden | "bloom now, every waiting flower" | 4 | Good — it's a command. "Every waiting" is slightly wordy. | **"bloom, every waiting flower"** |
-| Cottage | "little candle burn bright" | 5 | Perfect. Intimate, commanding, specific. | — |
-| Cottage | "amber glow fills every room" | 3 | Passive description, not a spell. | **"fill every room with warmth"** |
-| Stars | "Orion Vega Sirius Lyra" | 5 | Brilliant. Naming as invocation. | — |
-| Stars | "the sky blooms with ancient fire" | 4 | Beautiful but passive. | **"burn again with ancient fire"** |
-| Well | "deep water remember your name" | 5 | Commanding and mystical. Best in the game. | — |
-| Well | "rise and carry the old songs home" | 4 | Good command. | — |
-| Bridge | "moss and stone recall the crossing" | 3 | Who's being commanded? Vague. | **"stone, recall the crossing"** |
-| Bridge | "where old paths meet spirits still walk" | 2 | Fortune cookie. Not a spell. | **"spirits, walk the old paths"** |
-| Library | "open the pages let wisdom rise" | 3 | Two commands mashed together. | **"open, sleeping pages"** |
-| Library | "every old word finds its voice again" | 2 | Passive, generic. Weakest prompt. | **"speak again, forgotten words"** |
-| Stones | "stand tall again guardians of old" | 5 | Perfect command. The gold standard. | — |
-| Stones | "the circle remembers what was promised" | 4 | Evocative but not a command. | **"remember what was promised"** |
-| Sanctum | "moonlight gathers where spirits convene" | 4 | Atmospheric. | — |
-| Sanctum | "the ancient ones return to their seats" | 3 | Tells, doesn't command. | **"return to your seats, ancient ones"** |
-| Tree | "roots deeper than memory" | 5 | Fragment as incantation. Powerful. | — |
-| Tree | "branches wider than sky" | 5 | Same. Perfect escalation. | — |
-| Tree | "nexus of all living things awaken" | 4 | Good but "nexus of all living things" is clunky. | **"awaken, heart of all things"** |
-| World | "the garden blooms the hearth burns bright" | 3 | Callback, but reads like a list. | **"garden bloom, hearth burn bright"** |
-| World | "every star remembers every spirit sings" | 3 | Same — list, not spell. | **"stars remember, spirits sing"** |
-| World | "the ancient order is restored" | 4 | Declarative. Fitting finale. | — |
+| Level | Prompts | Rating | Notes |
+|---|---|---|---|
+| Garden | "wake now, sleeping roots" / "bloom, every waiting flower" | 4 | Good commands. |
+| Cottage | "little candle burn bright" / "fill every room with warmth" | 5 | Best pair in the game. |
+| Stars | "Orion Vega Sirius Lyra" / "burn again with ancient fire" | 5 | Naming as invocation + command. |
+| Well | "deep water remember your name" / "rise and carry the old songs home" | 5 | Mystical and specific. |
+| Bridge | "stone, recall the crossing" / "spirits, walk the old paths" | 4 | Direct commands. |
+| Library | "open, sleeping pages" / "speak again, forgotten words" | 4 | Concise. Feels sacred. |
+| Stones | "stand tall again guardians of old" / "remember what was promised" | 5 | Gold standard. |
+| Sanctum | "moonlight, gather where spirits convene" / "return to your seats, ancient ones" | 4 | Atmospheric. |
+| Tree | "roots deeper than memory" / "branches wider than sky" / "awaken, heart of all things" | 5 | Perfect escalation. |
+| World | "garden bloom, hearth burn bright" / "stars remember, spirits sing" / "the ancient order is restored" | 4 | Fitting callbacks. |
 
-**Average: 3.6/5.** Six prompts are at or below 3. These should all be commands — the player is a scribe whose words have power. Passive descriptions ("every old word finds its voice") break the spell.
+**Average: 4.5/5.** Narrative is no longer a problem. The words now feel like spells.
 
-### Top 3
-
-1. Rewrite all prompts rated 2-3 as direct commands.
-2. Flavor text for Garden still has two sentences. Make it one: "Breathe life back into the garden."
-3. The escalation from Act I to IV should feel like growing power. Currently Act II prompts are no more powerful than Act I.
+### Verdict
+Narrative is strong. It deserves art that matches it.
 
 ---
 
@@ -72,103 +63,119 @@ Every prompt should feel like **casting a spell** — a command the world obeys.
 
 ### Assessment
 
-| Finding | Severity |
+The mechanical UX is good now. Golden pulse, keyboard nav, save/resume, breathing pause — all working. The remaining issues are all downstream of the art problem:
+
+| Finding | Root Cause |
 |---|---|
-| Overlay layout hides bottom ~30% of scene. If any scene has critical animation in the lower third (ground-level flowers, roots, water), the player can't see it. | High |
-| "tap here to begin typing" is wrong on desktop — should be "click anywhere to type" or just auto-focus more aggressively | Medium |
-| 1.5s breathing pause is good on first play but may frustrate on replay. Consider reducing to 1s after first completion. | Low |
-| No skip for levels already completed (save restores position but can't jump ahead) | Medium |
-| The golden pulse stops after first character on the first phrase only — it should pulse on EVERY new phrase start until first character typed | Medium |
-| Progress diamonds are still tiny and unlabeled | Low |
+| Players don't feel connected to the visual change | The visuals aren't detailed enough to show nuanced change |
+| The "wow" moment never arrives | No scene is beautiful enough to provoke it |
+| The outro feels flat | A silhouette tree against a gradient isn't an emotional payoff |
+| Intro vignettes feel static despite CSS motion | The shapes being moved are too simple to benefit from motion |
 
-### Top 3
-
-1. Audit every scene's bottom third — ensure no key animations happen below y=170 in the SVG viewport (the typing overlay zone).
-2. Golden pulse should activate at the start of every phrase, not just the first.
-3. Context-aware focus hint: "click anywhere" on desktop, "tap to type" on mobile.
+### Verdict
+UX is fine. The experience fails at the art layer, not the interaction layer.
 
 ---
 
 ## 4. Design Director
 
-### Scene Grades
+### THE FUNDAMENTAL PROBLEM
 
-| Scene | Grade | Best Moment | Worst Moment | What Would Elevate It |
-|---|---|---|---|---|
-| Garden | C+ | Flowers blooming with staggered delays | Flat hill shapes, no depth | **Parallax**: 3 hill layers moving at different rates. **Particles**: pollen/petals drifting. **Depth-of-field**: blur on distant hills. |
-| Cottage | C | Candle flame glow radiating | Rectangular walls, no warmth feeling | **Warm color wash** across entire scene as candles light. **Flickering shadow play** using animated opacity on dark shapes. **Smoke/dust particles**. |
-| Stars | B- | Stars appearing one-by-one with glow halos | Flat treeline triangles | **Twinkling**: subtle opacity oscillation on placed stars. **Shooting star** as a surprise reward at completion. **Milky Way band** needs more luminosity. |
-| Well | C+ | Water rising with rune glow | Rectangular well structure | **Water reflection**: mirror the sky in the water surface. **Ripple animation**: concentric circles when water reaches each rune. |
-| Bridge | C | Spirit lanterns lighting | Flat cliff faces, no depth to chasm | **Mist parallax**: multiple mist layers at different speeds. **Depth haze**: distant elements blurred/faded. |
-| Library | C+ | Crystal formations growing | Still too rectangular. Not sacred enough. | **Volumetric light shafts** through the vault. **Floating particle dust** catching the light. **Book pages fluttering** as they rise. |
-| Stones | B+ | Ley lines racing between stones | Ground could be richer | The best scene. Model for others. Could add **wind grass animation** and **sky drama**. |
-| Sanctum | B | Spirit figures in moonlight | Clearing feels empty | **Fireflies**. **Ground mandala glowing**. **Leaf fall** from surrounding trees. |
-| Tree | B- | Three-phase root/branch/crown build | Trunk is still too geometric | **Bark detail**: visible texture lines. **Leaf particles**: individual leaves appearing in canopy. **Root glow pulse**: traveling light along roots. |
-| World | C | Concept of connecting all locations | It's a network diagram, not a landscape | Needs complete rethink — should feel like **looking down at a living map**, not a data visualization. |
+**We are drawing with geometric primitives when we should be drawing with illustration paths.**
 
-**Average: C+.** No scene is genuinely beautiful yet. They're competent SVG illustrations. To reach "numinous," we need:
+Look at the tree screenshot. The branches are 5 `<path>` strokes radiating symmetrically from a point. The canopy is 7 overlapping `<ellipse>` elements. There is no:
+- Irregular branching (real trees have asymmetric, crooked branches)
+- Leaf texture (the canopy should have visible leaf clusters, not smooth ovals)
+- Bark detail (the trunk should have visible grain, knots, character)
+- Environmental interaction (branches should overlap the sky, roots should grip the earth)
+- Scale cues (small details that make the tree feel MASSIVE)
+- Light direction (one side should be lighter than the other)
 
-### Techniques We Haven't Used
+**The same critique applies to every scene.** The cottage is rectangles. The well is rectangles. The bridge is a stroke. The library is rectangles with smaller rectangles.
 
-1. **CSS parallax on SVG groups**: Wrap background/midground/foreground in groups, apply `transform: translateY()` animations for subtle depth movement.
-2. **strokeDashoffset line-drawing**: Constellation lines, ley lines, rune patterns should DRAW themselves, not just fade in.
-3. **clipPath reveal**: Instead of opacity fade, reveal elements through expanding clip masks — like a curtain pulling back.
-4. **Particle density**: Most scenes have 5-8 atmospheric particles. Journey has hundreds. Even 30-50 tiny dots drifting would transform the feeling.
-5. **Color temperature shifts**: The entire SVG should shift warmth as progress increases — not just individual elements, but the whole palette rotating via a CSS filter.
-6. **Animated SVG patterns**: `<pattern>` fills for water, stone, wood — instead of flat colors.
+### What "Good SVG Art" Actually Looks Like
 
-### Top 3
+Games like **Gris**, **Alto's Adventure**, and **Monument Valley** use simple color palettes but complex paths. A single mountain in Alto's is one `<path>` element — but it has 40+ control points creating an organic, flowing silhouette. Our mountains have 6 control points.
 
-1. Add parallax depth movement to every scene (3 layers minimum).
-2. Triple the particle count in every scene — wisps, dust, pollen, embers, snowflakes.
-3. Use strokeDashoffset line-drawing for all ley lines and constellation lines.
+**The fix is not more elements. It is more complex individual paths.**
+
+A tree trunk should be ONE path with 20+ bezier control points — bulges, knots, tapering, character. Not a rectangle with `rx="4"`. A canopy should be ONE complex path following an irregular, organic edge — not 7 overlapping ellipses.
+
+### Scene Grades (Revised — Honest)
+
+| Scene | Grade | Core Problem |
+|---|---|---|
+| Garden | D+ | Hills are smooth sine waves. Flowers are the only good element (Flower primitive uses real petals). Everything else is flat. |
+| Cottage | D | Interior is entirely rectangles. No warmth, no character. Candle flames are ellipses. |
+| Stars | C+ | Stars and moon work. The treeline is triangles. Best scene only because stars are SUPPOSED to be dots. |
+| Well | D | The well is rectangles stacked. Water is a rectangle. No stone texture despite having a TextureFilter available. |
+| Bridge | D+ | The arch is a single stroke. Cliffs are StoneBlock primitives (slightly irregular rectangles). |
+| Library | D+ | Vaulted ceiling is one bezier — good idea, but the rest is rectangles. Crystals are polygons. |
+| Stones | C | The stones use actual bezier paths — best structural art in the game. But the ground and sky are flat. |
+| Sanctum | C | Spirit figures are the most complex bezier work. Moon and trees are basic. |
+| Tree | D | SEE SCREENSHOT. Sticks + blobs. The game's climactic moment looks like clip art. |
+| World | D | Network diagram. Abstract nodes and lines. |
+
+**Average: D+**. We've been giving ourselves C's and B's. That was dishonest.
+
+### What Must Change
+
+1. **Every major element needs a hand-crafted complex path.** Not `<ellipse>`. Not `<rect>`. A `<path d="...">` with 15-40 control points that looks organic and intentional.
+
+2. **Silhouettes first.** Before adding filters, particles, or glow — the BASE SHAPES must look beautiful as solid-color silhouettes. If a tree doesn't look like a tree as a black shape on white, no amount of glow will fix it.
+
+3. **Reference real SVG illustration.** Study how SVG artists on sites like CodePen create trees, landscapes, and buildings. They use detailed `d=""` paths, not primitives.
+
+4. **Reduce element count, increase path complexity.** 50 simple circles < 5 complex paths. Quality over quantity.
+
+### Verdict
+The art approach is fundamentally wrong. We need to stop adding features to simple shapes and start drawing complex shapes.
 
 ---
 
 ## 5. Product Lead
 
-### 5 Changes That Would Make Someone Screenshot This
+### Assessment
 
-1. **One hero scene that's genuinely breathtaking.** Pick the Tree or Sanctum and pour everything into it — parallax, particles, color shifts, line-drawing animations. If one level makes people say "wow," they'll play the rest to see what else is coming.
-2. **Particle atmosphere everywhere.** The single cheapest way to make SVG art feel alive. 30-50 floating particles per scene. Pollen, dust, embers, fireflies, snow, starlight. Different per scene.
-3. **The intro needs to MOVE.** Three static desaturated images crossfading is not cinematic. A slow pan, a parallax drift, something that says "this is alive even in its dormancy."
-4. **Sound.** Even one ambient loop per scene (rain, fire crackle, night crickets, water dripping, wind) would double the atmosphere. This is the single highest-impact addition possible.
-5. **The outro dawn.** The tree silhouette against a warming sky is the right idea. But it needs to be GORGEOUS — layered clouds, god rays, color that takes your breath away. This is the screenshot moment.
+We've built excellent engineering around mediocre art. The narrative is now strong. The UX is polished. The code is clean. But the game's entire value proposition — "watch the world come alive" — fails because the world doesn't look like a world. It looks like a programmer's approximation of a world.
+
+### The 5 Things That Would Actually Fix This
+
+1. **Hire an SVG illustrator** (or spend 10x more time on paths). Every scene needs its key elements redrawn with complex, intentional bezier paths. This is not a code problem — it's a drawing problem.
+
+2. **Start with silhouettes.** Before any color, filter, or animation, create a black-and-white silhouette version of each scene. If it looks like clip art, the colored version will too.
+
+3. **One scene at a time, done right.** Stop spreading effort across all 10 scenes. Take the Garden and make it genuinely beautiful. Then use that as the template for the rest.
+
+4. **Use the SVG viewBox more intentionally.** Our 400×250 viewport is small. Every pixel matters. Fill it with detail.
+
+5. **Accept that procedural generation has limits.** Functions that compute ellipse positions will never produce art. The beautiful parts of this game will be hand-authored `d=""` strings, not algorithms.
 
 ---
 
 ## 6. Alpha Tester Panel
 
-### Level-by-Level Emotional Map
+### Session Notes
 
-| Level | First Impression | Emotional Peak | Would Show a Friend? |
-|---|---|---|---|
-| Garden | "It's growing" | Flowers blooming | Maybe — it's pleasant |
-| Cottage | "Oh, candles" | Cat appearing | No — too flat |
-| Stars | "Pretty" | Naming stars as they appear | Yes — the naming conceit is clever |
-| Well | "Interesting" | Runes surfacing | Maybe |
-| Bridge | "Atmospheric" | Lanterns lighting | No — chasm has no depth |
-| Library | "Mysterious" | Crystals growing | No — not sacred enough |
-| Stones | "Powerful" | Ley lines racing between stones | **Yes** — this is the one |
-| Sanctum | "Beautiful" | Spirits appearing in moonlight | **Yes** — genuinely atmospheric |
-| Tree | "Impressive" | Crown glow at completion | Yes — satisfying build |
-| World | "Abstract" | Connections forming | No — too diagrammatic |
+**Alex (fast typist):** "The breathing pause is better. I can actually see the animations now. But the animations themselves... I mean, the flowers are nice. The rest is kind of flat. The tree at the end was a letdown."
 
-**Emotional arc:** Starts pleasant (1-3), dips in the middle (4-6), peaks at Stones/Sanctum (7-8), satisfying finale (9). The mid-game sag is the problem — levels 4-6 need to be as strong as 7-8.
+**Cal (patient explorer):** "The words are much better — they feel like spells now. But when I cast 'awaken, heart of all things' and see... that tree... the gap between the words and the visuals is enormous. The words promise numinous. The art delivers adequate."
+
+**Dana (impatient):** "Save works, great. But I still got bored in the middle. The levels all look the same — dark background, some shapes, type type type. Where's the variety?"
 
 ---
 
-## Priority Stack — Top 10
+## Priority Stack — v4
 
-| # | Change | Impact | Effort |
-|---|---|---|---|
-| 1 | Rewrite all 2-3 rated prompts as commands | Huge — transforms typing from "filling forms" to "casting spells" | Small |
-| 2 | Add 30-50 particles per scene (wisps, dust, pollen, embers) | Huge — instant atmosphere upgrade | Medium |
-| 3 | Parallax depth on all scenes (3 layers, subtle CSS transform animation) | Large — makes flat SVGs feel 3D | Medium |
-| 4 | strokeDashoffset line-drawing for ley lines and constellations | Large — makes connections feel magical, not instant | Small |
-| 5 | Quantize progress for effective React.memo | Medium — performance fix enables more complex scenes | Small |
-| 6 | Audit scene bottom thirds for overlay occlusion | Medium — ensures players see what they earned | Small |
-| 7 | One ambient sound per scene | Huge — doubles atmosphere | Medium |
-| 8 | Make intro MOVE (slow parallax pan, not static crossfade) | Large — first impression is everything | Medium |
-| 9 | Golden pulse on every phrase start, not just first | Small — but improves flow for every level | Small |
-| 10 | Hero-polish the Tree scene as the visual showcase | Large — gives the game its "wow" moment | Large |
+| # | Change | Impact | Effort | Notes |
+|---|---|---|---|---|
+| 1 | Rewrite TreeScene with complex hand-crafted paths | Huge | Large | The climax must be the best scene. 1 complex trunk path, organic branching, detailed canopy edge, NOT ellipses |
+| 2 | Rewrite GardenScene with organic landscape paths | Huge | Large | First scene = first impression. Rolling terrain, detailed tree silhouettes, layered depth |
+| 3 | Rewrite CottageScene as a warm interior | Large | Large | Needs to feel like a room, not a diagram. Curved walls, visible hearth, wood grain |
+| 4 | Rewrite OutroSequence tree with the improved TreeScene paths | Large | Small | Reuse the better tree art in the outro |
+| 5 | Add real stone shapes to Well and Bridge | Large | Medium | Replace rectangles with irregular hand-drawn stone paths |
+| 6 | Create a visual style guide with silhouette tests | Medium | Small | Every element must pass the "black on white" test |
+| 7 | Audio — even one ambient loop per act | Huge | Medium | Deferred too long. Sound doubles atmosphere instantly |
+| 8 | Reduce total scene count if quality can't be maintained | Medium | N/A | 7 great scenes > 10 mediocre ones |
+| 9 | Consider importing pre-made SVG art as static assets | Huge | Medium | Draw in Figma/Inkscape, export as SVG, import as components |
+| 10 | Test on real devices before any more feature work | Medium | Small | We've never tested on a real phone |
