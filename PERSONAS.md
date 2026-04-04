@@ -1,6 +1,8 @@
-# Inkwood -- Persona Review Panel
+# Inkwood — Persona Review Panel
 
 Six specialist perspectives on the current state of Inkwood, a cozy typing puzzle (Vite/React/TypeScript/SVG) with 10 levels across 4 acts. Thematic watchwords: **numinous** and **nourishing**.
+
+*Last updated after alpha testing round 2.*
 
 ---
 
@@ -10,22 +12,21 @@ Six specialist perspectives on the current state of Inkwood, a cozy typing puzzl
 
 ### Assessment
 
-The codebase is compact and readable. `store.ts` uses Zustand well, component decomposition is reasonable, and the SVG scene architecture (`SceneProps.progress` driving everything) is elegant. That said, several patterns will cause real problems at scale or on constrained devices.
+The codebase is compact and readable. Zustand store is well-structured, component decomposition is clean, and the scene architecture (`progress: number` driving everything) is elegant. Key issues remain around rendering performance.
 
-| Issue | Location | Severity |
+| Issue | Location | Status |
 |---|---|---|
-| RAF loop calls `setTime()` every frame (~60 Hz state updates) | `IntroSequence.tsx:108-118`, `OutroSequence.tsx:46-55` | High -- triggers a full React reconciliation per frame for 15-28 seconds |
-| Scene components are not wrapped in `React.memo` | `scenes/*.tsx`, consumed in `PlayingScreen.tsx:68` | High -- every keystroke re-renders the entire SVG tree via `levelProgress` |
-| Store mixes derived functions (`level()`, `target()`, `isComplete()`) with raw state | `store.ts:17-23` | Medium -- callers like `PlayingScreen` must invoke `g.level()` per render; Zustand selectors cannot skip renders for derived values |
-| Completion timer uses a `completingRef` guard to survive React strict-mode double-invoke | `PlayingScreen.tsx:40-48` | Low -- works, but the intent is non-obvious; a comment or extraction to a hook would help |
-| SVG filter stack (`GlowFilter`, `MistFilter`, `TextureFilter`, `WaterFilter`, `SoftLightFilter`) can compound | `svg/filters.tsx` | Medium -- `feTurbulence` + `feDisplacementMap` on low-end GPUs can drop frames when multiple filters are active |
-| `getSceneComponent` returns a new reference only if the key changes, but the lookup map is stable | `scenes/index.ts:26-28` | OK |
+| RAF loop calls `setTime()` every frame (~60 Hz state updates) | `IntroSequence.tsx`, `OutroSequence.tsx` | **Open** — triggers full React reconciliation per frame for 15-28 seconds |
+| Scene components are not wrapped in `React.memo` | `scenes/*.tsx` | **Open** — every keystroke re-renders the entire SVG tree |
+| Store mixes derived functions with state | `store.ts:17-23` | **Open** — selectors can't skip renders for derived values |
+| Completion timer uses `completingRef` guard for strict-mode | `PlayingScreen.tsx:40-48` | OK — works, intent is documented |
+| SVG filter stack can compound on low-end GPUs | `svg/filters.tsx` | **Open** — untested on real devices |
 
 ### Top Priorities
 
-1. Wrap every scene component (`GardenScene`, `CottageScene`, etc.) in `React.memo` so keystrokes only re-render when `progress` actually changes.
-2. Throttle the RAF state updates in `IntroSequence` and `OutroSequence` -- update at ~20 Hz or use CSS/SMIL animations instead of React state for time-driven opacity.
-3. Profile SVG filter load on a real low-end device (e.g., Moto G Power). Set a budget: max 2 filters per scene, no stacked `feTurbulence`.
+1. **`React.memo`** on every scene component — keystrokes should only re-render when `progress` materially changes.
+2. **Throttle RAF** in intro/outro to ~15 Hz, or use CSS animations for time-driven opacity.
+3. **Profile SVG filters** on a real budget device. Set a budget: max 2 filters per scene.
 
 ---
 
@@ -35,32 +36,28 @@ The codebase is compact and readable. `store.ts` uses Zustand well, component de
 
 ### Assessment
 
-The four-act structure (Awakening, Discovery, The Nexus, Restoration) is sound. The best moments happen when what you type is what you see: typing "stand tall again guardians of old" while stones rise in `StonesScene` is genuinely moving. The weakest moments disconnect words from visuals.
+Text trimming in round 2 was a major improvement. Win texts are now punchy ("The nexus breathes." / "All one."). Flavor text is one sentence max. The game feels more numinous with less words.
 
-| Level | Prompt-to-Visual Alignment | Notes |
+| Level | Prompt ↔ Visual Alignment | Status |
 |---|---|---|
-| The Sleeping Garden | Weak | "warm summer rain" -- but there is no rain in `GardenScene`; flowers just grow |
-| The Dark Cottage | Good | "little candle burn bright" maps directly to `candle1/2/3` lighting up |
-| The Night Sky | Good | "Orion Vega Sirius Lyra" -- stars appear; the naming conceit works |
-| The Dry Well | Good | "deep water remember your name" -- water rises in `WellScene` |
-| The Forgotten Bridge | OK | "moss and stone recall the crossing" -- bridge rebuilds, but "spirits still walk" has no visible spirits |
-| The Whispering Library | OK | "open the pages let wisdom rise" -- books animate, but "every old word finds its voice" is vague |
-| The Spirit Stones | Strong | "stand tall again" triggers stone-rise; "the circle remembers" triggers ley lines |
-| The Moonlit Sanctum | Strong | "moonlight gathers where spirits convene" -- moonbeams + spirit figures appear |
-| The Great Tree | Strong | Three prompts build roots, branches, full radiance. Best pacing in the game. |
-| The Waking World | OK | Callback phrases are nice but feel like a summary, not a climax |
+| Garden | **Weak** — "warm summer rain" but `GardenScene` has rain that fades quickly; flowers are the real visual | **Needs fix** |
+| Cottage | Good — "little candle burn bright" maps to candle lighting | OK |
+| Night Sky | Good — "Orion Vega Sirius Lyra" names stars as they appear | OK |
+| Dry Well | Good — "deep water remember your name" while water rises | OK |
+| Bridge | OK — "spirits still walk" but no visible spirits during that phrase | **Could improve** |
+| Library | OK — "let wisdom rise" while books float, but feels generic | **Could improve** |
+| Stones | **Strong** — "stand tall again" → stones rise; "circle remembers" → ley lines | Model for others |
+| Sanctum | **Strong** — moonbeams + spirits match both phrases perfectly | Model for others |
+| Great Tree | **Strong** — three prompts build roots, branches, full radiance | Best pacing |
+| Waking World | OK — callback phrases are nice but feel like summary | **Could improve** |
 
-**Flavor text** sometimes over-explains. "An ancient spring, long silent. The stones still remember the sound of water." -- the second sentence weakens the first. One sentence maximum.
-
-**Win text** is strong in Acts I-II, gets wordy in Act III. "Light races between the stones in lines of pale fire. The ley lines are waking. You understand now -- these are not monuments. They are conduits." -- cut the last two sentences; let the visual do that work.
-
-**Outro** (`OutroSequence.tsx`) currently has zero text -- just colored dots and "Begin Again." This is the emotional resolution of the entire game. It needs one poetic line. Not a paragraph. One line.
+**Outro** currently has zero text — just dots and "Begin Again." The animation should speak for itself, but one poetic line (not a paragraph) would give emotional closure. Something like: *"The forest remembers."*
 
 ### Top Priorities
 
-1. Audit every prompt against its scene animation. Fix "warm summer rain" (add rain, or change the phrase to "green returns to sleeping roots").
-2. Trim all flavor text to one sentence. Trust the player.
-3. Add a single closing line to the outro -- something that echoes the opening silence without explaining it.
+1. Fix Garden prompt: change "warm summer rain" to something that matches the flower-growth visual, or make rain a more prominent animation phase.
+2. Add a single closing line to the outro.
+3. Strengthen Bridge/Library/World prompts to be more visually specific.
 
 ---
 
@@ -70,23 +67,24 @@ The four-act structure (Awakening, Discovery, The Nexus, Restoration) is sound. 
 
 ### Assessment
 
-The core loop (read phrase, type it, watch the scene change) is intuitive once understood. Getting to that understanding is the problem.
+Round 2 fixed several critical issues: keyboard navigation (space/enter on all screens), intro skip, text contrast. The golden pulse on the prompt box is an effective attention draw. Stacked layout ensures the scene is always visible.
 
-| Finding | Severity | Location |
+| Finding | Severity | Status |
 |---|---|---|
-| Mobile keyboard may never appear: the hidden `<input>` in `PlayingScreen.tsx:163` relies on programmatic `.focus()` with a 50ms delay, which many mobile browsers block without a direct user gesture | Critical | `PlayingScreen.tsx:51-53` |
-| No skip affordance on intro beyond a tiny "tap to skip" hint at the bottom of `IntroSequence.tsx:207` -- easy to miss, especially on desktop where "tap" is the wrong word | High | `IntroSequence.tsx:207` |
-| Screen transitions use `AnimatePresence mode="wait"` in `App.tsx:19` -- if exit duration (300ms) and enter duration (500ms) overlap badly, users see a flash of blank screen | Medium | `App.tsx:9-13` |
-| Progress diamonds in `PlayingScreen.tsx:78-88` are small unicode characters (`\u25C6`) with no labels; 10 dots at body font size are hard to parse | Medium | `PlayingScreen.tsx:78-88` |
-| No pause, no back button, no way to revisit a completed level | Medium | `store.ts` (no save/load actions) |
-| No ARIA labels on the prompt characters or progress indicators | Low | `PlayingScreen.tsx:109-130` |
-| Color-only error indication (red text for mistyped characters) fails WCAG for color-blind users | Low | `PlayingScreen.tsx:119` |
+| Mobile keyboard may never appear (programmatic `.focus()` blocked) | Critical | **Open** |
+| "tap to skip" on intro is wrong word on desktop | Medium | **Open** — should say "press any key" on desktop |
+| ~~Hands must leave keyboard to click Continue~~ | ~~High~~ | **Fixed** — space/enter now works |
+| ~~Text too dark to read~~ | ~~High~~ | **Fixed** — contrast bumped |
+| ~~Typing area covering the scene~~ | ~~High~~ | **Fixed** — stacked layout |
+| No pause, no back, no level revisit | Medium | **Open** |
+| No ARIA labels on prompt or progress indicators | Low | **Open** |
+| Color-only error indication (red for mistype) | Low | **Open** |
 
 ### Top Priorities
 
-1. Test mobile keyboard trigger on iOS Safari and Chrome Android. If `.focus()` fails, add a visible "Tap here to begin typing" overlay that fires focus on a real user tap event.
-2. Replace "tap to skip" with "click anywhere to skip" on desktop, or use a universal affordance like a small skip button.
-3. Add `aria-label` to the prompt box and progress indicators.
+1. **Mobile keyboard focus**: Add a visible "Tap to begin" overlay on first `playing` screen entry, wired to a real touch event that calls `.focus()`.
+2. Adaptive skip hint: "press any key" on desktop, "tap to skip" on mobile.
+3. Add `aria-label` to prompt box and progress indicators.
 
 ---
 
@@ -96,26 +94,26 @@ The core loop (read phrase, type it, watch the scene change) is intuitive once u
 
 ### Assessment
 
-The SVG filter library in `svg/filters.tsx` (glow, mist, texture, water ripple, soft light, inner shadow) is a strong foundation. `svg/primitives.tsx` provides reusable shapes (`Hill`, `Wisp`, `GrassRow`). Color palettes in `svg/palettes.ts` are well-chosen -- muted, earthy, appropriate for the tone.
+The scene quality gap is the biggest design problem. `StonesScene`, `SanctumScene`, and `TreeScene` are genuinely atmospheric — organic shapes, staggered reveals, filter-driven glow. Meanwhile `CottageScene` and `LibraryScene` feel like diagrams.
 
 **What works:**
-- `StonesScene` -- the 7-stone perspective arc with staggered rise + ley-line connections is the visual high point.
-- `SanctumScene` -- moonbeam pooling + spirit figures is atmospheric.
-- `TreeScene` -- three-phase build (roots, branches, full canopy) with radiance is satisfying.
-- Intro vignettes (`DormantGarden`, `DormantCottage`, `DormantSky`) are moody and effective.
-- Act transitions in `ActTransition.tsx` are atmospheric.
+- Stones — 7-stone perspective arc with bezier shapes, rune glyphs, ley-line animation
+- Sanctum — moonbeam pooling, hand-drawn forest framing, translucent spirit bezier figures
+- Tree — three-phase build with ley glow through roots, crown radiance
+- Intro vignettes — moody, properly dark-but-visible after round 2 fix
+- Golden pulse on prompt box — effective, subtle, on-brand
 
-**What does not work:**
-- `CottageScene` feels diagrammatic: flat rectangles for walls, simple rect candles, basic window cross. Compare its geometric primitives to the organic shapes in `StonesScene`.
-- `LibraryScene` likely has the same flatness problem (geometric book shapes, no atmosphere).
-- The outro world-map (`OutroSequence.tsx`) is circles and lines -- the most abstract moment in the game is supposed to be the most beautiful. It reads as a network diagram, not a living world.
-- No ambient motion. Scenes are static until the player types. A slow parallax drift, firefly particles, or gentle color cycling would make the world feel alive even at rest.
+**What needs work:**
+- **Cottage** — flat rectangles, basic window cross, cat is just circles. Needs organic warmth, wood texture, firelight play on surfaces.
+- **Library** — the user specifically asked for it to feel "sacred, powerful, controlled." Currently it's rectangles floating. Needs: vaulted ceiling, crystalline light, reverence.
+- **Outro** — circles-and-lines network diagram where there should be a living landscape. This is the last thing the player sees.
+- **No ambient motion** — scenes are dead until the player types. Subtle idle animation (parallax drift, particle float, gentle color breathing) would make the world feel alive.
 
 ### Top Priorities
 
-1. Rebuild `CottageScene` and `LibraryScene` to match the organic quality of `StonesScene`/`SanctumScene`. Use the texture and mist filters that already exist in `svg/filters.tsx` but are underused.
-2. Make the outro a showpiece: replace the node-and-line diagram with a painterly landscape that assembles from the 9 scene palettes, culminating in the Great Tree.
-3. Add subtle ambient CSS animations (slow background color drift, particle layer, gentle parallax on scene layers) so the world breathes even when the player pauses.
+1. **Rebuild Cottage and Library** to match Stones/Sanctum quality standard.
+2. **Redesign outro** as a visual showpiece — not abstract, but painterly.
+3. **Add ambient idle motion** to all scenes — the world should breathe even when the player pauses.
 
 ---
 
@@ -125,74 +123,79 @@ The SVG filter library in `svg/filters.tsx` (glow, mist, texture, water ripple, 
 
 ### Assessment
 
-Inkwood is a small game with a big emotional ask: it wants 20-30 minutes of focused attention and rewards patience. That contract only holds if quality is even across all 10 levels.
+The game is significantly improved after round 2: keyboard flow, text economy, visible intro, stacked layout. The core experience when it works (Stones, Sanctum, Tree) is genuinely moving. The problem is inconsistency — three great levels, four good levels, three forgettable ones.
 
-**Biggest risks:**
+**Remaining risks:**
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Uneven level quality -- `StonesScene`/`SanctumScene` are genuinely moving; `CottageScene`/`LibraryScene` are forgettable | Players disengage mid-game and never reach the best content | Prioritize visual parity before any new features |
-| No save state -- closing the tab resets to the intro | A 20-min game with no resume is hostile to mobile users | Add `localStorage` save/resume (current `lvl` + `promptIdx`) to `store.ts` |
-| Intro may appear broken on slow loads -- 0.8s of pure black before anything renders | First impression is "is this working?" | Show a minimal loading indicator or start the first vignette immediately |
-| Outro has no emotional payoff -- no text, abstract visuals, just "Begin Again" | The ending is the last thing the player remembers | One poetic line, a more beautiful final scene |
-| Performance untested on real devices | SVG filters can destroy frame rate on budget phones | Test on 3 real devices before launch; set a filter budget |
+| Level quality gap | Players disengage mid-game, never reach best content | Rebuild Cottage + Library before any new features |
+| No save state | 20-min game with no resume is hostile | `localStorage` save (lvl + promptIdx), small effort |
+| Mobile broken | Can't ship to mobile without keyboard fix | Test + fix before any public release |
+| Outro flat | Last impression is the weakest | One poetic line + visual redesign |
+| Untested performance | SVG filters may destroy frame rate on budget devices | Test on 3 real devices |
 
-**What NOT to build yet:** Level select, achievements, sound design, sharing. All of these are polish on top of a foundation that needs evening out first.
+**What NOT to build yet:** Audio, level select, achievements, sharing, difficulty tiers. Foundation first.
 
 ### Top Priorities
 
-1. Level quality parity: bring every scene to `StonesScene` level before adding features.
-2. Save/resume via `localStorage` -- minimal effort, large impact.
-3. Performance audit on real devices (budget Android phone, older iPad, desktop Firefox).
+1. **Quality parity**: Cottage and Library rebuild.
+2. **Save/resume** via `localStorage`.
+3. **Mobile keyboard fix** — gate any public release on this.
 
 ---
 
 ## 6. Alpha Tester Panel
 
-**Role:** Composite user testing. Four profiles, four experiences.
+**Role:** Composite user testing across skill, device, and patience spectrums.
 
 ### Profiles
 
-| Tester | Device | Style | Typing Speed |
+| Tester | Device | Typing Speed | Style |
 |---|---|---|---|
-| Alex | Desktop, Chrome | Fast typist, competitive | 90+ WPM |
-| Bea | iPhone SE, Safari | Non-gamer, curious | 30 WPM, hunt-and-peck |
-| Cal | Desktop, Firefox | Patient explorer, art-lover | 50 WPM, deliberate |
-| Dana | Android tablet, Chrome | Impatient, low attention span | 60 WPM |
+| Alex | Desktop, Chrome | 90+ WPM | Fast, competitive |
+| Bea | iPhone SE, Safari | 30 WPM | Non-gamer, curious |
+| Cal | Desktop, Firefox | 50 WPM | Patient, art-lover |
+| Dana | Android tablet | 60 WPM | Impatient, low attention |
 
-### Session Notes
+### Session Notes (Round 2)
 
-**Alex (fast typist, desktop):** Blasted through each prompt in seconds. Barely saw the animations -- by the time stones started rising, the level was already won. Said: "I typed it all correctly but felt like I missed the point." The 700ms completion delay (`PlayingScreen.tsx:45`) is the only breathing room, and it is not enough. Would benefit from a brief animation hold (1-2s) between prompts so the visual change can land.
+**Alex (fast typist):** The golden pulse drew his eye. He started typing immediately — but blew through each prompt so fast the animations blurred past. The 700ms completion delay is the only breathing room and it's not enough. Said: "I wish I could see what I just did." Wants a 1-2 second hold between prompts.
 
-**Bea (non-gamer, phone):** Could not figure out where to type. Tapped the prompt text, tapped the screen, nothing happened. The hidden input (`PlayingScreen.tsx:163`) never received focus because iOS Safari blocked the programmatic `.focus()` call. Eventually gave up. When we manually triggered the keyboard, she enjoyed the game but found the "type the phrase above" hint (`PlayingScreen.tsx:151`) too subtle -- she did not realize she needed to match the exact text including spaces. Autocorrect also interfered despite `autoCorrect="off"`.
+**Bea (phone):** Still can't reliably trigger the keyboard. On iOS Safari, the hidden input doesn't receive focus from programmatic `.focus()`. She tapped the golden-pulsing prompt box and nothing happened. This is a blocker.
 
-**Cal (patient explorer, desktop):** Loved it. Paused between keystrokes to watch the scene evolve. Said the intro was "beautiful but too long" and wished he could linger on completed scenes before the level-win overlay appeared. Wanted to revisit the Moonlit Sanctum. Was disappointed by the outro -- "it felt like a credits screen, not a finale."
+**Cal (patient explorer):** Much happier with the stacked layout — scene is fully visible. Loved the trimmed text. Said the Stones level was "meditative." Was disappointed the outro was just dots and a button. Wants to linger on completed scenes. Keyboard advance (space/enter) was "perfect."
 
-**Dana (impatient, tablet):** Clicked through the intro immediately, landed on Level 1 with no context. Did not know it was a typing game until she accidentally triggered the keyboard. Finished 3 levels, got bored during the Bridge, closed the tab. Came back later and was annoyed to start over from the beginning. Said: "If there's no save, it needs to be shorter."
+**Dana (impatient):** Pressed Enter to skip intro immediately (keyboard nav works!). Got through 4 levels in 3 minutes. Closed the tab, came back, had to start over. Said: "This is pretty but I don't have time to replay it."
 
 ### Top Priorities
 
-1. Add a visible "tap anywhere to begin typing" overlay on mobile, triggered on the first `playing` screen entry.
-2. Add a 1-2 second breathing pause between prompts so fast typists can see the animation they earned.
-3. Test and fix mobile keyboard focus on iOS Safari and Android Chrome.
-4. Implement `localStorage` save so returning players resume where they left off.
-5. Consider a brief (3-second) non-interactive hold on completed scenes before showing the win overlay.
+1. **Breathing pause** (1-2s) between prompts so fast typists see what they earned.
+2. **Mobile keyboard fix** — visible tap target.
+3. **`localStorage` save** — Dana will never finish without it.
+4. **Scene linger** — brief (3s) non-interactive hold on completed scenes before win overlay.
 
 ---
 
-## Summary: Cross-Persona Priority Stack
+## Summary: Priority Stack
 
-| Priority | Owner | Effort |
-|---|---|---|
-| Fix mobile keyboard focus | UX / Code | Small |
-| `React.memo` on all scene components | Code | Small |
-| Save/resume via `localStorage` | Product / Code | Small |
-| Throttle RAF loops in intro/outro | Code | Small |
-| Audit prompts against visual changes | Narrative | Medium |
-| Trim flavor text to one sentence | Narrative | Small |
-| Add one poetic line to outro | Narrative / Design | Small |
-| Rebuild `CottageScene` and `LibraryScene` | Design | Large |
-| Redesign outro as a visual showpiece | Design | Large |
-| Performance test on 3 real devices | Product / Code | Medium |
-| Add ambient motion to idle scenes | Design | Medium |
-| Add breathing pause between prompts | UX / Code | Small |
+| # | Priority | Owner | Effort | Status |
+|---|---|---|---|---|
+| 1 | Fix mobile keyboard focus | UX / Code | Small | **Open** |
+| 2 | `React.memo` on scene components | Code | Small | **Open** |
+| 3 | Save/resume via `localStorage` | Product / Code | Small | **Open** |
+| 4 | Breathing pause between prompts | UX / Code | Small | **Open** |
+| 5 | Rebuild Cottage scene | Design | Large | **Open** |
+| 6 | Rebuild Library scene | Design | Large | **Open** |
+| 7 | Fix Garden prompt-to-visual alignment | Narrative | Small | **Open** |
+| 8 | Add one poetic line to outro | Narrative | Small | **Open** |
+| 9 | Throttle RAF in intro/outro | Code | Small | **Open** |
+| 10 | Redesign outro as visual showpiece | Design | Large | **Open** |
+| 11 | Add ambient idle motion to scenes | Design | Medium | **Open** |
+| 12 | Performance test on real devices | Product | Medium | **Open** |
+| — | ~~Keyboard navigation (space/enter)~~ | ~~UX~~ | ~~Small~~ | **Done** |
+| — | ~~Text contrast / WCAG compliance~~ | ~~Design~~ | ~~Small~~ | **Done** |
+| — | ~~Intro visibility (too dark)~~ | ~~Design~~ | ~~Small~~ | **Done** |
+| — | ~~Layout: scene covered by typing area~~ | ~~UX~~ | ~~Medium~~ | **Done** |
+| — | ~~Trim flavor/win text~~ | ~~Narrative~~ | ~~Small~~ | **Done** |
+| — | ~~Level title flash during transitions~~ | ~~Code~~ | ~~Small~~ | **Done** |
