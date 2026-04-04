@@ -208,18 +208,7 @@ function GardenScene({ progress: p }: SceneProps) {
 
       {/* ── TREE ── */}
 
-      {/* Canopy — transitions from grey to green */}
-      <path d={CANOPY}
-        fill={`hsl(${110 + p * 15}, ${canopyS}%, ${canopyL}%)`}
-        opacity={0.3 + canopyLife * 0.6} />
-      {/* Canopy highlight — lighter inner area */}
-      <path d={CANOPY}
-        fill={`hsl(${115 + p * 10}, ${canopyS + 8}%, ${canopyL + 5}%)`}
-        opacity={canopyLife * 0.2}
-        transform="translate(4, 3) scale(0.85)"
-        style={{ transformOrigin: "125px 60px" }} />
-
-      {/* Trunk + limbs — one integrated shape that splits at the crown */}
+      {/* Trunk + limbs first — visible as bare wood */}
       <path d={TRUNK_AND_LIMBS}
         fill={`hsl(30, ${trunkS}%, ${trunkL}%)`} />
 
@@ -230,6 +219,18 @@ function GardenScene({ progress: p }: SceneProps) {
             fill={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`} />
         ))}
       </g>
+
+      {/* Canopy — rendered ON TOP of branches, fading in with progress
+          so you see bare branches early, then leaves fill in and cover them */}
+      <path d={CANOPY}
+        fill={`hsl(${110 + p * 15}, ${canopyS}%, ${canopyL}%)`}
+        opacity={canopyLife * 0.85} />
+      {/* Canopy highlight — lighter inner area for depth */}
+      <path d={CANOPY}
+        fill={`hsl(${115 + p * 10}, ${canopyS + 8}%, ${canopyL + 5}%)`}
+        opacity={canopyLife * 0.25}
+        transform="translate(4, 3) scale(0.85)"
+        style={{ transformOrigin: "125px 60px" }} />
 
       {/* Roots */}
       <g opacity={0.3 + rootGlow * 0.7}>
