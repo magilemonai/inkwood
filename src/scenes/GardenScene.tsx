@@ -52,60 +52,42 @@ const CANOPY = `
   C32 90, 30 88, 32 88
   Z`;
 
-/** Branches — emerge at DIFFERENT HEIGHTS on the trunk, not all from one point */
-const BRANCHES = [
-  // lowest left branch — forks from trunk at y:135, sweeps left
-  `M106 136
-   C98 130, 86 124, 72 118 C64 115, 56 114, 50 112
-   L51 115
-   C58 116, 66 118, 74 122 C88 128, 100 134, 110 140 Z`,
-  // mid-left — from y:118, curves up-left
-  `M106 118
-   C98 110, 86 100, 76 90 C70 84, 64 80, 60 76
-   L63 78
-   C66 82, 72 86, 80 94 C90 104, 100 112, 110 122 Z`,
-  // upper-left — from y:108, reaches toward top-left canopy
-  `M110 108
-   C104 98, 92 86, 82 76 C76 70, 70 64, 64 58
-   L67 60
-   C72 66, 78 72, 86 80 C96 90, 106 100, 114 112 Z`,
-  // upper-right — from y:106, curves up-right
-  `M130 106
-   C136 96, 146 84, 156 74 C162 68, 168 64, 174 58
-   L176 61
-   C170 66, 164 72, 158 78 C148 88, 138 98, 134 110 Z`,
-  // right — from y:120, sweeps right
-  `M137 120
-   C146 114, 160 108, 176 104 C188 100, 196 98, 204 96
-   L204 99
-   C197 101, 190 103, 178 108 C162 112, 148 118, 140 124 Z`,
+/** 3 major limbs — clean tapered curves flowing from trunk into canopy.
+ *  A real oak splits: trunk to 2-3 main limbs, canopy fills the rest. */
+const LIMBS = [
+  // Left limb — curves gracefully left and upward from mid-trunk
+  `M108 130
+   C102 120, 90 105, 75 90
+   C65 80, 55 72, 48 62
+   L52 60
+   C58 68, 68 78, 78 88
+   C92 102, 106 118, 114 134 Z`,
+  // Center limb — rises straight up from the trunk crown
+  `M116 104
+   C115 90, 118 74, 120 58
+   C121 48, 122 40, 124 34
+   L128 35
+   C127 42, 126 50, 126 60
+   C125 76, 128 92, 130 106 Z`,
+  // Right limb — curves right and slightly upward
+  `M132 115
+   C140 108, 155 98, 172 90
+   C185 84, 196 80, 206 76
+   L207 80
+   C198 84, 187 88, 174 94
+   C158 102, 144 112, 136 120 Z`,
 ];
 
-/** Sub-branches — forking off mains, inside canopy */
-const SUB_BRANCHES = [
-  // off lowest-left, forks down
-  `M68 120 C62 122, 55 120, 48 122 L49 124 C56 123, 64 124, 72 124 Z`,
-  // off mid-left, forks left
-  `M80 92 C74 86, 66 82, 58 78 L60 80 C67 84, 76 90, 84 96 Z`,
-  // off upper-left, forks up
-  `M84 78 C78 72, 70 66, 64 62 L66 64 C72 68, 80 74, 88 82 Z`,
-  // off upper-right, forks right
-  `M158 72 C164 66, 172 62, 178 56 L180 59 C174 64, 166 70, 162 76 Z`,
-  // off right branch, forks up
-  `M180 104 C186 96, 194 92, 200 86 L202 89 C196 94, 188 100, 184 108 Z`,
+/** A few secondary forks — just 3, clean and short */
+const FORKS = [
+  // off left limb, a short upward fork
+  `M72 88 C66 80, 58 72, 52 66 L55 68 C60 74, 68 82, 76 92 Z`,
+  // off center limb, a fork to the left
+  `M120 62 C112 56, 104 52, 96 48 L98 50 C106 54, 114 60, 124 66 Z`,
+  // off right limb, a fork upward
+  `M174 90 C180 82, 188 76, 194 68 L196 71 C190 78, 182 86, 178 94 Z`,
 ];
 
-/** Fine twigs — very short */
-const TWIGS = [
-  "M48 122 C44 120, 40 120, 36 118",
-  "M58 78 C54 74, 48 72, 44 70",
-  "M64 62 C58 56, 54 54, 48 50",
-  "M64 58 C60 52, 56 48, 52 44",
-  "M178 56 C184 50, 188 48, 194 44",
-  "M174 58 C178 52, 184 50, 188 46",
-  "M200 86 C206 80, 210 78, 214 76",
-  "M198 90 C204 86, 210 84, 214 80",
-];
 
 /** Roots — spreading from trunk base */
 const ROOTS = [
@@ -254,22 +236,15 @@ function GardenScene({ progress: p }: SceneProps) {
         transform="translate(4, 3) scale(0.85)"
         style={{ transformOrigin: "125px 60px" }} />
 
-      {/* Branches — emerge at different heights along trunk */}
+      {/* Limbs — 3 clean major limbs + 3 secondary forks */}
       <g opacity={0.4 + p * 0.3}>
-        {BRANCHES.map((d, i) => (
+        {LIMBS.map((d, i) => (
           <path key={i} d={d}
             fill={`hsl(30, ${trunkS}%, ${trunkL + 3}%)`} />
         ))}
-        {SUB_BRANCHES.map((d, i) => (
-          <path key={`sb${i}`} d={d}
-            fill={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`} />
-        ))}
-        {TWIGS.map((d, i) => (
-          <path key={`tw${i}`} d={d}
-            fill="none"
-            stroke={`hsl(30, ${trunkS}%, ${trunkL + 6}%)`}
-            strokeWidth={1}
-            strokeLinecap="round" />
+        {FORKS.map((d, i) => (
+          <path key={`f${i}`} d={d}
+            fill={`hsl(30, ${trunkS}%, ${trunkL + 5}%)`} />
         ))}
       </g>
 
@@ -325,33 +300,21 @@ function GardenScene({ progress: p }: SceneProps) {
         )}
       </g>
 
-      {/* ── FLOWERS — smaller, softer colors, more delicate ── */}
+      {/* ── WILDFLOWERS — simple, delicate: stem + small color blob ── */}
       {flowers.map((f, i) => {
-        const fp = sub(p, f.delay, 0.22);
+        const fp = sub(p, f.delay, 0.25);
         if (fp <= 0) return null;
-        const headY = f.x > 400 ? 196 : (196 + (i % 2) * 2) - f.stemH * fp;
-        const ps = f.size * fp;
         const baseY = 196 + (i % 2) * 2;
+        const headY = baseY - f.stemH * fp;
         return (
-          <g key={i} opacity={fp}>
-            {/* Stem — slight curve */}
+          <g key={i} opacity={fp * 0.9}>
+            {/* Stem */}
             <path
-              d={`M${f.x} ${baseY} Q${f.x + 2} ${baseY - f.stemH * 0.5 * fp} ${f.x} ${headY}`}
-              fill="none" stroke="#2a5a1a" strokeWidth={1.5} />
-            {/* Petals — 5 small petals */}
-            {[0, 72, 144, 216, 288].map((ang, j) => {
-              const px = f.x + Math.cos((ang * Math.PI) / 180) * ps * 1.1;
-              const py = headY + Math.sin((ang * Math.PI) / 180) * ps * 1.1;
-              return (
-                <ellipse key={j}
-                  cx={px} cy={py}
-                  rx={ps * 0.55} ry={ps * 0.35}
-                  fill={f.color}
-                  transform={`rotate(${ang + 90}, ${px}, ${py})`} />
-              );
-            })}
-            {/* Center */}
-            <circle cx={f.x} cy={headY} r={ps * 0.3} fill="#e8d060" />
+              d={`M${f.x} ${baseY} Q${f.x + 1.5} ${(baseY + headY) / 2} ${f.x - 0.5} ${headY}`}
+              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.2} />
+            {/* Bloom — a soft small circle, not individual petals */}
+            <circle cx={f.x} cy={headY} r={f.size * 0.5 * fp} fill={f.color} opacity={0.8} />
+            <circle cx={f.x} cy={headY} r={f.size * 0.2 * fp} fill="#f0e880" opacity={0.7} />
           </g>
         );
       })}
