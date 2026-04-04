@@ -5,6 +5,7 @@ import PlayingScreen from "./components/PlayingScreen";
 import LevelWinScreen from "./components/LevelWinScreen";
 import ActTransition from "./components/ActTransition";
 import OutroSequence from "./components/OutroSequence";
+import DevPanel from "./components/DevPanel";
 
 const screenVariants = {
   initial: { opacity: 0 },
@@ -16,21 +17,24 @@ export default function App() {
   const screen = useGameStore((g) => g.screen);
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={screen}
-        variants={screenVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        style={{ minHeight: "100vh" }}
-      >
-        {screen === "intro" && <IntroSequence />}
-        {screen === "playing" && <PlayingScreen />}
-        {screen === "levelWin" && <LevelWinScreen />}
-        {screen === "actTransition" && <ActTransition />}
-        {screen === "outro" && <OutroSequence />}
-      </motion.div>
-    </AnimatePresence>
+    <>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={screen}
+          variants={screenVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          style={{ minHeight: "100vh" }}
+        >
+          {screen === "intro" && <IntroSequence />}
+          {screen === "playing" && <PlayingScreen />}
+          {screen === "levelWin" && <LevelWinScreen />}
+          {screen === "actTransition" && <ActTransition />}
+          {screen === "outro" && <OutroSequence />}
+        </motion.div>
+      </AnimatePresence>
+      {import.meta.env.DEV && <DevPanel />}
+    </>
   );
 }

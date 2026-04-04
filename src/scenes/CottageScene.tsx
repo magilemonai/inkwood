@@ -1,477 +1,277 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
-import { GlowFilter, TextureFilter } from "../svg/filters";
-import { Wisp } from "../svg/primitives";
+import { GlowFilter } from "../svg/filters";
 
-/** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
+// ─── HAND-CRAFTED PATHS ────────────────────────────────────
+
+/** Window frame — one thick, slightly irregular wooden frame with 4 panes.
+ *  The window is the scenic anchor. Cold moonlight → warm amber reflection. */
+const WINDOW_FRAME = `
+  M52 26 C52 24, 54 22, 58 22 L122 22 C126 22, 128 24, 128 26
+  L128 118 C128 120, 126 122, 122 122 L58 122 C54 122, 52 120, 52 118 Z`;
+const WINDOW_SILL = `
+  M46 118 C46 116, 48 115, 52 115 L128 115 C132 115, 134 116, 134 118
+  L134 126 C134 128, 132 129, 128 129 L52 129 C48 129, 46 128, 46 126 Z`;
+
+/** Stone hearth — arched opening, cold and empty.
+ *  The story says "the hearth is cold." It stays cold. The candles do the warming. */
+const HEARTH_ARCH = `
+  M280 190 L280 148 C280 130, 300 118, 320 118
+  C340 118, 360 130, 360 148 L360 190 Z`;
+const HEARTH_INNER = `
+  M288 190 L288 152 C288 138, 304 128, 320 128
+  C336 128, 352 138, 352 152 L352 190 Z`;
+const HEARTH_MANTEL = `
+  M270 145 C270 140, 275 137, 282 137 L358 137 C365 137, 370 140, 370 145
+  L370 150 C370 152, 368 153, 366 153 L274 153 C272 153, 270 152, 270 150 Z`;
+
+/** Shelf — slightly bowed, not perfectly straight */
+const SHELF = `
+  M135 100 C165 98, 210 97, 240 99 L240 103 C210 101, 165 102, 135 104 Z`;
+
+/** Floor-to-wall transition — an irregular line, old cottage */
+const FLOOR_LINE = `
+  M0 190 C30 189, 60 191, 100 190 C140 189, 180 191, 220 190
+  C260 189, 300 191, 340 190 C370 189, 390 190, 400 190`;
+
+// ─── SCENE COMPONENT ───────────────────────────────────────
+
 function CottageScene({ progress: p }: SceneProps) {
-  // ── Ambient warmth — room color warms as candles light ──
-  const ambientR = 12 + p * 28;
-  const ambientG = 10 + p * 14;
-  const ambientB = 10 + p * 4;
-  const ambientColor = `rgb(${ambientR}, ${ambientG}, ${ambientB})`;
+  // Color temperature: cold blue-grey → warm amber
+  const coldR = 14, coldG = 14, coldB = 20;
+  const warmR = 42, warmG = 28, warmB = 16;
+  const r = Math.round(coldR + (warmR - coldR) * p);
+  const g = Math.round(coldG + (warmG - coldG) * p);
+  const b = Math.round(coldB + (warmB - coldB) * p);
 
-  // ── Candle progress ──
-  const candle1 = sub(p, 0.08, 0.18);
-  const candle2 = sub(p, 0.28, 0.18);
-  const candle3 = sub(p, 0.48, 0.18);
+  // Candle timing — three candles light during phrase 1
+  const c1 = sub(p, 0.06, 0.18);
+  const c2 = sub(p, 0.24, 0.18);
+  const c3 = sub(p, 0.42, 0.18);
 
-  // ── Window glow ──
-  const windowGlow = sub(p, 0.05, 0.6);
+  // Window warmth
+  const windowWarm = sub(p, 0.05, 0.55);
 
-  // ── Mug steam ──
-  const steamP = sub(p, 0.5, 0.2);
+  // Second phrase elements
+  const steamP = sub(p, 0.52, 0.18);
+  const catP = sub(p, 0.68, 0.2);
+  const dustP = sub(p, 0.6, 0.2);
+  const journalP = sub(p, 0.85, 0.12);
 
-  // ── Cat silhouette ──
-  const catP = sub(p, 0.72, 0.2);
-
-  // ── Bookshelf books fade in ──
-  const booksP = sub(p, 0.12, 0.35);
-
-  // ── Floorboard visibility ──
-  const floorP = sub(p, 0.02, 0.3);
-
-  // ── Shelf ──
-  const shelfP = sub(p, 0.05, 0.2);
-
-  // book data
-  const books = [
-    { x: 240, w: 10, h: 34, color: "#6b2020", delay: 0.12 },
-    { x: 252, w: 12, h: 38, color: "#1e3a5a", delay: 0.16 },
-    { x: 266, w: 9,  h: 30, color: "#3a5a2a", delay: 0.22 },
-    { x: 277, w: 11, h: 36, color: "#5a2a5a", delay: 0.28 },
-    { x: 290, w: 10, h: 32, color: "#5a4a1a", delay: 0.33 },
-    { x: 302, w: 13, h: 40, color: "#2a2a4a", delay: 0.38 },
-    { x: 317, w: 9,  h: 28, color: "#6a3a2a", delay: 0.42 },
-    { x: 328, w: 11, h: 35, color: "#1a4a4a", delay: 0.46 },
+  // Candle positions
+  const candles = [
+    { x: 160, wickY: 80, baseY: 103, lit: c1 },
+    { x: 195, wickY: 76, baseY: 100, lit: c2 },
+    { x: 228, wickY: 82, baseY: 103, lit: c3 },
   ];
 
   return (
     <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
-        {/* Filters */}
-        <TextureFilter id="woodTex" scale={0.06} intensity={0.18} seed={5} />
-        <TextureFilter id="wallTex" scale={0.04} intensity={0.12} seed={12} />
-        <TextureFilter id="floorTex" scale={0.1} intensity={0.15} seed={8} />
-        <GlowFilter id="candleGlow1" radius={12} color="#e89a30" opacity={0.5} />
-        <GlowFilter id="candleGlow2" radius={8} color="#e89a30" opacity={0.4} />
-        <GlowFilter id="windowGlowF" radius={16} color="#e89a30" opacity={0.35} />
-        <GlowFilter id="flameGlowInner" radius={3} color="#ffe080" opacity={0.7} />
+        <GlowFilter id="flameGlow" radius={10} color="#e89a30" opacity={0.5} />
+        <GlowFilter id="flameCore" radius={3} color="#ffe080" opacity={0.7} />
+        <GlowFilter id="journalGlow" radius={6} color="#e89a30" opacity={0.4} />
 
-        {/* Ambient warm radial for candle light pools */}
-        <radialGradient id="lightPool1" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#e89a30" stopOpacity={0.18 * candle1} />
-          <stop offset="60%" stopColor="#e89a30" stopOpacity={0.06 * candle1} />
-          <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
-        </radialGradient>
-        <radialGradient id="lightPool2" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#e89a30" stopOpacity={0.18 * candle2} />
-          <stop offset="60%" stopColor="#e89a30" stopOpacity={0.06 * candle2} />
-          <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
-        </radialGradient>
-        <radialGradient id="lightPool3" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#e89a30" stopOpacity={0.18 * candle3} />
-          <stop offset="60%" stopColor="#e89a30" stopOpacity={0.06 * candle3} />
+        {/* Warm light overlay gradient — fades in as candles light */}
+        <radialGradient id="warmOverlay" cx="45%" cy="40%" r="55%">
+          <stop offset="0%" stopColor="#e89a30" stopOpacity={p * 0.12} />
+          <stop offset="60%" stopColor="#e89a30" stopOpacity={p * 0.04} />
           <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
         </radialGradient>
 
-        {/* Window amber gradient */}
-        <radialGradient id="windowAmber" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#e89a30" stopOpacity={windowGlow * 0.6} />
-          <stop offset="70%" stopColor="#e89a30" stopOpacity={windowGlow * 0.2} />
+        {/* Per-candle light pools */}
+        {candles.map((c, i) => (
+          <radialGradient key={i} id={`pool${i}`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#e89a30" stopOpacity={c.lit * 0.2} />
+            <stop offset="60%" stopColor="#e89a30" stopOpacity={c.lit * 0.06} />
+            <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
+          </radialGradient>
+        ))}
+
+        {/* Window color */}
+        <radialGradient id="windowGlow" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#e89a30" stopOpacity={windowWarm * 0.5} />
           <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
         </radialGradient>
-        {/* Parallax animations */}
-        <style>{`
-          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
-          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
-          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
-          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
-          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
-          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
-        `}</style>
       </defs>
 
-      <g className="bgLayer">
-      {/* ══════ BACKGROUND LAYER ══════ */}
+      {/* ── ROOM BASE — cold, warms with progress ── */}
+      <rect width="400" height="250" fill={`rgb(${r},${g},${b})`} />
 
-      {/* Room base — dark walls */}
-      <rect width="400" height="250" fill={ambientColor} />
+      {/* ── BACK WALL — slightly warmer than base ── */}
+      <rect x="0" y="0" width="400" height="190"
+        fill={`rgb(${r + 6},${g + 4},${b + 2})`} />
 
-      {/* Back wall with wood texture */}
-      <rect x="0" y="0" width="400" height="190" fill={`rgb(${22 + p * 18}, ${18 + p * 10}, ${14 + p * 4})`} filter="url(#wallTex)" />
-
-      {/* Wall panel lines — vertical wood paneling */}
-      {[55, 120, 185, 250, 315, 380].map((x, i) => (
-        <line
-          key={`panel-${i}`}
-          x1={x} y1={0} x2={x} y2={190}
-          stroke={`rgba(${8 + p * 10}, ${6 + p * 6}, ${4 + p * 2}, ${0.3 + p * 0.15})`}
-          strokeWidth={1.5}
-        />
+      {/* Wall panel grooves — vertical lines suggesting old wood */}
+      {[65, 130, 195, 260, 325, 390].map((x, i) => (
+        <line key={i} x1={x} y1="0" x2={x} y2="190"
+          stroke={`rgba(${r - 4},${g - 3},${b - 2}, 0.25)`} strokeWidth="1.2" />
       ))}
+      {/* Wainscoting rail */}
+      <line x1="0" y1="135" x2="400" y2="135"
+        stroke={`rgb(${r + 12},${g + 6},${b + 2})`} strokeWidth="3" />
 
-      {/* Horizontal wainscoting rail */}
-      <rect x="0" y="130" width="400" height="4" fill={`rgb(${30 + p * 12}, ${22 + p * 8}, ${14 + p * 3})`} />
-      <rect x="0" y="60" width="400" height="2" fill={`rgba(${30 + p * 12}, ${22 + p * 8}, ${14 + p * 3}, 0.5)`} />
-
-      {/* ══════ WINDOW ══════ */}
-      {/* Window recess */}
-      <rect x="55" y="28" width="68" height="88" rx="3" fill={`rgb(${8 + p * 5}, ${6 + p * 3}, ${5})`} />
-
-      {/* Window panes — start dark, fill with amber glow */}
-      <rect x="59" y="32" width="28" height="38" rx="1" fill={`rgba(${20 + Math.floor(windowGlow * 180)}, ${15 + Math.floor(windowGlow * 100)}, ${12 + Math.floor(windowGlow * 20)}, 1)`} />
-      <rect x="91" y="32" width="28" height="38" rx="1" fill={`rgba(${20 + Math.floor(windowGlow * 170)}, ${15 + Math.floor(windowGlow * 95)}, ${12 + Math.floor(windowGlow * 18)}, 1)`} />
-      <rect x="59" y="74" width="28" height="38" rx="1" fill={`rgba(${20 + Math.floor(windowGlow * 160)}, ${15 + Math.floor(windowGlow * 90)}, ${12 + Math.floor(windowGlow * 16)}, 1)`} />
-      <rect x="91" y="74" width="28" height="38" rx="1" fill={`rgba(${20 + Math.floor(windowGlow * 165)}, ${15 + Math.floor(windowGlow * 92)}, ${12 + Math.floor(windowGlow * 17)}, 1)`} />
-
-      {/* Window glow aura */}
-      {windowGlow > 0.05 && (
-        <ellipse
-          cx="89" cy="70" rx="65" ry="55"
-          fill="url(#windowAmber)"
-          filter="url(#windowGlowF)"
-        />
-      )}
-
-      {/* Thick wooden muntins */}
-      <rect x="86" y="28" width="6" height="88" rx="1" fill={`rgb(${28 + p * 10}, ${20 + p * 6}, ${12 + p * 2})`} />
-      <rect x="55" y="68" width="68" height="5" rx="1" fill={`rgb(${28 + p * 10}, ${20 + p * 6}, ${12 + p * 2})`} />
-      {/* Window frame */}
-      <rect x="53" y="26" width="72" height="92" rx="4" fill="none" stroke={`rgb(${35 + p * 10}, ${26 + p * 7}, ${16 + p * 3})`} strokeWidth="3" />
-      {/* Window sill */}
-      <rect x="48" y="116" width="82" height="6" rx="2" fill={`rgb(${35 + p * 10}, ${26 + p * 7}, ${16 + p * 3})`} filter="url(#woodTex)" />
-
-      </g>
-
-      <g className="midLayer">
-      {/* ══════ MIDGROUND LAYER ══════ */}
-
-      {/* ── Shelf on wall ── */}
-      <rect
-        x="145" y="100" width="230" height="5" rx="1"
-        fill={`rgb(${34 + p * 12}, ${26 + p * 8}, ${16 + p * 3})`}
-        opacity={0.3 + shelfP * 0.7}
-        filter="url(#woodTex)"
-      />
-      {/* Shelf bracket left */}
-      <path
-        d={`M158 105 L158 118 Q158 120 160 120 L165 120 L158 105`}
-        fill={`rgb(${30 + p * 10}, ${22 + p * 6}, ${14 + p * 2})`}
-        opacity={0.3 + shelfP * 0.7}
-      />
-      {/* Shelf bracket right */}
-      <path
-        d={`M362 105 L362 118 Q362 120 360 120 L355 120 L362 105`}
-        fill={`rgb(${30 + p * 10}, ${22 + p * 6}, ${14 + p * 2})`}
-        opacity={0.3 + shelfP * 0.7}
-      />
-
-      {/* ── Three Candles on shelf ── */}
-      {/* Candle 1 — left */}
-      <g opacity={0.3 + candle1 * 0.7}>
-        {/* Wax body — tapered */}
-        <path
-          d="M168 100 L166 82 Q167 78 170 78 Q173 78 174 82 L172 100 Z"
-          fill={`rgb(${200 + Math.floor(candle1 * 40)}, ${190 + Math.floor(candle1 * 30)}, ${170})`}
-        />
-        {/* Lit side highlight */}
-        <path
-          d="M170 80 L172 100 L174 82 Z"
-          fill={`rgba(255, 220, 160, ${candle1 * 0.25})`}
-        />
-        {/* Flame — outer */}
-        {candle1 > 0.3 && (
-          <>
-            <ellipse cx="170" cy="73" rx="4.5" ry="7" fill="#e89a30" opacity={candle1 * 0.7} filter="url(#candleGlow1)" />
-            {/* Flame — inner bright */}
-            <ellipse cx="170" cy="74" rx="2" ry="5" fill="#ffe890" opacity={candle1 * 0.9} filter="url(#flameGlowInner)" />
-            <ellipse cx="170" cy="75.5" rx="1" ry="2.5" fill="#fff8e0" opacity={candle1} />
-          </>
-        )}
-        {/* Light pool on wall */}
-        <ellipse cx="170" cy="85" rx="45" ry="40" fill="url(#lightPool1)" />
-      </g>
-
-      {/* Candle 2 — center */}
-      <g opacity={0.3 + candle2 * 0.7}>
-        <path
-          d="M258 100 L256 78 Q257 74 260 74 Q263 74 264 78 L262 100 Z"
-          fill={`rgb(${200 + Math.floor(candle2 * 40)}, ${190 + Math.floor(candle2 * 30)}, ${170})`}
-        />
-        <path
-          d="M260 76 L262 100 L264 78 Z"
-          fill={`rgba(255, 220, 160, ${candle2 * 0.25})`}
-        />
-        {candle2 > 0.3 && (
-          <>
-            <ellipse cx="260" cy="69" rx="5" ry="7.5" fill="#e89a30" opacity={candle2 * 0.7} filter="url(#candleGlow1)" />
-            <ellipse cx="260" cy="70" rx="2.2" ry="5.5" fill="#ffe890" opacity={candle2 * 0.9} filter="url(#flameGlowInner)" />
-            <ellipse cx="260" cy="71.5" rx="1.1" ry="2.8" fill="#fff8e0" opacity={candle2} />
-          </>
-        )}
-        <ellipse cx="260" cy="82" rx="48" ry="42" fill="url(#lightPool2)" />
-      </g>
-
-      {/* Candle 3 — right */}
-      <g opacity={0.3 + candle3 * 0.7}>
-        <path
-          d="M348 100 L346 85 Q347 81 350 81 Q353 81 354 85 L352 100 Z"
-          fill={`rgb(${200 + Math.floor(candle3 * 40)}, ${190 + Math.floor(candle3 * 30)}, ${170})`}
-        />
-        <path
-          d="M350 83 L352 100 L354 85 Z"
-          fill={`rgba(255, 220, 160, ${candle3 * 0.25})`}
-        />
-        {candle3 > 0.3 && (
-          <>
-            <ellipse cx="350" cy="76" rx="4" ry="6.5" fill="#e89a30" opacity={candle3 * 0.7} filter="url(#candleGlow1)" />
-            <ellipse cx="350" cy="77" rx="1.8" ry="4.8" fill="#ffe890" opacity={candle3 * 0.9} filter="url(#flameGlowInner)" />
-            <ellipse cx="350" cy="78.5" rx="0.9" ry="2.3" fill="#fff8e0" opacity={candle3} />
-          </>
-        )}
-        <ellipse cx="350" cy="88" rx="40" ry="38" fill="url(#lightPool3)" />
-      </g>
-
-      {/* ── Bookshelf (below shelf, against wall) ── */}
-      {/* Bookshelf frame */}
-      <rect
-        x="232" y="130" width="108" height="56" rx="2"
-        fill={`rgb(${26 + p * 10}, ${20 + p * 6}, ${12 + p * 2})`}
-        opacity={0.3 + booksP * 0.7}
-        filter="url(#woodTex)"
-      />
-      {/* Shelf dividers */}
-      <rect x="232" y="155" width="108" height="2" fill={`rgb(${34 + p * 10}, ${26 + p * 6}, ${16 + p * 2})`} opacity={0.3 + booksP * 0.7} />
-
-      {/* Books — top row */}
-      {books.slice(0, 4).map((b, i) => {
-        const bp = sub(p, b.delay, 0.2);
-        const litSide = i < 2 ? candle2 * 0.15 : candle3 * 0.12;
-        return (
-          <g key={`book-t-${i}`} opacity={0.2 + bp * 0.8}>
-            <rect
-              x={b.x} y={155 - b.h * 0.7}
-              width={b.w} height={b.h * 0.7}
-              rx="1"
-              fill={b.color}
-            />
-            {/* Spine highlight from candlelight */}
-            <rect
-              x={b.x} y={155 - b.h * 0.7}
-              width={2} height={b.h * 0.7}
-              fill="#e89a30"
-              opacity={litSide}
-            />
-          </g>
-        );
-      })}
-
-      {/* Books — bottom row */}
-      {books.slice(4).map((b, i) => {
-        const bp = sub(p, b.delay, 0.2);
-        const litSide = candle2 * 0.12 + candle3 * 0.08;
-        return (
-          <g key={`book-b-${i}`} opacity={0.2 + bp * 0.8}>
-            <rect
-              x={b.x} y={186 - b.h * 0.65}
-              width={b.w} height={b.h * 0.65}
-              rx="1"
-              fill={b.color}
-            />
-            <rect
-              x={b.x} y={186 - b.h * 0.65}
-              width={2} height={b.h * 0.65}
-              fill="#e89a30"
-              opacity={litSide}
-            />
-          </g>
-        );
-      })}
-
-      {/* ══════ FLOOR LAYER ══════ */}
-
-      {/* Floor base */}
-      <rect x="0" y="190" width="400" height="60" fill={`rgb(${20 + p * 14}, ${16 + p * 8}, ${10 + p * 3})`} filter="url(#floorTex)" />
-
-      {/* Floorboard lines — horizontal with slight perspective */}
-      {[195, 205, 218, 234].map((y, i) => (
-        <line
-          key={`floor-${i}`}
-          x1="0" y1={y} x2="400" y2={y + (i % 2 === 0 ? 1 : -0.5)}
-          stroke={`rgba(${10 + p * 8}, ${8 + p * 5}, ${5 + p * 2}, ${(0.15 + floorP * 0.2)})`}
-          strokeWidth={1}
-        />
+      {/* ── WINDOW — cold moonlight outside, warming ── */}
+      {/* Panes — start cold blue, warm to amber */}
+      {[[56, 30, 30, 40], [92, 30, 30, 40], [56, 74, 30, 40], [92, 74, 30, 40]].map(([x, y, w, h], i) => (
+        <rect key={i} x={x} y={y} width={w} height={h} rx="1"
+          fill={`rgb(${16 + Math.round(windowWarm * 140)},${16 + Math.round(windowWarm * 80)},${28 + Math.round(windowWarm * 10)})`} />
       ))}
-
-      {/* Floorboard vertical seams — wood grain direction */}
-      {[45, 95, 150, 205, 260, 320, 375].map((x, i) => (
-        <line
-          key={`seam-${i}`}
-          x1={x + (i % 2) * 5} y1="190" x2={x} y2="250"
-          stroke={`rgba(${8 + p * 6}, ${6 + p * 4}, ${4 + p * 2}, ${0.12 + floorP * 0.1})`}
-          strokeWidth={0.8}
-        />
-      ))}
-
-      {/* Floor candle light reflections */}
-      {candle1 > 0.3 && (
-        <ellipse cx="170" cy="210" rx="30" ry="12" fill="#e89a30" opacity={candle1 * 0.04} />
+      {/* Window glow spilling into room */}
+      {windowWarm > 0.1 && (
+        <ellipse cx="90" cy="72" rx="60" ry="50"
+          fill="url(#windowGlow)" />
       )}
-      {candle2 > 0.3 && (
-        <ellipse cx="260" cy="210" rx="35" ry="14" fill="#e89a30" opacity={candle2 * 0.05} />
-      )}
-      {candle3 > 0.3 && (
-        <ellipse cx="350" cy="210" rx="28" ry="10" fill="#e89a30" opacity={candle3 * 0.04} />
-      )}
+      {/* Frame — thick wood */}
+      <path d={WINDOW_FRAME} fill="none"
+        stroke={`rgb(${r + 18},${g + 10},${b + 4})`} strokeWidth="5" />
+      {/* Muntins */}
+      <line x1="89" y1="26" x2="89" y2="118"
+        stroke={`rgb(${r + 16},${g + 9},${b + 3})`} strokeWidth="4" />
+      <line x1="56" y1="70" x2="124" y2="70"
+        stroke={`rgb(${r + 16},${g + 9},${b + 3})`} strokeWidth="4" />
+      {/* Sill */}
+      <path d={WINDOW_SILL}
+        fill={`rgb(${r + 14},${g + 8},${b + 3})`} />
 
-      </g>
+      {/* ── HEARTH — stone arch, cold and empty ── */}
+      <path d={HEARTH_ARCH}
+        fill={`rgb(${r + 8},${g + 5},${b + 2})`} />
+      <path d={HEARTH_INNER}
+        fill={`rgb(${Math.max(6, r - 4)},${Math.max(5, g - 3)},${Math.max(5, b - 2)})`} />
+      <path d={HEARTH_MANTEL}
+        fill={`rgb(${r + 12},${g + 7},${b + 3})`} />
+      {/* Cold ash in hearth */}
+      <ellipse cx="320" cy="186" rx="24" ry="4"
+        fill={`rgb(${r + 4},${g + 3},${b + 2})`} opacity="0.4" />
+      {/* Stone texture lines on hearth */}
+      <line x1="290" y1="155" x2="290" y2="190" stroke={`rgb(${r + 2},${g + 1},${b})`} strokeWidth="0.5" opacity="0.3" />
+      <line x1="320" y1="145" x2="320" y2="118" stroke={`rgb(${r + 2},${g + 1},${b})`} strokeWidth="0.5" opacity="0.2" />
+      <line x1="350" y1="155" x2="350" y2="190" stroke={`rgb(${r + 2},${g + 1},${b})`} strokeWidth="0.5" opacity="0.3" />
 
-      <g className="fgLayer">
-      {/* ══════ FOREGROUND OBJECTS ══════ */}
+      {/* ── SHELF ── */}
+      <path d={SHELF}
+        fill={`rgb(${r + 16},${g + 10},${b + 4})`} />
 
-      {/* ── Ceramic Mug ── */}
-      <g opacity={0.4 + sub(p, 0.3, 0.25) * 0.6}>
-        {/* Mug body — slightly tapered elliptical */}
-        <path
-          d="M145 204 Q143 195 144 190 Q145 186 152 186 Q159 186 160 190 Q161 195 159 204 Z"
-          fill={`rgb(${140 + Math.floor(candle1 * 40)}, ${90 + Math.floor(candle1 * 20)}, ${60})`}
-        />
-        {/* Mug lit side from candle 1 */}
-        <path
-          d="M155 186 Q159 186 160 190 Q161 195 159 204 L157 204 Q158 195 157 190 Z"
-          fill="#e89a30"
-          opacity={candle1 * 0.2}
-        />
-        {/* Handle */}
-        <path
-          d="M159 190 Q167 190 167 196 Q167 202 159 202"
-          fill="none"
-          stroke={`rgb(${130 + Math.floor(candle1 * 30)}, ${85 + Math.floor(candle1 * 15)}, ${55})`}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        {/* Mug rim */}
-        <ellipse cx="152" cy="186" rx="8" ry="2.5" fill={`rgb(${155 + Math.floor(candle1 * 30)}, ${100 + Math.floor(candle1 * 15)}, ${70})`} />
-        {/* Liquid inside */}
-        <ellipse cx="152" cy="187" rx="6.5" ry="1.8" fill={`rgb(${50 + Math.floor(candle1 * 20)}, ${25 + Math.floor(candle1 * 10)}, ${10})`} />
-
-        {/* Steam wisps */}
-        {steamP > 0 && (
-          <>
-            <Wisp x={149} y={180 - steamP * 8} color="#d8d0c8" radius={1.5} opacity={steamP * 0.25} />
-            <Wisp x={153} y={176 - steamP * 12} color="#d8d0c8" radius={1.2} opacity={steamP * 0.2} />
-            <Wisp x={156} y={178 - steamP * 6} color="#d8d0c8" radius={1.0} opacity={steamP * 0.18} />
-            {/* Extra wisp curls via paths */}
-            <path
-              d={`M149 ${182 - steamP * 10} Q147 ${175 - steamP * 12} 150 ${170 - steamP * 14}`}
-              fill="none" stroke="#c8c0b8" strokeWidth="0.8" strokeLinecap="round"
-              opacity={steamP * 0.15}
-            />
-            <path
-              d={`M155 ${181 - steamP * 8} Q158 ${174 - steamP * 10} 155 ${168 - steamP * 13}`}
-              fill="none" stroke="#c8c0b8" strokeWidth="0.7" strokeLinecap="round"
-              opacity={steamP * 0.12}
-            />
-          </>
-        )}
-      </g>
-
-      {/* ── Cat silhouette — bezier organic shape ── */}
-      {catP > 0 && (
-        <g opacity={catP * 0.85}>
-          {/* Cat body — sitting, facing slightly left */}
+      {/* ── CANDLES on shelf ── */}
+      {candles.map((c, i) => (
+        <g key={i}>
+          {/* Light pool on wall */}
+          <ellipse cx={c.x} cy={c.baseY - 15} rx="42" ry="35"
+            fill={`url(#pool${i})`} />
+          {/* Wax body — tapered */}
           <path
-            d={`
-              M42 208
-              C42 198 48 190 55 188
-              C58 187 60 186 62 183
-              L65 178
-              C66 176 68 176 68 178
-              L68 181
-              L72 176
-              C73 174 75 174 75 177
-              L73 182
-              C75 183 76 185 76 188
-              C78 188 80 190 80 192
-              C80 194 78 195 76 195
-              C75 198 72 202 72 208
-              C72 210 70 212 65 212
-              L48 212
-              C43 212 42 210 42 208
-              Z
-            `}
-            fill={`rgb(${14 + Math.floor(p * 8)}, ${12 + Math.floor(p * 5)}, ${10 + Math.floor(p * 3)})`}
-          />
-          {/* Tail — curving bezier */}
-          <path
-            d={`M72 206 C82 202 92 195 88 186 C86 182 80 184 82 190`}
-            fill="none"
-            stroke={`rgb(${14 + Math.floor(p * 8)}, ${12 + Math.floor(p * 5)}, ${10 + Math.floor(p * 3)})`}
-            strokeWidth="3.5"
-            strokeLinecap="round"
-          />
-          {/* Eye — subtle glint */}
-          <circle cx="64" cy="183" r="1" fill="#e89a30" opacity={catP * 0.6} />
-          <circle cx="70" cy="183.5" r="0.8" fill="#e89a30" opacity={catP * 0.5} />
-          {/* Ear inner highlights */}
-          <path d="M64 178.5 L65.5 176.5 L66.5 179" fill="none" stroke="#e89a30" strokeWidth="0.4" opacity={catP * 0.2} />
-          <path d="M71.5 177 L72.5 175 L73.5 178" fill="none" stroke="#e89a30" strokeWidth="0.4" opacity={catP * 0.2} />
+            d={`M${c.x - 4} ${c.baseY} L${c.x - 3} ${c.wickY + 4}
+                Q${c.x} ${c.wickY} ${c.x + 3} ${c.wickY + 4}
+                L${c.x + 4} ${c.baseY} Z`}
+            fill={`rgb(${200 + Math.round(c.lit * 40)},${190 + Math.round(c.lit * 30)},${170})`}
+            opacity={0.4 + c.lit * 0.6} />
+          {/* Flame */}
+          {c.lit > 0.3 && (
+            <>
+              <ellipse cx={c.x} cy={c.wickY - 5} rx={4} ry={7}
+                fill="#e89a30" opacity={c.lit * 0.7} filter="url(#flameGlow)" />
+              <ellipse cx={c.x} cy={c.wickY - 4} rx={2} ry={5}
+                fill="#ffe890" opacity={c.lit * 0.9} filter="url(#flameCore)" />
+              <ellipse cx={c.x} cy={c.wickY - 3} rx={1} ry={2.5}
+                fill="#fff8e0" opacity={c.lit} />
+            </>
+          )}
+        </g>
+      ))}
+
+      {/* ── BOOKS on shelf ── */}
+      {[
+        { x: 140, w: 6, h: 16, color: `rgb(${60 + Math.round(p * 30)},20,20)` },
+        { x: 148, w: 7, h: 20, color: `rgb(20,${40 + Math.round(p * 20)},60)` },
+        { x: 157, w: 5, h: 14, color: `rgb(30,${50 + Math.round(p * 20)},25)` },
+        { x: 164, w: 6, h: 18, color: `rgb(${50 + Math.round(p * 20)},25,${50 + Math.round(p * 15)})` },
+      ].map((bk, i) => (
+        <rect key={i} x={bk.x} y={100 - bk.h} width={bk.w} height={bk.h}
+          fill={bk.color} rx="0.5" opacity={0.3 + sub(p, 0.1 + i * 0.06, 0.2) * 0.7} />
+      ))}
+
+      {/* ── JOURNAL on mantel — glows late, narrative hook ── */}
+      {journalP > 0 && (
+        <g opacity={journalP}>
+          <rect x="310" y="130" width="16" height="10" rx="1"
+            fill={`rgb(${60 + Math.round(p * 40)},${30 + Math.round(p * 15)},15)`}
+            filter="url(#journalGlow)" />
+          {/* Faint glow suggesting the symbols */}
+          <rect x="313" y="132" width="10" height="6" rx="0.5"
+            fill="#e89a30" opacity={journalP * 0.15} />
         </g>
       )}
 
-      {/* ── Shadow cast by mug from candle 1 ── */}
-      {candle1 > 0.3 && (
-        <ellipse cx="138" cy="210" rx="12" ry="3" fill="#000" opacity={candle1 * 0.08} />
-      )}
+      {/* ── FLOOR ── */}
+      <path d={FLOOR_LINE} fill="none"
+        stroke={`rgb(${r + 10},${g + 6},${b + 2})`} strokeWidth="2" />
+      <rect x="0" y="190" width="400" height="60"
+        fill={`rgb(${r + 4},${g + 2},${b})`} />
+      {/* Floorboard seams */}
+      {[50, 110, 175, 240, 310, 370].map((x, i) => (
+        <line key={i} x1={x} y1="190" x2={x - 3} y2="250"
+          stroke={`rgb(${r - 2},${g - 2},${b - 1})`} strokeWidth="0.6" opacity="0.3" />
+      ))}
 
-      {/* ── Shadow cast by bookshelf from candles ── */}
-      {(candle2 > 0.3 || candle3 > 0.3) && (
-        <rect x="232" y="186" width="108" height="6" fill="#000" opacity={Math.max(candle2, candle3) * 0.06} />
-      )}
-
+      {/* ── MUG — with steam in phrase 2 ── */}
+      <g opacity={0.4 + sub(p, 0.3, 0.2) * 0.6}>
+        <path d="M108 204 Q106 196 107 191 Q108 188 114 188 Q120 188 121 191 Q122 196 120 204 Z"
+          fill={`rgb(${120 + Math.round(c1 * 40)},${80 + Math.round(c1 * 20)},55)`} />
+        <path d="M120 192 Q127 192 127 197 Q127 202 120 202"
+          fill="none" stroke={`rgb(${110 + Math.round(c1 * 30)},${75 + Math.round(c1 * 15)},50)`}
+          strokeWidth="2" strokeLinecap="round" />
+        <ellipse cx="114" cy="188" rx="7" ry="2" fill={`rgb(${130 + Math.round(c1 * 30)},${90 + Math.round(c1 * 15)},65)`} />
+        {/* Steam */}
+        {steamP > 0 && (
+          <g opacity={steamP * 0.3}>
+            <path d={`M111 ${186 - steamP * 8} Q109 ${180 - steamP * 10} 112 ${175 - steamP * 12}`}
+              fill="none" stroke="#c8c0b0" strokeWidth="0.8" strokeLinecap="round" />
+            <path d={`M116 ${185 - steamP * 6} Q118 ${178 - steamP * 9} 115 ${172 - steamP * 11}`}
+              fill="none" stroke="#c8c0b0" strokeWidth="0.7" strokeLinecap="round" />
+          </g>
+        )}
       </g>
 
-      {/* ══════ AMBIENT OVERLAYS ══════ */}
-
-      {/* Overall warm wash as candles light up */}
-      <rect
-        width="400" height="250"
-        fill="#e89a30"
-        opacity={p * 0.04}
-      />
-
-      {/* Vignette — dark corners for coziness */}
-      <rect width="400" height="250" fill="url(#vignette)" opacity={0.6} />
-
-      {/* Subtle dust motes in candlelight — late appearance */}
-      {p > 0.6 && (
-        <>
-          <Wisp x={180} y={95} color="#e8d8b0" radius={0.8} opacity={sub(p, 0.6, 0.15) * 0.15} />
-          <Wisp x={250} y={80} color="#e8d8b0" radius={0.6} opacity={sub(p, 0.65, 0.15) * 0.12} />
-          <Wisp x={310} y={92} color="#e8d8b0" radius={0.7} opacity={sub(p, 0.7, 0.15) * 0.14} />
-          <Wisp x={195} y={110} color="#e8d8b0" radius={0.5} opacity={sub(p, 0.75, 0.15) * 0.1} />
-          <Wisp x={340} y={105} color="#e8d8b0" radius={0.9} opacity={sub(p, 0.8, 0.15) * 0.13} />
-          <Wisp x={160} y={75} color="#e8d8b0" radius={0.6} opacity={sub(p, 0.85, 0.12) * 0.11} />
-        </>
+      {/* ── CAT — bezier silhouette, appears late ── */}
+      {catP > 0 && (
+        <g opacity={catP * 0.85}>
+          <path d={`
+            M42 208 C42 198 48 190 55 188 C58 187 60 186 62 183
+            L65 178 C66 176 68 176 68 178 L68 181 L72 176
+            C73 174 75 174 75 177 L73 182 C75 183 76 185 76 188
+            C78 188 80 190 80 192 C80 194 78 195 76 195
+            C75 198 72 202 72 208 C72 210 70 212 65 212
+            L48 212 C43 212 42 210 42 208 Z
+          `} fill={`rgb(${r - 2},${g - 2},${b - 2})`} />
+          {/* Tail */}
+          <path d="M72 206 C82 202 92 195 88 186 C86 182 80 184 82 190"
+            fill="none" stroke={`rgb(${r - 2},${g - 2},${b - 2})`}
+            strokeWidth="3.5" strokeLinecap="round" />
+          {/* Eyes — amber glint */}
+          <circle cx="64" cy="183" r="1" fill="#e89a30" opacity={catP * 0.6} />
+          <circle cx="70" cy="183.5" r="0.8" fill="#e89a30" opacity={catP * 0.5} />
+        </g>
       )}
 
-      {/* Atmospheric particles — dust motes and tiny embers */}
-      {Array.from({ length: 40 }).map((_, i) => {
-        const px = (i * 47 + 13) % 400;
-        const baseY = (i * 71 + 29) % 220 + 15;
-        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
-        const py = baseY - p * 30 * ((i % 5) / 5);
-        const size = 0.5 + (i % 4) * 0.25;
-        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
-        return (
-          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
-            fill={i % 5 === 0 ? "#e8a040" : "#e8d0a0"} opacity={opacity} />
-        );
+      {/* ── WARM LIGHT OVERLAY — like the canopy, this covers the cold room ── */}
+      <rect width="400" height="250" fill="url(#warmOverlay)" />
+
+      {/* ── DUST MOTES in candlelight ── */}
+      {dustP > 0 && Array.from({ length: 12 }).map((_, i) => {
+        const mx = 130 + (i * 37) % 140;
+        const my = 60 + (i * 29) % 100;
+        const drift = Math.sin(p * Math.PI * 2 + i * 1.5) * 3;
+        const mp = sub(p, 0.6 + i * 0.025, 0.12);
+        return mp > 0 ? (
+          <circle key={i} cx={mx + drift} cy={my - mp * 5}
+            r={0.5 + (i % 3) * 0.2}
+            fill="#e8d0a0" opacity={mp * 0.15} />
+        ) : null;
       })}
     </svg>
   );

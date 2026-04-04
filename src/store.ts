@@ -67,6 +67,7 @@ interface GameState {
   advanceLevel: () => void;
   startGame: () => void;
   restart: () => void;
+  jumpToLevel: (lvl: number) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -160,5 +161,18 @@ export const useGameStore = create<GameState>((set, get) => ({
       completing: false,
       screen: "intro",
     });
+  },
+
+  jumpToLevel: (lvl: number) => {
+    if (lvl >= 0 && lvl < LEVELS.length) {
+      set({
+        lvl,
+        promptIdx: 0,
+        typed: "",
+        completing: false,
+        screen: "playing",
+      });
+      writeSave(lvl, 0);
+    }
   },
 }));
