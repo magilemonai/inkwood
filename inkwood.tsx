@@ -904,19 +904,21 @@ export default function Inkwood() {
   const [promptIdx, setPromptIdx] = useState(0);
   const [typed, setTyped] = useState("");
   const [completing, setCompleting] = useState(false);
+  const completingRef = useRef(false);
   const inputRef = useRef(null);
 
   const level = LEVELS[lvl];
-  const target = level.prompts[promptIdx];
+  const target = level.prompts[promptIdx] || "";
   const totalPrompts = level.prompts.length;
   const charStates = getCharStates(typed, target);
   const hasError = charStates.some((s) => s === "error");
-  const isComplete = typed === target;
-  const promptProgress = typed.length / target.length;
+  const isComplete = target.length > 0 && typed === target;
+  const promptProgress = target.length > 0 ? typed.length / target.length : 0;
   const levelProgress = (promptIdx + promptProgress) / totalPrompts;
 
   useEffect(() => {
-    if (!isComplete || completing) return;
+    if (!isComplete || completingRef.current) return;
+    completingRef.current = true;
     setCompleting(true);
     setTimeout(() => {
       if (promptIdx + 1 < totalPrompts) {
@@ -927,8 +929,9 @@ export default function Inkwood() {
         if (lvl + 1 < LEVELS.length) setScreen("levelWin");
         else setScreen("gameWin");
       }
+      completingRef.current = false;
     }, 700);
-  }, [isComplete, completing, promptIdx, totalPrompts, lvl]);
+  }, [isComplete, promptIdx, totalPrompts, lvl]);
 
   useEffect(() => {
     if (screen === "playing") setTimeout(() => inputRef.current?.focus(), 50);
