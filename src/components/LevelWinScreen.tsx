@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { LEVELS, getActLabel } from "../levels";
 import s from "../styles/WinScreens.module.css";
@@ -7,9 +7,12 @@ export default function LevelWinScreen() {
   const { lvl, advanceLevel } = useGameStore();
 
   // Capture level data at mount — prevents flash of next level during exit animation
-  const snapshotRef = useRef({ lvl, level: LEVELS[lvl] });
-  const { level } = snapshotRef.current;
-  const snappedLvl = snapshotRef.current.lvl;
+  const [snapshot] = useState(() => ({ lvl, level: LEVELS[lvl] }));
+  const { level } = snapshot;
+  const snappedLvl = snapshot.lvl;
+
+  const { accent, bg } = level;
+  const pct = Math.round(((snappedLvl + 1) / LEVELS.length) * 100);
 
   // Keyboard: space or enter to advance
   useEffect(() => {
@@ -22,9 +25,6 @@ export default function LevelWinScreen() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [advanceLevel]);
-
-  const { accent, bg } = level;
-  const pct = Math.round(((snappedLvl + 1) / LEVELS.length) * 100);
 
   return (
     <div className={s.container} style={{ background: bg }}>

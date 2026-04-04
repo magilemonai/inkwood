@@ -98,8 +98,8 @@ function StonesScene({ progress: p }: SceneProps) {
       <rect x="0" y="205" width="400" height="45" fill={`hsl(35, ${8 + p * 5}%, ${groundL}%)`} />
 
       {/* ── Heather and scrub ── */}
-      <GrassRow y="200" color={`hsl(30, ${15 + p * 8}%, ${12 + p * 5}%)`} count={30} maxHeight={8} progress={0.4 + p * 0.6} />
-      <GrassRow y="210" color={`hsl(25, ${12 + p * 6}%, ${10 + p * 4}%)`} count={20} maxHeight={6} progress={0.3 + p * 0.7} />
+      <GrassRow y={200} color={`hsl(30, ${15 + p * 8}%, ${12 + p * 5}%)`} count={30} maxHeight={8} progress={0.4 + p * 0.6} />
+      <GrassRow y={210} color={`hsl(25, ${12 + p * 6}%, ${10 + p * 4}%)`} count={20} maxHeight={6} progress={0.3 + p * 0.7} />
 
       {/* ── Central glow ── */}
       <ellipse cx="200" cy="155" rx="140" ry="60" fill="url(#stonesGlow)" />
@@ -231,7 +231,7 @@ function StonesScene({ progress: p }: SceneProps) {
       )}
 
       {/* ── Foreground scrub ── */}
-      <GrassRow y="240" color={`hsl(30, ${10 + p * 5}%, ${8 + p * 4}%)`} count={12} maxHeight={14} progress={0.5 + p * 0.5} />
+      <GrassRow y={240} color={`hsl(30, ${10 + p * 5}%, ${8 + p * 4}%)`} count={12} maxHeight={14} progress={0.5 + p * 0.5} />
     </svg>
   );
 }

@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, TextureFilter, MistFilter } from "../svg/filters";
-import { Hill, TreeSilhouette, StoneBlock, Wisp, GrassRow } from "../svg/primitives";
+import { TreeSilhouette, StoneBlock, Wisp, GrassRow } from "../svg/primitives";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {

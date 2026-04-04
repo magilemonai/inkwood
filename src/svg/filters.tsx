@@ -93,10 +93,10 @@ export function TextureFilter({
         values="0"
         result="gray"
       />
-      <feBlend in="SourceGraphic" in2="gray" mode="overlay" result="textured" />
-      <feComponentTransfer in="textured">
-        <feFuncA type="linear" slope={1} intercept={0} />
+      <feComponentTransfer in="gray" result="fadedNoise">
+        <feFuncA type="linear" slope={intensity} intercept={0} />
       </feComponentTransfer>
+      <feBlend in="SourceGraphic" in2="fadedNoise" mode="overlay" />
     </filter>
   );
 }
