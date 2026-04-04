@@ -1,26 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 
 /**
- * Floating dev panel for testing. Toggle with backtick (`) key.
+ * Floating dev panel for testing. Toggle with F2 key.
  * Only rendered in development mode.
  */
 export default function DevPanel() {
   const [open, setOpen] = useState(false);
   const { lvl, screen, jumpToLevel, setScreen } = useGameStore();
 
-  // Toggle with backtick key
-  if (typeof window !== "undefined") {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useState(() => {
-      const handler = (e: KeyboardEvent) => {
-        if (e.key === "`") setOpen((o) => !o);
-      };
-      window.addEventListener("keydown", handler);
-      return () => window.removeEventListener("keydown", handler);
-    });
-  }
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        setOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   if (!open) return null;
 
@@ -68,7 +67,7 @@ export default function DevPanel() {
       </div>
 
       <div style={{ marginTop: 6, color: "#444", fontSize: 9 }}>
-        press ` to close
+        F2 to close
       </div>
     </div>
   );
