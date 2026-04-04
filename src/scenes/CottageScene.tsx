@@ -67,7 +67,7 @@ function CottageScene({ progress: p }: SceneProps) {
           <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
         </radialGradient>
 
-        {candles.map((c, i) => (
+        {candles.map((_c, i) => (
           <radialGradient key={i} id={`pool${i}`} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#e89a30" stopOpacity={candleLit[i] * 0.2} />
             <stop offset="60%" stopColor="#e89a30" stopOpacity={candleLit[i] * 0.06} />
