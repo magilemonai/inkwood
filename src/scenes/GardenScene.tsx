@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter, TextureFilter } from "../svg/filters";
-import { Hill, Cloud, Flower, GrassRow, TreeSilhouette } from "../svg/primitives";
+import { Hill, Cloud, Flower, Rain, GrassRow, TreeSilhouette } from "../svg/primitives";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {
@@ -17,6 +17,10 @@ function GardenScene({ progress: p }: SceneProps) {
   // ── Sun ──
   const sunY = 95 - p * 65;
   const sunGlow = p;
+
+  // ── Rain fades in mid-progress, fades out ──
+  const rainIntensity =
+    p < 0.15 ? 0 : p < 0.35 ? (p - 0.15) / 0.2 : p < 0.6 ? 1 : Math.max(0, (0.75 - p) / 0.15);
 
   // ── Flowers stagger ──
   const flowers = [
@@ -125,6 +129,11 @@ function GardenScene({ progress: p }: SceneProps) {
       </g>
 
       <g className="midLayer">
+
+      {/* ── Rain ── */}
+      {rainIntensity > 0.05 && (
+        <Rain intensity={rainIntensity} opacity={rainIntensity * 0.55} />
+      )}
 
       {/* ── Ground (foreground) ── */}
       <Hill y={210} height={15} color={`hsl(120, ${22 + p * 25}%, ${9 + p * 10}%)`} seed={0.7} />
