@@ -89,23 +89,48 @@ const BRANCHES = [
    C207 87, 193 89, 180 92 C162 96, 148 102, 138 109 Z`,
 ];
 
-/** Secondary twigs — thin offshoots from main branches for detail */
+/** Sub-branches — medium forking branches off the main ones, tapered closed paths */
+const SUB_BRANCHES = [
+  // off far-left branch, forks upward around midpoint
+  `M72 86 C66 78, 56 72, 48 65 L50 67 C58 74, 68 80, 76 89 Z`,
+  // off up-left, forks further left near top
+  `M86 64 C78 56, 66 52, 56 46 L58 48 C68 54, 80 60, 90 68 Z`,
+  // off up-left, smaller fork downward-left at midpoint
+  `M96 78 C88 80, 78 78, 68 80 L69 82 C79 81, 90 82, 98 82 Z`,
+  // off center, forks right in upper section
+  `M121 55 C128 48, 136 44, 144 38 L145 41 C138 46, 130 52, 124 58 Z`,
+  // off center, forks left lower down
+  `M119 70 C112 66, 104 62, 96 60 L97 62 C105 65, 114 70, 122 74 Z`,
+  // off up-right, forks further right near top
+  `M160 62 C168 54, 178 50, 188 44 L189 47 C180 52, 170 58, 163 66 Z`,
+  // off far-right, forks upward at midpoint
+  `M182 88 C190 80, 198 76, 208 70 L209 73 C200 78, 192 84, 185 92 Z`,
+  // off far-right, smaller drooping fork
+  `M200 86 C208 90, 216 88, 226 92 L225 94 C216 91, 209 92, 202 90 Z`,
+];
+
+/** Fine twigs — thin stroked tips at the ends of branches */
 const TWIGS = [
-  // off far-left branch
-  "M62 84 C56 78, 48 74, 42 70",
-  "M78 88 C72 82, 64 80, 58 76",
-  // off up-left branch
-  "M86 66 C78 62, 72 56, 66 52",
-  "M94 76 C86 72, 80 66, 74 62",
-  // off center branch
-  "M120 58 C112 54, 106 50, 100 48",
-  "M122 72 C130 68, 136 64, 140 60",
-  // off up-right branch
-  "M156 64 C162 58, 170 56, 176 52",
-  "M146 74 C152 70, 160 68, 168 64",
-  // off far-right branch
-  "M178 88 C184 82, 192 80, 198 76",
-  "M196 86 C200 80, 208 78, 214 74",
+  // tips of far-left sub-branch
+  "M48 65 C42 60, 36 56, 30 54",
+  "M50 67 C44 64, 38 62, 34 58",
+  // tips of up-left
+  "M56 46 C50 40, 44 36, 38 32",
+  "M68 44 C62 38, 58 34, 52 30",
+  // tips of center forks
+  "M144 38 C150 32, 154 28, 160 24",
+  "M96 60 C90 56, 84 54, 78 52",
+  // tips of up-right
+  "M188 44 C194 38, 200 36, 206 32",
+  "M180 48 C186 42, 190 38, 196 34",
+  // tips of far-right
+  "M208 70 C214 64, 220 62, 226 58",
+  "M226 92 C232 90, 238 92, 244 90",
+  // a few wispy tips at very ends
+  "M30 54 C26 50, 22 48, 18 46",
+  "M38 32 C34 26, 30 24, 26 22",
+  "M160 24 C164 18, 168 16, 172 14",
+  "M206 32 C212 26, 216 24, 222 22",
 ];
 
 /** Tree roots — thick curves spreading from the trunk base into the earth */
@@ -258,18 +283,24 @@ function GardenScene({ progress: p }: SceneProps) {
         transform="translate(3, 2) scale(0.88)"
         style={{ transformOrigin: "125px 65px" }} />
 
-      {/* Branches — tapered filled shapes, visible through canopy gaps */}
+      {/* Branches — tapered filled shapes with forking sub-branches */}
       <g opacity={0.4 + p * 0.3}>
+        {/* Main branches */}
         {BRANCHES.map((d, i) => (
           <path key={i} d={d}
             fill={`hsl(30, ${trunkS}%, ${trunkL + 3}%)`} />
         ))}
-        {/* Secondary twigs — thin stroked offshoots */}
+        {/* Forking sub-branches — medium tapered shapes */}
+        {SUB_BRANCHES.map((d, i) => (
+          <path key={`sb${i}`} d={d}
+            fill={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`} />
+        ))}
+        {/* Fine twigs at branch tips */}
         {TWIGS.map((d, i) => (
           <path key={`tw${i}`} d={d}
             fill="none"
-            stroke={`hsl(30, ${trunkS}%, ${trunkL + 5}%)`}
-            strokeWidth={1.2}
+            stroke={`hsl(30, ${trunkS}%, ${trunkL + 6}%)`}
+            strokeWidth={1}
             strokeLinecap="round" />
         ))}
       </g>
