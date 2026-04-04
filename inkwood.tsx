@@ -918,7 +918,7 @@ export default function Inkwood() {
   useEffect(() => {
     if (!isComplete || completing) return;
     setCompleting(true);
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       if (promptIdx + 1 < totalPrompts) {
         setPromptIdx((p) => p + 1);
         setTyped("");
@@ -928,7 +928,6 @@ export default function Inkwood() {
         else setScreen("gameWin");
       }
     }, 700);
-    return () => clearTimeout(timer);
   }, [isComplete, completing, promptIdx, totalPrompts, lvl]);
 
   useEffect(() => {
