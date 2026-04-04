@@ -129,13 +129,15 @@ function CottageScene({ progress: p }: SceneProps) {
           strokeWidth="2" strokeLinecap="round" />
         <ellipse cx="353" cy="105" rx="6" ry="1.8"
           fill={`rgb(${130 + Math.round(c3 * 30)},${90 + Math.round(c3 * 15)},65)`} />
-        {/* Steam — thin wispy curves, visible against dark right wall */}
+        {/* Steam — asymmetric wispy curves */}
         {sub(p, 0.55, 0.2) > 0 && (
           <g opacity={sub(p, 0.55, 0.2) * 0.3}>
-            <path d={`M351 103 Q348 96 351 90 Q353 85 350 80`}
+            <path d="M351 102 Q347 94 352 86 Q355 80 351 74"
               fill="none" stroke="#c8b898" strokeWidth="0.8" strokeLinecap="round" />
-            <path d={`M355 102 Q358 95 355 88 Q353 83 356 78`}
-              fill="none" stroke="#c8b898" strokeWidth="0.7" strokeLinecap="round" />
+            <path d="M356 103 Q360 98 357 92 Q354 88 358 84"
+              fill="none" stroke="#c8b898" strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M353 101 Q350 97 353 93"
+              fill="none" stroke="#c8b898" strokeWidth="0.5" strokeLinecap="round" opacity="0.6" />
           </g>
         )}
       </g>
@@ -203,38 +205,40 @@ function CottageScene({ progress: p }: SceneProps) {
       <rect x="0" y="190" width="400" height="60"
         fill={`rgb(${r + 3},${g + 2},${b})`} />
 
-      {/* ── CAT — sitting on floor below window, silhouette in profile ── */}
+      {/* ── CAT — sitting on floor below window ── */}
       {catP > 0 && (
         <g opacity={catP * 0.9}>
-          {/* A sitting cat seen from the side:
-              Round haunches, chest rising to a small round head,
-              two triangular ears, front paws visible, tail curls
-              around on the floor in front */}
+          {/* Body — wide haunches tapering to narrow neck, then
+              widening again into a round head with ears on top */}
           <path d={`
-            M50 190
-            C50 182, 52 175, 56 170
-            C60 164, 64 160, 66 156
-            C67 154, 68 152, 69 150
-            C70 148, 72 148, 72 150
-            C72 151, 71 153, 70 154
-            C72 152, 74 150, 75 150
-            C76 150, 76 152, 75 154
-            C74 155, 72 156, 72 158
-            C72 160, 72 162, 74 164
-            C76 166, 78 170, 78 175
-            C78 180, 78 186, 76 190
+            M48 190
+            C48 183, 50 176, 54 172
+            C58 168, 60 165, 62 162
+            C63 160, 63 158, 62 156
+            C61 154, 58 152, 56 150
+            C54 148, 52 145, 52 142
+            C52 139, 54 136, 58 136
+            C62 136, 66 138, 68 140
+            L70 136
+            C72 134, 74 135, 73 138
+            C73 140, 72 142, 70 143
+            C72 144, 74 146, 76 148
+            C78 150, 79 153, 78 156
+            C77 158, 76 160, 74 162
+            C76 164, 78 168, 80 172
+            C82 176, 82 183, 80 190
             Z
           `} fill={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`} />
-          {/* Tail — curls forward along the floor, not up */}
-          <path d="M50 188 C44 186, 36 184, 30 186 C26 188, 28 190, 32 189 C36 188, 40 190, 44 190"
+          {/* Tail — curls forward along floor */}
+          <path d="M48 188 C42 186, 34 184, 28 186 C24 188, 26 190, 30 189 C34 188, 38 190, 42 190"
             fill="none" stroke={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`}
             strokeWidth="3" strokeLinecap="round" />
-          {/* Eyes — amber glints */}
-          <circle cx="70" cy="152" r="1.2" fill="#e89a30" opacity={catP * 0.7} />
+          {/* Eye */}
+          <circle cx="66" cy="146" r="1.3" fill="#e89a30" opacity={catP * 0.7} />
           {/* Whiskers */}
           <g opacity={catP * 0.25}>
-            <line x1="74" y1="155" x2="82" y2="153" stroke="#c8a870" strokeWidth="0.4" />
-            <line x1="74" y1="156" x2="82" y2="157" stroke="#c8a870" strokeWidth="0.4" />
+            <line x1="76" y1="150" x2="84" y2="148" stroke="#c8a870" strokeWidth="0.4" />
+            <line x1="76" y1="152" x2="84" y2="153" stroke="#c8a870" strokeWidth="0.4" />
           </g>
         </g>
       )}
