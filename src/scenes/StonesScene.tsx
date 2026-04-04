@@ -81,10 +81,21 @@ function StonesScene({ progress: p }: SceneProps) {
           <stop offset="0%" stopColor="#88a8c8" stopOpacity={p * 0.12} />
           <stop offset="100%" stopColor="#88a8c8" stopOpacity={0} />
         </radialGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── Sky ── */}
       <rect width="400" height="250" fill="url(#stonesSky)" />
+
+      <g className="bgLayer">
 
       {/* ── Aurora at high progress ── */}
       {p > 0.7 && <rect x="60" y="5" width="280" height="40" fill="url(#aurora)" rx="20" />}
@@ -101,6 +112,9 @@ function StonesScene({ progress: p }: SceneProps) {
       <GrassRow y={200} color={`hsl(30, ${15 + p * 8}%, ${12 + p * 5}%)`} count={30} maxHeight={8} progress={0.4 + p * 0.6} />
       <GrassRow y={210} color={`hsl(25, ${12 + p * 6}%, ${10 + p * 4}%)`} count={20} maxHeight={6} progress={0.3 + p * 0.7} />
 
+      </g>
+
+      <g className="midLayer">
       {/* ── Central glow ── */}
       <ellipse cx="200" cy="155" rx="140" ry="60" fill="url(#stonesGlow)" />
 
@@ -124,13 +138,17 @@ function StonesScene({ progress: p }: SceneProps) {
         const stoneTopY2 = s2.y + s2.h - sub(p, s2.delay, 0.2) * s2.h;
         const midY1 = stoneTopY1 + 15;
         const midY2 = stoneTopY2 + 15;
+        const lineLength = Math.sqrt((s2.x - s1.x) ** 2 + (midY2 - midY1) ** 2);
         return (
           <line
             key={i}
             x1={s1.x} y1={midY1}
-            x2={s1.x + (s2.x - s1.x) * lp} y2={midY1 + (midY2 - midY1) * lp}
+            x2={s2.x} y2={midY2}
             stroke="#88a8c8"
             strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeDasharray={lineLength}
+            strokeDashoffset={lineLength * (1 - lp)}
             opacity={lp * 0.45}
             filter="url(#leyGlow)"
           />
@@ -212,6 +230,9 @@ function StonesScene({ progress: p }: SceneProps) {
         </g>
       )}
 
+      </g>
+
+      <g className="fgLayer">
       {/* ── Low mist ── */}
       <rect x="0" y="195" width="400" height="55"
         fill="#8898a8"
@@ -232,6 +253,21 @@ function StonesScene({ progress: p }: SceneProps) {
 
       {/* ── Foreground scrub ── */}
       <GrassRow y={240} color={`hsl(30, ${10 + p * 5}%, ${8 + p * 4}%)`} count={12} maxHeight={14} progress={0.5 + p * 0.5} />
+      </g>
+
+      {/* Atmospheric particles — wind-blown grass seeds and faint spirits */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.25;
+        const opacity = (0.07 + (i % 3) * 0.05) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 3 === 0 ? "#a0b8d8" : "#88a8c8"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

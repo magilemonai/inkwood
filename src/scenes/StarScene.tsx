@@ -141,10 +141,21 @@ function StarScene({ progress: p }: SceneProps) {
           <stop offset="0%" stopColor="white" stopOpacity={0.8} />
           <stop offset="100%" stopColor="white" stopOpacity={0} />
         </linearGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ══════ BACKGROUND LAYER — SKY ══════ */}
       <rect width="400" height="250" fill="url(#skyGrad)" />
+
+      <g className="bgLayer">
 
       {/* ── Milky Way band — diagonal wash ── */}
       {milkyP > 0 && (
@@ -281,6 +292,9 @@ function StarScene({ progress: p }: SceneProps) {
         />
       )}
 
+      </g>
+
+      <g className="midLayer">
       {/* ══════ HORIZON / MIDGROUND ══════ */}
 
       {/* Atmospheric haze at horizon */}
@@ -305,6 +319,9 @@ function StarScene({ progress: p }: SceneProps) {
       <Hill y={218} height={18} color="#050c14" seed={2.1} opacity={0.3 + treeP * 0.7} />
       <Hill y={225} height={14} color="#040a10" seed={3.8} opacity={0.4 + treeP * 0.6} />
 
+      </g>
+
+      <g className="fgLayer">
       {/* ══════ FOREGROUND — TREELINE ══════ */}
 
       {/* Dark ground base */}
@@ -340,6 +357,21 @@ function StarScene({ progress: p }: SceneProps) {
 
       {/* ── Bottom ground — absolute dark ── */}
       <rect x="0" y="240" width="400" height="10" fill="#020508" />
+      </g>
+
+      {/* Atmospheric particles — faint distant stars and cosmic dust */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.4 + (i % 4) * 0.2;
+        const opacity = (0.06 + (i % 3) * 0.04) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 3 === 0 ? "#c8c8ff" : "#e0e8ff"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

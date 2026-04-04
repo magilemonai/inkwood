@@ -148,11 +148,21 @@ function WellScene({ progress: p }: SceneProps) {
         <clipPath id="wellClip">
           <rect x={wellInnerLeft} y={wellTop} width={wellInnerRight - wellInnerLeft} height={wellBottom - wellTop + 5} />
         </clipPath>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── Sky ── */}
       <rect width="400" height="250" fill="url(#wellSkyGrad)" />
 
+      <g className="bgLayer">
       {/* ── Distant hills ── */}
       <Hill y={170} height={22} color={`hsl(160, ${12 + p * 10}%, ${7 + p * 4}%)`} seed={0.5} />
       <Hill y={180} height={18} color={`hsl(155, ${15 + p * 12}%, ${8 + p * 5}%)`} seed={2.1} />
@@ -165,6 +175,9 @@ function WellScene({ progress: p }: SceneProps) {
       <TreeSilhouette x={340} y={178} height={70} spread={28} color={`hsl(155, 13%, ${5 + p * 3}%)`} opacity={0.35 + p * 0.35} />
       <TreeSilhouette x={385} y={175} height={50} spread={20} color={`hsl(160, 10%, ${7 + p * 3}%)`} opacity={0.3 + p * 0.25} />
 
+      </g>
+
+      <g className="midLayer">
       {/* ── Mid-ground hills (clearing) ── */}
       <Hill y={195} height={14} color={`hsl(140, ${18 + p * 20}%, ${9 + p * 8}%)`} seed={1.2} />
 
@@ -462,6 +475,9 @@ function WellScene({ progress: p }: SceneProps) {
         filter="url(#clearingMist)"
       />
 
+      </g>
+
+      <g className="fgLayer">
       {/* ── Firefly wisps ── */}
       {wisps.map((w, i) => {
         const wp = sub(p, w.delay, 0.08);
@@ -485,6 +501,21 @@ function WellScene({ progress: p }: SceneProps) {
         maxHeight={18}
         progress={0.3 + p * 0.7}
       />
+      </g>
+
+      {/* Atmospheric particles — water droplets and mist */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.3;
+        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill="#60c8c8" opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

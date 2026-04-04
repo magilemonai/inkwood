@@ -257,6 +257,15 @@ function SanctumScene({ progress: p }: SceneProps) {
           <stop offset="0%" stopColor="#d0b870" stopOpacity={p * 0.06} />
           <stop offset="100%" stopColor="#d0b870" stopOpacity={0} />
         </radialGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── Sky ── */}
@@ -265,6 +274,7 @@ function SanctumScene({ progress: p }: SceneProps) {
       {/* ── Gold ambient wash ── */}
       <rect width="400" height="250" fill="url(#goldAmbient)" />
 
+      <g className="bgLayer">
       {/* ── Stars ── */}
       {stars.map((s, i) => {
         const sp = sub(p, 0.05 + i * 0.03, 0.15);
@@ -316,6 +326,9 @@ function SanctumScene({ progress: p }: SceneProps) {
         );
       })}
 
+      </g>
+
+      <g className="midLayer">
       {/* ── Distant hills ── */}
       <Hill y={200} height={15} color={`hsl(220, ${10 + p * 8}%, ${5 + p * 3}%)`} seed={0.5} />
 
@@ -409,6 +422,9 @@ function SanctumScene({ progress: p }: SceneProps) {
         rx={5}
       />
 
+      </g>
+
+      <g className="fgLayer">
       {/* ── Spirit wisps / fireflies ── */}
       {wisps.map((w, i) => {
         const wp = sub(p, w.delay, 0.12);
@@ -441,6 +457,21 @@ function SanctumScene({ progress: p }: SceneProps) {
 
       {/* ── Foreground grass edges ── */}
       <GrassRow y={245} color={`hsl(110, ${12 + p * 10}%, ${5 + p * 4}%)`} count={20} maxHeight={14} progress={p} />
+      </g>
+
+      {/* Atmospheric particles — fireflies and spirit motes */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.6 + (i % 4) * 0.3;
+        const opacity = (0.1 + (i % 3) * 0.08) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 4 === 0 ? "#e8d090" : "#d0b870"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

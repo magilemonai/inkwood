@@ -146,11 +146,21 @@ function BridgeScene({ progress: p }: SceneProps) {
           <stop offset="40%" stopColor="white" stopOpacity={0.06} />
           <stop offset="100%" stopColor="white" stopOpacity={0.15} />
         </linearGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── Sky ── */}
       <rect width="400" height="250" fill="url(#bridgeSkyGrad)" />
 
+      <g className="bgLayer">
       {/* ── Distant mountain peaks ── */}
       <path
         d="M0 130 L30 75 L55 95 L90 55 L120 90 L150 60 L185 85 L200 70
@@ -174,6 +184,9 @@ function BridgeScene({ progress: p }: SceneProps) {
       <TreeSilhouette x={360} y={122} height={48} spread={18} color={`hsl(150, 10%, ${7 + p * 2}%)`} opacity={0.35 + p * 0.2} />
       <TreeSilhouette x={390} y={126} height={58} spread={22} color={`hsl(145, 12%, ${5 + p * 2}%)`} opacity={0.3 + p * 0.2} />
 
+      </g>
+
+      <g className="midLayer">
       {/* ── Chasm void ── */}
       <rect x={leftCliffRight - 5} y={bridgeY} width={rightCliffLeft - leftCliffRight + 10} height={130} fill="url(#chasmGrad)" />
 
@@ -427,6 +440,9 @@ function BridgeScene({ progress: p }: SceneProps) {
         </g>
       )}
 
+      </g>
+
+      <g className="fgLayer">
       {/* ── Chasm mist layers — denser at bottom, thinner upward ── */}
       {/* Dense bottom mist */}
       <rect
@@ -476,6 +492,21 @@ function BridgeScene({ progress: p }: SceneProps) {
         maxHeight={8}
         progress={0.3 + p * 0.7}
       />
+      </g>
+
+      {/* Atmospheric particles — mist particles and floating seeds */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.3;
+        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill="#90b890" opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

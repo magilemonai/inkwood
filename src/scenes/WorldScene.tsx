@@ -94,11 +94,22 @@ function WorldScene({ progress: p }: SceneProps) {
             <stop offset="100%" stopColor={loc.color} stopOpacity={0} />
           </radialGradient>
         ))}
+
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── Background ── */}
       <rect width="400" height="250" fill="url(#worldSky)" />
 
+      <g className="bgLayer">
       {/* ── Atmospheric mist overlay ── */}
       <rect width="400" height="250" fill="#2a2820" opacity={0.1} filter="url(#bgMist)" />
 
@@ -117,6 +128,9 @@ function WorldScene({ progress: p }: SceneProps) {
         />
       ))}
 
+      </g>{/* end bgLayer */}
+
+      <g className="midLayer">
       {/* ── Ley line connections ── */}
       {connections.map(([a, b], i) => {
         const la = getNode(a);

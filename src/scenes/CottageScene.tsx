@@ -85,8 +85,18 @@ function CottageScene({ progress: p }: SceneProps) {
           <stop offset="70%" stopColor="#e89a30" stopOpacity={windowGlow * 0.2} />
           <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
         </radialGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
+      <g className="bgLayer">
       {/* ══════ BACKGROUND LAYER ══════ */}
 
       {/* Room base — dark walls */}
@@ -136,6 +146,9 @@ function CottageScene({ progress: p }: SceneProps) {
       {/* Window sill */}
       <rect x="48" y="116" width="82" height="6" rx="2" fill={`rgb(${35 + p * 10}, ${26 + p * 7}, ${16 + p * 3})`} filter="url(#woodTex)" />
 
+      </g>
+
+      <g className="midLayer">
       {/* ══════ MIDGROUND LAYER ══════ */}
 
       {/* ── Shelf on wall ── */}
@@ -316,6 +329,9 @@ function CottageScene({ progress: p }: SceneProps) {
         <ellipse cx="350" cy="210" rx="28" ry="10" fill="#e89a30" opacity={candle3 * 0.04} />
       )}
 
+      </g>
+
+      <g className="fgLayer">
       {/* ══════ FOREGROUND OBJECTS ══════ */}
 
       {/* ── Ceramic Mug ── */}
@@ -418,6 +434,8 @@ function CottageScene({ progress: p }: SceneProps) {
         <rect x="232" y="186" width="108" height="6" fill="#000" opacity={Math.max(candle2, candle3) * 0.06} />
       )}
 
+      </g>
+
       {/* ══════ AMBIENT OVERLAYS ══════ */}
 
       {/* Overall warm wash as candles light up */}
@@ -441,6 +459,20 @@ function CottageScene({ progress: p }: SceneProps) {
           <Wisp x={160} y={75} color="#e8d8b0" radius={0.6} opacity={sub(p, 0.85, 0.12) * 0.11} />
         </>
       )}
+
+      {/* Atmospheric particles — dust motes and tiny embers */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.25;
+        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 5 === 0 ? "#e8a040" : "#e8d0a0"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

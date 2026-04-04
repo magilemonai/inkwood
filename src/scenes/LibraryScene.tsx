@@ -136,8 +136,18 @@ function LibraryScene({ progress: p }: SceneProps) {
           <stop offset="60%" stopColor="#c088b0" stopOpacity={tomeP * 0.2} />
           <stop offset="100%" stopColor="#c088b0" stopOpacity={0} />
         </radialGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
+      <g className="bgLayer">
       {/* ── Background — dark cavern ── */}
       <rect width="400" height="250" fill={`hsl(280, ${ambientS}%, ${ambientL}%)`} />
 
@@ -184,6 +194,8 @@ function LibraryScene({ progress: p }: SceneProps) {
         opacity={p * 0.04}
       />
 
+      </g>
+      <g className="midLayer">
       {/* ── Stone columns — left and right ── */}
       {/* Left column */}
       <rect
@@ -386,6 +398,8 @@ function LibraryScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
+      </g>
+      <g className="fgLayer">
       {/* ── Dust motes / sparkle particles ── */}
       {sparkles.map((s, i) => {
         const sp = sub(p, s.delay, 0.15);
@@ -419,6 +433,7 @@ function LibraryScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
+      </g>
       {/* ── Ambient light overlay ── */}
       <rect width="400" height="250" fill="url(#ambientLight)" />
 
@@ -434,6 +449,20 @@ function LibraryScene({ progress: p }: SceneProps) {
         fill={`hsl(280, 15%, 2%)`}
         opacity={Math.max(0, 0.3 - p * 0.2)}
       />
+
+      {/* Atmospheric particles — dust motes catching light */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.25;
+        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 4 === 0 ? "#d8b0d0" : "#c088b0"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

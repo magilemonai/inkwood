@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import SceneRenderer from "./SceneRenderer";
+import ErrorBoundary from "./ErrorBoundary";
+import { useCompletionTimer } from "../hooks/useCompletionTimer";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -11,6 +13,14 @@ function getCharStates(typed: string, target: string): CharState[] {
     return typed[i] === ch ? "correct" : "error";
   });
 }
+
+/** Quantize to 0.01 so React.memo on scenes actually prevents re-renders */
+function quantize(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** Detect touch device for context-aware hints */
+const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
 export default function PlayingScreen() {
   const {
@@ -26,27 +36,33 @@ export default function PlayingScreen() {
   const level = useGameStore((g) => g.level());
   const target = useGameStore((g) => g.target());
   const totalPrompts = useGameStore((g) => g.totalPrompts());
-  const levelProgress = useGameStore((g) => g.levelProgress());
+  const rawProgress = useGameStore((g) => g.levelProgress());
   const isComplete = useGameStore((g) => g.isComplete());
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const completingRef = useRef(false);
   const [inputFocused, setInputFocused] = useState(false);
 
   const { accent } = level;
   const charStates = getCharStates(typed, target);
   const hasError = charStates.some((st) => st === "error");
 
-  // ── Completion timer (strict-mode safe) ──
-  useEffect(() => {
-    if (!isComplete || completingRef.current) return;
-    completingRef.current = true;
+  // Quantize progress for effective React.memo on scenes
+  const levelProgress = quantize(rawProgress);
+
+  // ── Completion timer (extracted to hook) ──
+  const handleComplete = useCallback(() => {
     startCompletion();
-    setTimeout(() => {
-      advancePrompt();
-      completingRef.current = false;
-    }, 1500);
-  }, [isComplete, promptIdx, lvl, startCompletion, advancePrompt]);
+    advancePrompt();
+  }, [startCompletion, advancePrompt]);
+
+  useCompletionTimer(isComplete, handleComplete, 1500, [promptIdx, lvl]);
+
+  // ── Start completion state immediately (for UI feedback) ──
+  useEffect(() => {
+    if (isComplete && !completing) {
+      startCompletion();
+    }
+  }, [isComplete, completing, startCompletion]);
 
   // ── Focus management ──
   useEffect(() => {
@@ -68,11 +84,16 @@ export default function PlayingScreen() {
 
   const showTapOverlay = !inputFocused && typed.length === 0;
 
+  // Golden pulse: active at the start of EVERY phrase until first character typed
+  const showPulse = typed.length === 0 && !completing;
+
   return (
     <div className={s.container} onClick={focusInput}>
-      {/* Scene fills entire viewport */}
+      {/* Scene fills entire viewport — wrapped in error boundary */}
       <div className={s.sceneContainer}>
-        <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
+        <ErrorBoundary>
+          <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
+        </ErrorBoundary>
       </div>
 
       {/* Header floats on top */}
@@ -107,15 +128,15 @@ export default function PlayingScreen() {
 
         <p className={s.flavor}>{level.flavor}</p>
 
-        {/* Prompt display */}
+        {/* Prompt display — pulses on every phrase start */}
         <div
-          className={`${s.promptBox} ${typed.length === 0 && promptIdx === 0 && !completing ? s.promptBoxPulsing : ""}`}
+          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""}`}
           style={{ border: `1px solid ${accent}25` }}
           onClick={focusInput}
         >
           {showTapOverlay && (
             <div className={s.tapOverlay} onClick={focusInput}>
-              tap here to begin typing
+              {isTouchDevice ? "tap here to begin typing" : "click anywhere to type"}
             </div>
           )}
 

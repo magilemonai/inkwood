@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter, TextureFilter } from "../svg/filters";
-import { Hill, Cloud, Flower, Rain, GrassRow, TreeSilhouette } from "../svg/primitives";
+import { Hill, Cloud, Flower, GrassRow, TreeSilhouette } from "../svg/primitives";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {
@@ -17,10 +17,6 @@ function GardenScene({ progress: p }: SceneProps) {
   // ── Sun ──
   const sunY = 95 - p * 65;
   const sunGlow = p;
-
-  // ── Rain fades in mid-progress, fades out ──
-  const rainIntensity =
-    p < 0.15 ? 0 : p < 0.35 ? (p - 0.15) / 0.2 : p < 0.6 ? 1 : Math.max(0, (0.75 - p) / 0.15);
 
   // ── Flowers stagger ──
   const flowers = [
@@ -62,6 +58,16 @@ function GardenScene({ progress: p }: SceneProps) {
         <MistFilter id="groundMist" scale={0.012} opacity={0.25} />
         <TextureFilter id="groundTex" scale={0.06} intensity={0.1} seed={3} />
 
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
+
         {/* Sun radial gradient */}
         <radialGradient id="sunRadial" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#f5e060" stopOpacity={sunGlow * 0.5} />
@@ -79,6 +85,7 @@ function GardenScene({ progress: p }: SceneProps) {
       {/* ── Sky ── */}
       <rect width="400" height="250" fill="url(#skyGrad)" />
 
+      <g className="bgLayer">
       {/* ── Distant hills (background layer) ── */}
       <Hill y={185} height={25} color={`hsl(130, ${15 + p * 12}%, ${8 + p * 5}%)`} seed={0.3} />
       <Hill y={195} height={20} color={`hsl(125, ${18 + p * 15}%, ${9 + p * 6}%)`} seed={1.8} />
@@ -115,11 +122,9 @@ function GardenScene({ progress: p }: SceneProps) {
         opacity={p * 0.9}
         filter={p > 0.3 ? "url(#sunGlow)" : undefined}
       />
+      </g>
 
-      {/* ── Rain ── */}
-      {rainIntensity > 0.05 && (
-        <Rain intensity={rainIntensity} opacity={rainIntensity * 0.55} />
-      )}
+      <g className="midLayer">
 
       {/* ── Ground (foreground) ── */}
       <Hill y={210} height={15} color={`hsl(120, ${22 + p * 25}%, ${9 + p * 10}%)`} seed={0.7} />
@@ -165,6 +170,7 @@ function GardenScene({ progress: p }: SceneProps) {
           progress={sub(p, f.delay, 0.25)}
         />
       ))}
+      </g>
 
       {/* ── Pollen motes / fireflies — appear late ── */}
       {motes.map((m, i) => {
@@ -178,6 +184,7 @@ function GardenScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
+      <g className="fgLayer">
       {/* ── Foreground grass blades (closest layer, slight overlay) ── */}
       <GrassRow
         y={240}
@@ -186,6 +193,21 @@ function GardenScene({ progress: p }: SceneProps) {
         maxHeight={20}
         progress={p}
       />
+      </g>
+
+      {/* Atmospheric particles */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.6 + (i % 4) * 0.3;
+        const opacity = (0.1 + (i % 3) * 0.08) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill="#c8d870" opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }

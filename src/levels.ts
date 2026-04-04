@@ -4,9 +4,8 @@ export const LEVELS: Level[] = [
   // ── Act I: Awakening ──
   {
     title: "The Sleeping Garden",
-    flavor:
-      "Frost clings to every petal. Breathe life back into the garden.",
-    prompts: ["green returns to sleeping roots", "bloom now, every waiting flower"],
+    flavor: "Breathe life back into the garden.",
+    prompts: ["wake now, sleeping roots", "bloom, every waiting flower"],
     scene: "garden",
     accent: "#6bbf6b",
     bg: "#080e08",
@@ -14,9 +13,8 @@ export const LEVELS: Level[] = [
   },
   {
     title: "The Dark Cottage",
-    flavor:
-      "The hearth is cold and every candle dark. Call the warmth home.",
-    prompts: ["little candle burn bright", "amber glow fills every room"],
+    flavor: "Call the warmth home.",
+    prompts: ["little candle burn bright", "fill every room with warmth"],
     scene: "cottage",
     accent: "#e89a30",
     bg: "#0d0905",
@@ -24,9 +22,8 @@ export const LEVELS: Level[] = [
   },
   {
     title: "The Night Sky",
-    flavor:
-      "The stars have gone to sleep. Speak their names to wake them.",
-    prompts: ["Orion Vega Sirius Lyra", "the sky blooms with ancient fire"],
+    flavor: "Speak their names to wake them.",
+    prompts: ["Orion Vega Sirius Lyra", "burn again with ancient fire"],
     scene: "stars",
     accent: "#9090f8",
     bg: "#03030e",
@@ -36,10 +33,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Dry Well",
     flavor: "The stones still remember the sound of water.",
-    prompts: [
-      "deep water remember your name",
-      "rise and carry the old songs home",
-    ],
+    prompts: ["deep water remember your name", "rise and carry the old songs home"],
     scene: "well",
     accent: "#50b8b8",
     bg: "#040a0a",
@@ -47,11 +41,8 @@ export const LEVELS: Level[] = [
   },
   {
     title: "The Forgotten Bridge",
-    flavor: "The path it joined once linked two sacred places.",
-    prompts: [
-      "moss and stone recall the crossing",
-      "where old paths meet spirits still walk",
-    ],
+    flavor: "The path once linked two sacred places.",
+    prompts: ["stone, recall the crossing", "spirits, walk the old paths"],
     scene: "bridge",
     accent: "#7aaa6a",
     bg: "#060a06",
@@ -60,10 +51,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Whispering Library",
     flavor: "Every page holds a sleeping voice.",
-    prompts: [
-      "open the pages let wisdom rise",
-      "every old word finds its voice again",
-    ],
+    prompts: ["open, sleeping pages", "speak again, forgotten words"],
     scene: "library",
     accent: "#c088b0",
     bg: "#0a0608",
@@ -73,10 +61,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Spirit Stones",
     flavor: "They once guided great powers along hidden paths.",
-    prompts: [
-      "stand tall again guardians of old",
-      "the circle remembers what was promised",
-    ],
+    prompts: ["stand tall again guardians of old", "remember what was promised"],
     scene: "stones",
     accent: "#88a8c8",
     bg: "#050608",
@@ -84,11 +69,8 @@ export const LEVELS: Level[] = [
   },
   {
     title: "The Moonlit Sanctum",
-    flavor: "Moonlight pools like water where the spirits once gathered.",
-    prompts: [
-      "moonlight gathers where spirits convene",
-      "the ancient ones return to their seats",
-    ],
+    flavor: "Moonlight pools where the spirits once gathered.",
+    prompts: ["moonlight, gather where spirits convene", "return to your seats, ancient ones"],
     scene: "sanctum",
     accent: "#d0b870",
     bg: "#08080a",
@@ -97,11 +79,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Great Tree",
     flavor: "Its roots are the ley lines. Its branches hold the sky.",
-    prompts: [
-      "roots deeper than memory",
-      "branches wider than sky",
-      "nexus of all living things awaken",
-    ],
+    prompts: ["roots deeper than memory", "branches wider than sky", "awaken, heart of all things"],
     scene: "tree",
     accent: "#b8c8a8",
     bg: "#060806",
@@ -111,11 +89,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Waking World",
     flavor: "Speak the final words.",
-    prompts: [
-      "the garden blooms the hearth burns bright",
-      "every star remembers every spirit sings",
-      "the ancient order is restored",
-    ],
+    prompts: ["garden bloom, hearth burn bright", "stars remember, spirits sing", "the ancient order is restored"],
     scene: "world",
     accent: "#d8c890",
     bg: "#060808",

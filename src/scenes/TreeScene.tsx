@@ -119,6 +119,15 @@ function TreeScene({ progress: p }: SceneProps) {
           <stop offset="70%" stopColor="#3a2a18" />
           <stop offset="100%" stopColor="#2a1a0c" />
         </linearGradient>
+        {/* Parallax animations */}
+        <style>{`
+          @keyframes parallaxSlow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+          @keyframes parallaxMed { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+          @keyframes parallaxFast { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-1px) translateY(-1px); } }
+          .bgLayer { animation: parallaxSlow 12s ease-in-out infinite; }
+          .midLayer { animation: parallaxMed 10s ease-in-out infinite; }
+          .fgLayer { animation: parallaxFast 8s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── Sky ── */}
@@ -127,6 +136,7 @@ function TreeScene({ progress: p }: SceneProps) {
       {/* ── Green ambient wash ── */}
       <rect width="400" height="250" fill="url(#greenAmbient)" />
 
+      <g className="bgLayer">
       {/* ── Stars ── */}
       {stars.map((s, i) => {
         const sp = sub(p, 0.02 + i * 0.04, 0.15);
@@ -146,6 +156,9 @@ function TreeScene({ progress: p }: SceneProps) {
       <Hill y={218} height={10} color={`hsl(120, ${15 + p * 15}%, ${7 + p * 6}%)`} seed={2.3} />
       <rect x={0} y={225} width={400} height={25} fill={`hsl(120, ${18 + p * 15}%, ${8 + p * 6}%)`} />
 
+      </g>
+
+      <g className="midLayer">
       {/* ── Root glow on ground ── */}
       <ellipse
         cx={200} cy={232} rx={160 * (0.3 + p * 0.7)} ry={14}
@@ -186,17 +199,22 @@ function TreeScene({ progress: p }: SceneProps) {
               opacity={rp > 0 ? 1 : 0}
             />
             {/* Ley line energy through roots */}
-            {energyRootP > 0 && rp > 0.5 && (
-              <path
-                d={`M${ox} ${oy} C${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`}
-                fill="none"
-                stroke="#c8e8b0"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                opacity={energyRootP * 0.35}
-                filter="url(#leyGlow)"
-              />
-            )}
+            {energyRootP > 0 && rp > 0.5 && (() => {
+              const rootLen = Math.sqrt((endX - ox) ** 2 + (endY - oy) ** 2) * 1.4;
+              return (
+                <path
+                  d={`M${ox} ${oy} C${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`}
+                  fill="none"
+                  stroke="#c8e8b0"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeDasharray={rootLen}
+                  strokeDashoffset={rootLen * (1 - energyRootP)}
+                  opacity={energyRootP * 0.35}
+                  filter="url(#leyGlow)"
+                />
+              );
+            })()}
           </g>
         );
       })}
@@ -248,34 +266,41 @@ function TreeScene({ progress: p }: SceneProps) {
         fill="#30200e" opacity={0.35} />
 
       {/* ── Energy flow up the trunk ── */}
-      {energyTrunkP > 0 && (
-        <g>
-          <path
-            d={`M${trunkCX - 5} ${trunkBaseY}
-                C${trunkCX - 6} ${trunkBaseY - 40},
-                 ${trunkCX - 3} ${trunkBaseY - 80},
-                 ${trunkCX - 4} ${trunkTopY + (trunkBaseY - trunkTopY) * (1 - energyTrunkP)}`}
-            fill="none"
-            stroke="#c8e8b0"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            opacity={energyTrunkP * 0.35}
-            filter="url(#leyGlow)"
-          />
-          <path
-            d={`M${trunkCX + 5} ${trunkBaseY}
-                C${trunkCX + 4} ${trunkBaseY - 35},
-                 ${trunkCX + 6} ${trunkBaseY - 75},
-                 ${trunkCX + 3} ${trunkTopY + (trunkBaseY - trunkTopY) * (1 - energyTrunkP)}`}
-            fill="none"
-            stroke="#b8dca0"
-            strokeWidth={1}
-            strokeLinecap="round"
-            opacity={energyTrunkP * 0.25}
-            filter="url(#leyGlow)"
-          />
-        </g>
-      )}
+      {energyTrunkP > 0 && (() => {
+        const trunkLen = (trunkBaseY - trunkTopY) * 1.3;
+        return (
+          <g>
+            <path
+              d={`M${trunkCX - 5} ${trunkBaseY}
+                  C${trunkCX - 6} ${trunkBaseY - 40},
+                   ${trunkCX - 3} ${trunkBaseY - 80},
+                   ${trunkCX - 4} ${trunkTopY}`}
+              fill="none"
+              stroke="#c8e8b0"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeDasharray={trunkLen}
+              strokeDashoffset={trunkLen * (1 - energyTrunkP)}
+              opacity={energyTrunkP * 0.35}
+              filter="url(#leyGlow)"
+            />
+            <path
+              d={`M${trunkCX + 5} ${trunkBaseY}
+                  C${trunkCX + 4} ${trunkBaseY - 35},
+                   ${trunkCX + 6} ${trunkBaseY - 75},
+                   ${trunkCX + 3} ${trunkTopY}`}
+              fill="none"
+              stroke="#b8dca0"
+              strokeWidth={1}
+              strokeLinecap="round"
+              strokeDasharray={trunkLen}
+              strokeDashoffset={trunkLen * (1 - energyTrunkP)}
+              opacity={energyTrunkP * 0.25}
+              filter="url(#leyGlow)"
+            />
+          </g>
+        );
+      })()}
 
       {/* ── Branches — bezier curves ── */}
       {branches.map((b, i) => {
@@ -335,6 +360,9 @@ function TreeScene({ progress: p }: SceneProps) {
         );
       })}
 
+      </g>
+
+      <g className="fgLayer">
       {/* ── Spirit lights in canopy ── */}
       {spiritLights.map((s, i) => {
         const sp = sub(p, s.delay, 0.12);
@@ -405,6 +433,21 @@ function TreeScene({ progress: p }: SceneProps) {
         maxHeight={18}
         progress={p}
       />
+      </g>
+
+      {/* Atmospheric particles — leaf particles, spirit lights, pollen */}
+      {Array.from({ length: 40 }).map((_, i) => {
+        const px = (i * 47 + 13) % 400;
+        const baseY = (i * 71 + 29) % 220 + 15;
+        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
+        const py = baseY - p * 30 * ((i % 5) / 5);
+        const size = 0.5 + (i % 4) * 0.3;
+        const opacity = (0.08 + (i % 3) * 0.06) * (0.3 + p * 0.7);
+        return (
+          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
+            fill={i % 5 === 0 ? "#d8e8c8" : "#90b890"} opacity={opacity} />
+        );
+      })}
     </svg>
   );
 }
