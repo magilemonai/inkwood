@@ -181,17 +181,17 @@ The game is significantly improved after round 2: keyboard flow, text economy, v
 
 | # | Priority | Owner | Effort | Status |
 |---|---|---|---|---|
-| 1 | Fix mobile keyboard focus | UX / Code | Small | **Open** |
-| 2 | `React.memo` on scene components | Code | Small | **Open** |
-| 3 | Save/resume via `localStorage` | Product / Code | Small | **Open** |
-| 4 | Breathing pause between prompts | UX / Code | Small | **Open** |
-| 5 | Rebuild Cottage scene | Design | Large | **Open** |
-| 6 | Rebuild Library scene | Design | Large | **Open** |
-| 7 | Fix Garden prompt-to-visual alignment | Narrative | Small | **Open** |
-| 8 | Add one poetic line to outro | Narrative | Small | **Open** |
-| 9 | Throttle RAF in intro/outro | Code | Small | **Open** |
-| 10 | Redesign outro as visual showpiece | Design | Large | **Open** |
-| 11 | Add ambient idle motion to scenes | Design | Medium | **Open** |
+| 1 | ~~Fix mobile keyboard focus~~ | ~~UX / Code~~ | ~~Small~~ | **Done** — tap overlay + onFocus/onBlur |
+| 2 | ~~`React.memo` on scene components~~ | ~~Code~~ | ~~Small~~ | **Done** — all 10 scenes wrapped |
+| 3 | ~~Save/resume via `localStorage`~~ | ~~Product / Code~~ | ~~Small~~ | **Done** — persists lvl + promptIdx |
+| 4 | ~~Breathing pause between prompts~~ | ~~UX / Code~~ | ~~Small~~ | **Done** — 1.5s delay |
+| 5 | ~~Rebuild Cottage scene~~ | ~~Design~~ | ~~Large~~ | **Done** — bezier walls, tapered flames, organic cat |
+| 6 | ~~Rebuild Library scene~~ | ~~Design~~ | ~~Large~~ | **Done** — vaulted ceiling, crystals, Chronicle tome |
+| 7 | ~~Fix Garden prompt alignment~~ | ~~Narrative~~ | ~~Small~~ | **Done** — "green returns to sleeping roots" |
+| 8 | ~~Add poetic line to outro~~ | ~~Narrative~~ | ~~Small~~ | **Done** — "The forest remembers." |
+| 9 | ~~Throttle RAF in intro/outro~~ | ~~Code~~ | ~~Small~~ | **Done** — ~15Hz |
+| 10 | ~~Redesign outro as showpiece~~ | ~~Design~~ | ~~Large~~ | **Done** — panoramic landscape with vignettes |
+| 11 | ~~Add ambient idle motion~~ | ~~Design~~ | ~~Medium~~ | **Done** — CSS brightness/saturation breath |
 | 12 | Performance test on real devices | Product | Medium | **Open** |
 | — | ~~Keyboard navigation (space/enter)~~ | ~~UX~~ | ~~Small~~ | **Done** |
 | — | ~~Text contrast / WCAG compliance~~ | ~~Design~~ | ~~Small~~ | **Done** |
