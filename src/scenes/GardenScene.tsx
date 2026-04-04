@@ -60,18 +60,52 @@ const CANOPY = `
   C32 98, 28 94, 28 92
   Z`;
 
-/** Branch paths — each curves organically from trunk crown outward */
+/** Branch paths — each is a CLOSED TAPERED SHAPE, wide at trunk, thin at tip */
 const BRANCHES = [
-  // far left — sweeps down and left
-  "M108 106 C98 98, 82 90, 68 86 C56 83, 44 80, 34 78",
-  // up-left
-  "M114 102 C106 90, 94 76, 86 66 C80 58, 74 50, 68 44",
-  // up-center (slightly right of center)
-  "M122 100 C121 88, 124 74, 122 62 C120 52, 122 44, 120 36",
-  // up-right
-  "M130 102 C138 90, 148 78, 158 68 C166 60, 174 54, 180 48",
-  // far right
-  "M136 107 C146 100, 162 94, 178 90 C190 87, 202 86, 214 85",
+  // far left — sweeps down-left, wide at trunk (~6px), thin at tip (~1.5px)
+  `M106 103
+   C96 95, 78 87, 62 83 C50 80, 38 77, 28 75
+   L29 78
+   C39 80, 51 83, 64 86 C80 90, 98 98, 110 108 Z`,
+  // up-left — curves up and left with a slight bend
+  `M112 100
+   C104 88, 90 72, 82 62 C76 54, 70 47, 64 42
+   L67 44
+   C73 50, 80 58, 86 66 C96 78, 108 92, 116 104 Z`,
+  // up-center — rises with a gentle S-curve, slight rightward lean
+  `M119 99
+   C118 86, 120 72, 118 58 C117 48, 118 40, 117 33
+   L121 33
+   C122 40, 123 48, 124 58 C126 72, 124 86, 125 100 Z`,
+  // up-right — curves right with a wider spread
+  `M128 100
+   C136 88, 146 74, 156 64 C164 56, 172 50, 180 45
+   L182 48
+   C175 54, 167 60, 159 68 C149 78, 140 92, 132 104 Z`,
+  // far right — sweeps right, the longest branch
+  `M134 105
+   C144 98, 160 92, 178 88 C192 85, 206 84, 220 83
+   L220 86
+   C207 87, 193 89, 180 92 C162 96, 148 102, 138 109 Z`,
+];
+
+/** Secondary twigs — thin offshoots from main branches for detail */
+const TWIGS = [
+  // off far-left branch
+  "M62 84 C56 78, 48 74, 42 70",
+  "M78 88 C72 82, 64 80, 58 76",
+  // off up-left branch
+  "M86 66 C78 62, 72 56, 66 52",
+  "M94 76 C86 72, 80 66, 74 62",
+  // off center branch
+  "M120 58 C112 54, 106 50, 100 48",
+  "M122 72 C130 68, 136 64, 140 60",
+  // off up-right branch
+  "M156 64 C162 58, 170 56, 176 52",
+  "M146 74 C152 70, 160 68, 168 64",
+  // off far-right branch
+  "M178 88 C184 82, 192 80, 198 76",
+  "M196 86 C200 80, 208 78, 214 74",
 ];
 
 /** Tree roots — thick curves spreading from the trunk base into the earth */
@@ -224,13 +258,18 @@ function GardenScene({ progress: p }: SceneProps) {
         transform="translate(3, 2) scale(0.88)"
         style={{ transformOrigin: "125px 65px" }} />
 
-      {/* Branches — visible through gaps in dormant canopy, fade as canopy fills */}
+      {/* Branches — tapered filled shapes, visible through canopy gaps */}
       <g opacity={0.4 + p * 0.3}>
         {BRANCHES.map((d, i) => (
           <path key={i} d={d}
+            fill={`hsl(30, ${trunkS}%, ${trunkL + 3}%)`} />
+        ))}
+        {/* Secondary twigs — thin stroked offshoots */}
+        {TWIGS.map((d, i) => (
+          <path key={`tw${i}`} d={d}
             fill="none"
-            stroke={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`}
-            strokeWidth={4.5 - i * 0.5}
+            stroke={`hsl(30, ${trunkS}%, ${trunkL + 5}%)`}
+            strokeWidth={1.2}
             strokeLinecap="round" />
         ))}
       </g>
