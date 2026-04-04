@@ -60,7 +60,7 @@ export default function OutroSequence() {
   // Phase calculations
   const dawn = sub(time, 2, 8);       // 0→1 over 2s-10s
   const treeFade = sub(time, 4, 6);   // tree appears 4-10s
-  const embers = sub(time, 7, 5);     // colored embers 7-12s
+  // embers phase: individual particles use their own delays in emberData
   const fullWarm = sub(time, 10, 5);  // full warmth 10-15s
 
   // Sky color shifts from deep blue-black to warm golden dawn

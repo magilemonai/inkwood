@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
-import { getSceneComponent } from "../scenes";
+import SceneRenderer from "./SceneRenderer";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -66,14 +66,13 @@ export default function PlayingScreen() {
     setInputFocused(true);
   };
 
-  const SceneComp = getSceneComponent(level.scene);
   const showTapOverlay = !inputFocused && typed.length === 0;
 
   return (
     <div className={s.container} onClick={focusInput}>
       {/* Scene fills entire viewport */}
       <div className={s.sceneContainer}>
-        <SceneComp progress={levelProgress} />
+        <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
       </div>
 
       {/* Header floats on top */}
