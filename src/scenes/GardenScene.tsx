@@ -1,140 +1,121 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
-import { Flower } from "../svg/primitives";
 
 function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
 // ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
-// Every major element is a single complex bezier path, designed
-// to look organic as a solid-color silhouette.
 
-/** Gnarled oak trunk — asymmetric, with a visible burl on the left side */
+/** Oak trunk — slight leftward lean, subtle burl, NOT a potato */
 const TRUNK = `
-  M107 195
-  C106 190, 104 185, 103 179
-  C102 173, 100 169, 98 164
-  C95 158, 93 153, 95 148
-  C97 143, 100 140, 99 135
-  C98 128, 95 123, 97 118
-  C99 113, 103 109, 108 106
-  C112 103, 116 101, 120 100
-  L126 100
-  C130 101, 134 104, 136 107
-  C139 112, 141 118, 141 125
-  C141 132, 143 138, 142 145
-  C141 152, 144 158, 143 164
-  C142 170, 140 176, 139 182
-  C138 188, 137 192, 136 195
+  M112 195
+  C111 189, 110 183, 109 177
+  C108 171, 107 166, 106 160
+  C105 154, 103 150, 104 145
+  C105 140, 106 136, 106 130
+  C106 124, 105 118, 106 112
+  C107 108, 110 104, 114 101
+  L130 101
+  C133 104, 135 108, 136 112
+  C137 118, 137 124, 137 130
+  C137 136, 138 142, 138 148
+  C138 154, 139 160, 138 166
+  C137 172, 136 178, 135 184
+  C134 189, 133 192, 132 195
   Z`;
 
-/** Canopy — irregular leafy silhouette with ~30 curves */
+/** Canopy — irregular, with deep indentations and asymmetry */
 const CANOPY = `
-  M28 92
-  C24 86, 26 78, 34 72
-  C40 67, 35 60, 42 54
-  C47 49, 52 46, 58 43
-  C63 40, 59 35, 66 32
-  C71 29, 78 34, 84 30
-  C89 27, 84 21, 92 19
-  C98 17, 104 22, 110 18
-  C116 15, 120 20, 128 17
-  C134 14, 130 19, 138 17
-  C145 15, 150 20, 158 22
-  C164 24, 160 18, 170 22
-  C178 25, 184 30, 190 33
-  C196 36, 192 42, 200 44
-  C206 47, 212 52, 216 58
-  C220 64, 224 72, 222 78
-  C220 84, 226 90, 222 95
-  C218 99, 212 96, 206 100
-  C198 104, 190 100, 182 104
-  C174 108, 166 103, 158 106
-  C150 109, 142 105, 134 108
-  C126 110, 118 106, 110 109
-  C102 112, 94 107, 86 110
-  C78 112, 70 107, 62 109
-  C54 110, 46 106, 38 102
-  C32 98, 28 94, 28 92
+  M32 88
+  C28 80, 32 72, 40 66
+  C46 62, 42 55, 50 50
+  C55 46, 62 44, 68 40
+  C74 37, 70 32, 78 28
+  C84 25, 80 20, 90 18
+  C98 16, 104 22, 112 19
+  C120 16, 126 20, 134 17
+  C142 15, 148 20, 156 22
+  C162 24, 158 18, 168 22
+  C176 25, 182 30, 188 34
+  C194 38, 198 44, 204 48
+  C210 53, 216 60, 218 68
+  C220 74, 222 82, 218 88
+  C215 93, 208 90, 200 94
+  C192 98, 186 92, 176 96
+  C168 100, 158 94, 148 98
+  C138 102, 128 95, 118 100
+  C108 104, 98 97, 88 100
+  C80 102, 70 95, 60 98
+  C50 100, 42 95, 36 92
+  C32 90, 30 88, 32 88
   Z`;
 
-/** Branch paths — CLOSED TAPERED SHAPES, trimmed to stay inside canopy */
+/** Branches — emerge at DIFFERENT HEIGHTS on the trunk, not all from one point */
 const BRANCHES = [
-  // far left — shortened to end inside canopy (~x:48)
-  `M106 103
-   C96 95, 78 87, 62 83 C55 81, 50 80, 46 79
-   L47 82
-   C52 83, 57 84, 64 86 C80 90, 98 98, 110 108 Z`,
-  // up-left — shortened to end around x:72, y:52
-  `M112 100
-   C104 88, 92 74, 84 66 C80 60, 76 56, 72 52
-   L75 54
-   C78 58, 82 62, 88 68 C96 78, 108 92, 116 104 Z`,
-  // up-center — shortened to end around y:42
-  `M119 99
-   C118 86, 120 72, 118 58 C117 50, 118 44, 118 42
-   L122 42
-   C122 44, 123 50, 124 58 C126 72, 124 86, 125 100 Z`,
-  // up-right — shortened to end around x:168, y:56
-  `M128 100
-   C136 88, 148 76, 158 66 C163 60, 166 58, 168 56
-   L170 59
-   C168 61, 165 64, 160 68 C150 78, 140 92, 132 104 Z`,
-  // far right — shortened to end inside canopy (~x:205)
-  `M134 105
-   C144 98, 162 92, 180 88 C190 86, 198 85, 205 85
-   L205 88
-   C199 88, 192 89, 182 92 C164 96, 148 102, 138 109 Z`,
+  // lowest left branch — forks from trunk at y:135, sweeps left
+  `M106 136
+   C98 130, 86 124, 72 118 C64 115, 56 114, 50 112
+   L51 115
+   C58 116, 66 118, 74 122 C88 128, 100 134, 110 140 Z`,
+  // mid-left — from y:118, curves up-left
+  `M106 118
+   C98 110, 86 100, 76 90 C70 84, 64 80, 60 76
+   L63 78
+   C66 82, 72 86, 80 94 C90 104, 100 112, 110 122 Z`,
+  // upper-left — from y:108, reaches toward top-left canopy
+  `M110 108
+   C104 98, 92 86, 82 76 C76 70, 70 64, 64 58
+   L67 60
+   C72 66, 78 72, 86 80 C96 90, 106 100, 114 112 Z`,
+  // upper-right — from y:106, curves up-right
+  `M130 106
+   C136 96, 146 84, 156 74 C162 68, 168 64, 174 58
+   L176 61
+   C170 66, 164 72, 158 78 C148 88, 138 98, 134 110 Z`,
+  // right — from y:120, sweeps right
+  `M137 120
+   C146 114, 160 108, 176 104 C188 100, 196 98, 204 96
+   L204 99
+   C197 101, 190 103, 178 108 C162 112, 148 118, 140 124 Z`,
 ];
 
-/** Sub-branches — forking off main branches, all inside canopy bounds */
+/** Sub-branches — forking off mains, inside canopy */
 const SUB_BRANCHES = [
-  // off far-left, forks upward — stays inside canopy
-  `M68 84 C64 78, 58 74, 52 68 L54 70 C60 76, 66 80, 72 87 Z`,
-  // off up-left, forks left
-  `M86 66 C80 60, 72 56, 66 52 L68 54 C74 58, 82 62, 90 70 Z`,
-  // off up-left, smaller fork
-  `M96 78 C90 78, 82 76, 76 78 L77 80 C83 79, 92 80, 98 82 Z`,
-  // off center, forks right — keep inside canopy top
-  `M120 52 C126 46, 134 42, 140 38 L141 41 C136 44, 128 50, 123 56 Z`,
-  // off center, forks left
-  `M119 68 C114 65, 108 62, 102 61 L103 63 C109 65, 116 70, 122 74 Z`,
-  // off up-right, forks right — stays inside
-  `M160 64 C166 58, 172 54, 178 50 L179 53 C174 56, 168 60, 163 68 Z`,
-  // off far-right, forks upward
-  `M186 88 C192 82, 196 80, 200 76 L201 79 C198 82, 194 85, 189 91 Z`,
+  // off lowest-left, forks down
+  `M68 120 C62 122, 55 120, 48 122 L49 124 C56 123, 64 124, 72 124 Z`,
+  // off mid-left, forks left
+  `M80 92 C74 86, 66 82, 58 78 L60 80 C67 84, 76 90, 84 96 Z`,
+  // off upper-left, forks up
+  `M84 78 C78 72, 70 66, 64 62 L66 64 C72 68, 80 74, 88 82 Z`,
+  // off upper-right, forks right
+  `M158 72 C164 66, 172 62, 178 56 L180 59 C174 64, 166 70, 162 76 Z`,
+  // off right branch, forks up
+  `M180 104 C186 96, 194 92, 200 86 L202 89 C196 94, 188 100, 184 108 Z`,
 ];
 
-/** Fine twigs — short thin tips, all inside canopy */
+/** Fine twigs — very short */
 const TWIGS = [
-  // off far-left area
-  "M52 68 C48 64, 44 62, 40 60",
-  "M56 72 C50 68, 46 66, 42 64",
-  // off up-left area
-  "M66 52 C62 48, 58 44, 54 42",
-  "M72 52 C68 46, 64 44, 60 40",
-  // off center-top
-  "M140 38 C144 34, 146 30, 150 28",
-  "M102 61 C98 58, 94 56, 90 55",
-  // off up-right area
-  "M178 50 C182 46, 186 44, 190 42",
-  "M170 54 C174 50, 178 48, 182 46",
-  // off far-right area
-  "M200 76 C204 72, 208 70, 210 68",
-  "M198 80 C204 78, 208 76, 212 75",
+  "M48 122 C44 120, 40 120, 36 118",
+  "M58 78 C54 74, 48 72, 44 70",
+  "M64 62 C58 56, 54 54, 48 50",
+  "M64 58 C60 52, 56 48, 52 44",
+  "M178 56 C184 50, 188 48, 194 44",
+  "M174 58 C178 52, 184 50, 188 46",
+  "M200 86 C206 80, 210 78, 214 76",
+  "M198 90 C204 86, 210 84, 214 80",
 ];
 
-/** Tree roots — thick curves spreading from the trunk base into the earth */
+/** Roots — spreading from trunk base */
 const ROOTS = [
-  "M104 194 C94 197, 76 200, 56 199 C40 198, 22 201, 5 200",
-  "M108 195 C100 199, 82 204, 62 206 C46 208, 28 207, 10 210",
-  "M136 195 C148 199, 168 203, 190 205 C208 207, 228 206, 250 209",
-  "M134 194 C144 197, 164 200, 186 199 C202 198, 220 201, 240 200",
+  "M108 194 C98 197, 80 200, 60 199 C44 198, 26 201, 10 200",
+  "M112 195 C104 199, 86 204, 66 206 C50 208, 32 207, 14 210",
+  "M132 195 C144 199, 164 203, 186 205 C202 207, 222 206, 244 209",
+  "M130 194 C140 197, 158 200, 180 199 C196 198, 214 201, 234 200",
 ];
 
-/** Rolling terrain — hand-drawn with natural undulation, not sine waves */
+/** Rolling terrain — hand-drawn contours */
 const HILL_FAR = `
   M-10 182 C15 178, 38 170, 65 173 C85 175, 100 168, 128 166
   C150 164, 172 170, 198 168 C220 166, 242 162, 268 165
@@ -153,16 +134,15 @@ const GROUND = `
   C322 194, 344 198, 378 196 C398 195, 408 198, 420 200
   L420 250 L-10 250 Z`;
 
-/** A few hand-placed grass tufts — organic clumps, not lines */
+/** Grass tufts — organic hand-placed clumps */
 const GRASS_TUFTS = [
-  // each is a small cluster of curved blades
   { x: 168, paths: [
     "M168 196 Q166 188 164 178", "M170 196 Q169 186 170 176",
     "M172 196 Q174 187 176 179", "M167 196 Q163 190 160 184",
   ]},
   { x: 255, paths: [
     "M255 194 Q253 186 250 177", "M257 194 Q257 184 258 175",
-    "M259 194 Q262 186 264 178", "M254 194 Q250 188 247 182",
+    "M259 194 Q262 186 264 178",
   ]},
   { x: 330, paths: [
     "M330 196 Q328 189 326 181", "M332 196 Q332 187 333 179",
@@ -177,7 +157,7 @@ const GRASS_TUFTS = [
   ]},
 ];
 
-/** Small stones near the tree base */
+/** Small stones near tree base */
 const STONES = [
   "M92 198 C90 196, 88 194, 86 195 C84 196, 83 198, 85 199 C87 200, 90 200, 92 198 Z",
   "M145 197 C148 195, 152 194, 154 196 C155 198, 153 200, 150 200 C147 200, 144 199, 145 197 Z",
@@ -187,8 +167,7 @@ const STONES = [
 // ─── SCENE COMPONENT ───────────────────────────────────────
 
 function GardenScene({ progress: p }: SceneProps) {
-  // Color transitions: dormant grey-brown → alive green-gold
-  const skyH = 180 + p * 30;     // blue-grey → green-teal
+  const skyH = 180 + p * 30;
   const skyS = 8 + p * 30;
   const skyL = 12 + p * 22;
 
@@ -203,17 +182,18 @@ function GardenScene({ progress: p }: SceneProps) {
 
   const sunY = 95 - p * 60;
 
-  // Phase: roots wake (0-0.5), flowers bloom (0.4-1.0)
   const rootGlow = sub(p, 0.05, 0.4);
   const canopyLife = sub(p, 0.1, 0.5);
 
+  // Smaller, more delicate flowers with softer colors
   const flowers = [
-    { x: 200, stemH: 34, color: "#e87090", size: 8,  delay: 0.35 },
-    { x: 230, stemH: 40, color: "#f0c050", size: 9,  delay: 0.42 },
-    { x: 265, stemH: 36, color: "#a070e0", size: 8,  delay: 0.5 },
-    { x: 300, stemH: 42, color: "#e8a0c0", size: 9,  delay: 0.58 },
-    { x: 340, stemH: 38, color: "#60c888", size: 10, delay: 0.66 },
-    { x: 370, stemH: 32, color: "#f08050", size: 8,  delay: 0.75 },
+    { x: 210, stemH: 28, color: "#d88090", size: 6, delay: 0.38 },
+    { x: 238, stemH: 32, color: "#d8b060", size: 7, delay: 0.45 },
+    { x: 270, stemH: 26, color: "#9878c0", size: 6, delay: 0.52 },
+    { x: 300, stemH: 30, color: "#c890a8", size: 6, delay: 0.58 },
+    { x: 332, stemH: 34, color: "#68b080", size: 7, delay: 0.66 },
+    { x: 362, stemH: 24, color: "#c88060", size: 5, delay: 0.74 },
+    { x: 185, stemH: 22, color: "#a0a0d0", size: 5, delay: 0.8 },
   ];
 
   return (
@@ -242,14 +222,12 @@ function GardenScene({ progress: p }: SceneProps) {
       <circle cx="345" cy={sunY} r={16} fill="#f5d860" opacity={p * 0.85}
         filter={p > 0.3 ? "url(#sunGlow)" : undefined} />
 
-      {/* ── CLOUDS — soft shapes are appropriate for clouds ── */}
+      {/* ── CLOUDS — positioned to NOT overlap the tree ── */}
       {p > 0.35 && (
-        <g opacity={sub(p, 0.35, 0.3) * 0.35}>
-          <ellipse cx={80} cy={42} rx={35} ry={10} fill="white" />
-          <ellipse cx={62} cy={38} rx={22} ry={8} fill="white" />
-          <ellipse cx={100} cy={39} rx={25} ry={9} fill="white" />
-          <ellipse cx={280} cy={48} rx={30} ry={9} fill="white" opacity={0.7} />
-          <ellipse cx={300} cy={45} rx={22} ry={7} fill="white" opacity={0.7} />
+        <g opacity={sub(p, 0.35, 0.3) * 0.3}>
+          <ellipse cx={295} cy={52} rx={28} ry={8} fill="white" />
+          <ellipse cx={278} cy={48} rx={18} ry={6} fill="white" />
+          <ellipse cx={312} cy={49} rx={20} ry={7} fill="white" />
         </g>
       )}
 
@@ -263,32 +241,29 @@ function GardenScene({ progress: p }: SceneProps) {
         fill={`hsl(125, ${groundS - 2}%, ${groundL - 1}%)`}
         opacity={0.6 + p * 0.3} />
 
-      {/* ── TREE — the hero element ── */}
+      {/* ── TREE ── */}
 
       {/* Canopy — transitions from grey to green */}
       <path d={CANOPY}
         fill={`hsl(${110 + p * 15}, ${canopyS}%, ${canopyL}%)`}
         opacity={0.3 + canopyLife * 0.6} />
-      {/* Canopy highlight — lighter inner shape suggesting sunlit leaves */}
+      {/* Canopy highlight — lighter inner area */}
       <path d={CANOPY}
         fill={`hsl(${115 + p * 10}, ${canopyS + 8}%, ${canopyL + 5}%)`}
-        opacity={canopyLife * 0.25}
-        transform="translate(3, 2) scale(0.88)"
-        style={{ transformOrigin: "125px 65px" }} />
+        opacity={canopyLife * 0.2}
+        transform="translate(4, 3) scale(0.85)"
+        style={{ transformOrigin: "125px 60px" }} />
 
-      {/* Branches — tapered filled shapes with forking sub-branches */}
+      {/* Branches — emerge at different heights along trunk */}
       <g opacity={0.4 + p * 0.3}>
-        {/* Main branches */}
         {BRANCHES.map((d, i) => (
           <path key={i} d={d}
             fill={`hsl(30, ${trunkS}%, ${trunkL + 3}%)`} />
         ))}
-        {/* Forking sub-branches — medium tapered shapes */}
         {SUB_BRANCHES.map((d, i) => (
           <path key={`sb${i}`} d={d}
             fill={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`} />
         ))}
-        {/* Fine twigs at branch tips */}
         {TWIGS.map((d, i) => (
           <path key={`tw${i}`} d={d}
             fill="none"
@@ -298,16 +273,11 @@ function GardenScene({ progress: p }: SceneProps) {
         ))}
       </g>
 
-      {/* Trunk — complex gnarled path */}
+      {/* Trunk */}
       <path d={TRUNK}
         fill={`hsl(30, ${trunkS}%, ${trunkL}%)`} />
-      {/* Bark highlight — one side catching light */}
-      <path d={TRUNK}
-        fill={`hsl(35, ${trunkS + 4}%, ${trunkL + 6}%)`}
-        opacity={p * 0.3}
-        clipPath="inset(0 50% 0 0)" />
 
-      {/* Roots — emerge from trunk base, glow as they wake */}
+      {/* Roots */}
       <g opacity={0.3 + rootGlow * 0.7}>
         {ROOTS.map((d, i) => (
           <path key={i} d={d}
@@ -317,16 +287,12 @@ function GardenScene({ progress: p }: SceneProps) {
             strokeLinecap="round" />
         ))}
       </g>
-      {/* Root glow — ley-energy hint, subtle */}
       {rootGlow > 0.3 && (
         <g opacity={(rootGlow - 0.3) * 0.5}>
           {ROOTS.map((d, i) => (
             <path key={i} d={d}
-              fill="none"
-              stroke="#6bbf6b"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              filter="url(#rootGlow)" />
+              fill="none" stroke="#6bbf6b" strokeWidth={1.5}
+              strokeLinecap="round" filter="url(#rootGlow)" />
           ))}
         </g>
       )}
@@ -334,11 +300,10 @@ function GardenScene({ progress: p }: SceneProps) {
       {/* ── NEAR GROUND ── */}
       <path d={GROUND}
         fill={`hsl(120, ${groundS}%, ${groundL}%)`} />
-      {/* Earth below ground line */}
       <rect x={0} y={200} width={400} height={50}
         fill={`hsl(30, ${10 + p * 8}%, ${10 + p * 6}%)`} />
 
-      {/* ── STONES near tree base ── */}
+      {/* Stones */}
       <g opacity={0.3 + p * 0.4}>
         {STONES.map((d, i) => (
           <path key={i} d={d}
@@ -346,7 +311,7 @@ function GardenScene({ progress: p }: SceneProps) {
         ))}
       </g>
 
-      {/* ── GRASS TUFTS — organic hand-placed clumps ── */}
+      {/* Grass tufts */}
       <g opacity={0.2 + p * 0.7}>
         {GRASS_TUFTS.map((tuft, ti) =>
           tuft.paths.map((d, pi) => (
@@ -360,39 +325,49 @@ function GardenScene({ progress: p }: SceneProps) {
         )}
       </g>
 
-      {/* ── FLOWERS — bloom during second phrase ── */}
-      {flowers.map((f, i) => (
-        <Flower
-          key={i}
-          x={f.x}
-          y={196 + (i % 2) * 2}
-          stemHeight={f.stemH}
-          petalColor={f.color}
-          petalSize={f.size}
-          progress={sub(p, f.delay, 0.22)}
-        />
-      ))}
-
-      {/* ── POLLEN MOTES — appear late, very subtle ── */}
-      {p > 0.6 && Array.from({ length: 20 }).map((_, i) => {
-        const mx = 35 + (i * 53 + 17) % 350;
-        const my = 50 + (i * 37 + 11) % 140;
-        const mp = sub(p, 0.6 + i * 0.015, 0.15);
-        const drift = Math.sin(p * Math.PI * 3 + i * 1.2) * 5;
-        return mp > 0 ? (
-          <circle key={i} cx={mx + drift} cy={my - mp * 10}
-            r={0.8 + (i % 3) * 0.3}
-            fill="#f0e870" opacity={mp * 0.25} />
-        ) : null;
+      {/* ── FLOWERS — smaller, softer colors, more delicate ── */}
+      {flowers.map((f, i) => {
+        const fp = sub(p, f.delay, 0.22);
+        if (fp <= 0) return null;
+        const headY = f.x > 400 ? 196 : (196 + (i % 2) * 2) - f.stemH * fp;
+        const ps = f.size * fp;
+        const baseY = 196 + (i % 2) * 2;
+        return (
+          <g key={i} opacity={fp}>
+            {/* Stem — slight curve */}
+            <path
+              d={`M${f.x} ${baseY} Q${f.x + 2} ${baseY - f.stemH * 0.5 * fp} ${f.x} ${headY}`}
+              fill="none" stroke="#2a5a1a" strokeWidth={1.5} />
+            {/* Petals — 5 small petals */}
+            {[0, 72, 144, 216, 288].map((ang, j) => {
+              const px = f.x + Math.cos((ang * Math.PI) / 180) * ps * 1.1;
+              const py = headY + Math.sin((ang * Math.PI) / 180) * ps * 1.1;
+              return (
+                <ellipse key={j}
+                  cx={px} cy={py}
+                  rx={ps * 0.55} ry={ps * 0.35}
+                  fill={f.color}
+                  transform={`rotate(${ang + 90}, ${px}, ${py})`} />
+              );
+            })}
+            {/* Center */}
+            <circle cx={f.x} cy={headY} r={ps * 0.3} fill="#e8d060" />
+          </g>
+        );
       })}
 
-      {/* ── A small bird silhouette — reward for completion ── */}
-      {p > 0.9 && (
-        <g opacity={sub(p, 0.9, 0.1) * 0.5}>
-          <path d="M290 55 C288 52, 284 50, 280 52 C282 50, 286 48, 290 50 C294 48, 298 50, 300 52 C296 50, 292 52, 290 55 Z"
-            fill={`hsl(30, 10%, ${15 + p * 10}%)`} />
-        </g>
-      )}
+      {/* ── POLLEN MOTES — subtle ── */}
+      {p > 0.6 && Array.from({ length: 16 }).map((_, i) => {
+        const mx = 40 + (i * 53 + 17) % 340;
+        const my = 50 + (i * 37 + 11) % 130;
+        const mp = sub(p, 0.6 + i * 0.02, 0.15);
+        const drift = Math.sin(p * Math.PI * 3 + i * 1.2) * 4;
+        return mp > 0 ? (
+          <circle key={i} cx={mx + drift} cy={my - mp * 8}
+            r={0.7 + (i % 3) * 0.2}
+            fill="#f0e870" opacity={mp * 0.2} />
+        ) : null;
+      })}
     </svg>
   );
 }
