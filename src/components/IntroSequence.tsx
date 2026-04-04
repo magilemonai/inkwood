@@ -123,11 +123,17 @@ export default function IntroSequence() {
   useEffect(() => {
     const start = performance.now();
     let frame: number;
+    let lastUpdate = 0;
     const tick = () => {
-      const elapsed = (performance.now() - start) / 1000;
-      setTime(elapsed);
-      if (elapsed >= 14 && !showTitle) {
-        setShowTitle(true);
+      const now = performance.now();
+      const elapsed = (now - start) / 1000;
+      // Throttle state updates to ~15 Hz
+      if (now - lastUpdate > 66) {
+        lastUpdate = now;
+        setTime(elapsed);
+        if (elapsed >= 14 && !showTitle) {
+          setShowTitle(true);
+        }
       }
       if (elapsed < 18) {
         frame = requestAnimationFrame(tick);

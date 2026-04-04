@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import { getSceneComponent } from "../scenes";
@@ -31,6 +31,7 @@ export default function PlayingScreen() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const completingRef = useRef(false);
+  const [inputFocused, setInputFocused] = useState(false);
 
   const { accent, bg } = level;
   const charStates = getCharStates(typed, target);
@@ -44,12 +45,15 @@ export default function PlayingScreen() {
     setTimeout(() => {
       advancePrompt();
       completingRef.current = false;
-    }, 700);
+    }, 1500);
   }, [isComplete, promptIdx, lvl, startCompletion, advancePrompt]);
 
-  // ── Focus management ──
+  // ── Focus management — attempt programmatic focus, but don't rely on it ──
   useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 50);
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+      setInputFocused(document.activeElement === inputRef.current);
+    }, 80);
     return () => clearTimeout(timer);
   }, [lvl, promptIdx]);
 
@@ -57,9 +61,16 @@ export default function PlayingScreen() {
     typeChar(e.target.value);
   };
 
-  const focusInput = () => inputRef.current?.focus();
+  // Real user gesture → focus (critical for mobile)
+  const focusInput = () => {
+    inputRef.current?.focus();
+    setInputFocused(true);
+  };
 
   const SceneComp = getSceneComponent(level.scene);
+
+  // Show tap overlay when input isn't focused and nothing typed yet
+  const showTapOverlay = !inputFocused && typed.length === 0;
 
   return (
     <div className={s.container} style={{ background: bg }} onClick={focusInput}>
@@ -106,7 +117,14 @@ export default function PlayingScreen() {
           style={{ border: `1px solid ${accent}25` }}
           onClick={focusInput}
         >
-          {target.split("").map((ch, i) => {
+          {/* Mobile tap overlay */}
+          {showTapOverlay && (
+            <div className={s.tapOverlay} onClick={focusInput}>
+              tap here to begin typing
+            </div>
+          )}
+
+          {!showTapOverlay && target.split("").map((ch, i) => {
             const state = charStates[i];
             const isCursor = i === typed.length && !completing;
             return (
@@ -131,7 +149,7 @@ export default function PlayingScreen() {
               </span>
             );
           })}
-          {typed.length >= target.length && !completing && (
+          {!showTapOverlay && typed.length >= target.length && !completing && (
             <span
               className={s.endCursor}
               style={{ borderLeft: `2px solid ${accent}` }}
@@ -152,19 +170,23 @@ export default function PlayingScreen() {
               ? "\u2713 well done"
               : hasError
                 ? "backspace to correct"
-                : "type the phrase above"}
+                : showTapOverlay
+                  ? ""
+                  : "type the phrase above"}
           </span>
           <span>
             phrase {promptIdx + 1} of {totalPrompts}
           </span>
         </div>
 
-        {/* Hidden input */}
+        {/* Hidden input — positioned inside the prompt box area for mobile focus */}
         <input
           ref={inputRef}
           className={s.hiddenInput}
           value={typed}
           onChange={handleType}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter } from "../svg/filters";
 import { Hill, TreeSilhouette, Star } from "../svg/primitives";
@@ -74,7 +75,7 @@ const TREES = [
   { x: 395, h: 38, s: 16 },
 ];
 
-export default function StarScene({ progress: p }: SceneProps) {
+function StarScene({ progress: p }: SceneProps) {
   // ── Moon ──
   const moonP = sub(p, 0.05, 0.4);
   const moonY = 80 - moonP * 35;
@@ -342,3 +343,5 @@ export default function StarScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(StarScene);

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter, TextureFilter } from "../svg/filters";
 import { Hill, Cloud, Flower, Rain, GrassRow, TreeSilhouette } from "../svg/primitives";
@@ -7,7 +8,7 @@ function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
-export default function GardenScene({ progress: p }: SceneProps) {
+function GardenScene({ progress: p }: SceneProps) {
   // ── Sky transitions ──
   const skyH = 110 + p * 18;
   const skyS = 15 + p * 33;
@@ -188,3 +189,5 @@ export default function GardenScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(GardenScene);

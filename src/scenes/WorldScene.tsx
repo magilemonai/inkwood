@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter } from "../svg/filters";
 import { Wisp } from "../svg/primitives";
@@ -34,7 +35,7 @@ function getNode(idx: number) {
   return idx === -1 ? worldNode : locations[idx];
 }
 
-export default function WorldScene({ progress: p }: SceneProps) {
+function WorldScene({ progress: p }: SceneProps) {
   // Background warmth
   const bgH = 220 - p * 30;
   const bgS = 6 + p * 8;
@@ -316,3 +317,5 @@ export default function WorldScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(WorldScene);

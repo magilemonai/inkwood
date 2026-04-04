@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, TextureFilter, MistFilter } from "../svg/filters";
 import { Wisp, StoneBlock } from "../svg/primitives";
@@ -7,7 +8,7 @@ function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
-export default function LibraryScene({ progress: p }: SceneProps) {
+function LibraryScene({ progress: p }: SceneProps) {
   // ── Ambient light — dark cave that warms to mauve ──
   const ambientL = 3 + p * 14;
   const ambientS = 10 + p * 30;
@@ -436,3 +437,5 @@ export default function LibraryScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(LibraryScene);

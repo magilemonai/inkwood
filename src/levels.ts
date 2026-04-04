@@ -6,7 +6,7 @@ export const LEVELS: Level[] = [
     title: "The Sleeping Garden",
     flavor:
       "Frost clings to every petal. Breathe life back into the garden.",
-    prompts: ["warm summer rain", "roots reach deep, leaves touch light"],
+    prompts: ["green returns to sleeping roots", "bloom now, every waiting flower"],
     scene: "garden",
     accent: "#6bbf6b",
     bg: "#080e08",

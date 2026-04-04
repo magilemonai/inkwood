@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, TextureFilter, MistFilter } from "../svg/filters";
 import { Hill, TreeSilhouette, StoneBlock, Wisp, GrassRow } from "../svg/primitives";
@@ -60,7 +61,7 @@ const CARVING_PATHS = [
   "M-3 -3 Q0 -1, 3 -3 M-3 0 Q0 2, 3 0 M-3 3 Q0 5, 3 3",
 ];
 
-export default function BridgeScene({ progress: p }: SceneProps) {
+function BridgeScene({ progress: p }: SceneProps) {
   // ── Sky ──
   const skyH = 210 + p * 15;
   const skyS = 10 + p * 18;
@@ -478,3 +479,5 @@ export default function BridgeScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(BridgeScene);

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, TextureFilter } from "../svg/filters";
 import { Wisp } from "../svg/primitives";
@@ -7,7 +8,7 @@ function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
-export default function CottageScene({ progress: p }: SceneProps) {
+function CottageScene({ progress: p }: SceneProps) {
   // ── Ambient warmth — room color warms as candles light ──
   const ambientR = 12 + p * 28;
   const ambientG = 10 + p * 14;
@@ -443,3 +444,5 @@ export default function CottageScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(CottageScene);

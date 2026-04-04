@@ -57,10 +57,16 @@ export default function OutroSequence() {
   useEffect(() => {
     const start = performance.now();
     let frame: number;
+    let lastUpdate = 0;
     const tick = () => {
-      const elapsed = (performance.now() - start) / 1000;
-      setTime(elapsed);
-      if (elapsed >= 19 && !showText) setShowText(true);
+      const now = performance.now();
+      const elapsed = (now - start) / 1000;
+      // Throttle state updates to ~15 Hz
+      if (now - lastUpdate > 66) {
+        lastUpdate = now;
+        setTime(elapsed);
+        if (elapsed >= 19 && !showText) setShowText(true);
+      }
       if (elapsed < 28) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -214,11 +220,20 @@ export default function OutroSequence() {
             animate={{ opacity: 1 }}
             transition={{ duration: 2.5 }}
           >
+            <motion.p
+              className={s.body}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 2, delay: 0.5 }}
+            >
+              The forest remembers.
+            </motion.p>
+
             <motion.div
               className={s.dotRow}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1.5, delay: 0.5 }}
+              transition={{ duration: 1.5, delay: 2 }}
             >
               {LEVELS.map((l, i) => (
                 <div key={i} className={s.dot} style={{ background: l.accent }} />

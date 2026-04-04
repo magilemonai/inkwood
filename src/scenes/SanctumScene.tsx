@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter, SoftLightFilter } from "../svg/filters";
 import { Hill, Wisp, GrassRow } from "../svg/primitives";
@@ -155,7 +156,7 @@ function SpiritFigure({
   );
 }
 
-export default function SanctumScene({ progress: p }: SceneProps) {
+function SanctumScene({ progress: p }: SceneProps) {
   // Ambient brightening
   const ambL = 3 + p * 10;
   const ambS = 10 + p * 15;
@@ -443,3 +444,5 @@ export default function SanctumScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(SanctumScene);

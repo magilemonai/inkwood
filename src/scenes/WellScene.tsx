@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, TextureFilter, WaterFilter, MistFilter } from "../svg/filters";
 import { Hill, TreeSilhouette, StoneBlock, Wisp, GrassRow } from "../svg/primitives";
@@ -53,7 +54,7 @@ function SpiritFish({
   );
 }
 
-export default function WellScene({ progress: p }: SceneProps) {
+function WellScene({ progress: p }: SceneProps) {
   // ── Sky ──
   const skyH = 190 + p * 15;
   const skyS = 12 + p * 20;
@@ -487,3 +488,5 @@ export default function WellScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(WellScene);

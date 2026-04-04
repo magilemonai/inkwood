@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, TextureFilter, MistFilter } from "../svg/filters";
 import { Hill, Wisp, GrassRow } from "../svg/primitives";
@@ -7,7 +8,7 @@ function sub(p: number, start: number, duration: number): number {
   return Math.min(1, Math.max(0, (p - start) / duration));
 }
 
-export default function TreeScene({ progress: p }: SceneProps) {
+function TreeScene({ progress: p }: SceneProps) {
   // ── Background warmth ──
   const bgL = 4 + p * 5;
   const bgS = 10 + p * 12;
@@ -407,3 +408,5 @@ export default function TreeScene({ progress: p }: SceneProps) {
     </svg>
   );
 }
+
+export default memo(TreeScene);

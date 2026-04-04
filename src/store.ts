@@ -2,10 +2,48 @@ import { create } from "zustand";
 import { LEVELS, ACT_RANGES } from "./levels";
 import type { Screen } from "./types";
 
-/** Check if completing this level ends an act (i.e., next level is in a new act) */
+// ── localStorage persistence ──
+const SAVE_KEY = "inkwood-save";
+
+interface SaveData {
+  lvl: number;
+  promptIdx: number;
+}
+
+function loadSave(): SaveData | null {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as SaveData;
+    if (typeof data.lvl === "number" && data.lvl >= 0 && data.lvl < LEVELS.length) {
+      return data;
+    }
+  } catch { /* ignore corrupt saves */ }
+  return null;
+}
+
+function writeSave(lvl: number, promptIdx: number) {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ lvl, promptIdx }));
+  } catch { /* storage full or blocked */ }
+}
+
+function clearSave() {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+  } catch { /* ignore */ }
+}
+
+/** Check if completing this level ends an act */
 function isActBoundary(lvl: number): boolean {
   return ACT_RANGES.some(([, end]) => lvl === end) && lvl + 1 < LEVELS.length;
 }
+
+// ── Determine initial screen ──
+const saved = loadSave();
+const initialScreen: Screen = saved && saved.lvl > 0 ? "playing" : "intro";
+const initialLvl = saved?.lvl ?? 0;
+const initialPromptIdx = saved?.promptIdx ?? 0;
 
 interface GameState {
   screen: Screen;
@@ -32,9 +70,9 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  screen: "intro",
-  lvl: 0,
-  promptIdx: 0,
+  screen: initialScreen,
+  lvl: initialLvl,
+  promptIdx: initialPromptIdx,
   typed: "",
   completing: false,
 
@@ -74,45 +112,53 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { promptIdx, lvl } = get();
     const total = get().totalPrompts();
     if (promptIdx + 1 < total) {
-      set({ promptIdx: promptIdx + 1, typed: "", completing: false });
+      const nextIdx = promptIdx + 1;
+      set({ promptIdx: nextIdx, typed: "", completing: false });
+      writeSave(lvl, nextIdx);
     } else if (lvl + 1 < LEVELS.length) {
-      // Check if this is an act boundary → show act transition instead of level win
       if (isActBoundary(lvl)) {
         set({ screen: "actTransition" });
       } else {
         set({ screen: "levelWin" });
       }
     } else {
+      clearSave();
       set({ screen: "outro" });
     }
   },
 
   advanceLevel: () => {
     const { lvl } = get();
+    const nextLvl = lvl + 1;
     set({
-      lvl: lvl + 1,
+      lvl: nextLvl,
       promptIdx: 0,
       typed: "",
       completing: false,
       screen: "playing",
     });
+    writeSave(nextLvl, 0);
   },
 
-  startGame: () =>
+  startGame: () => {
     set({
       lvl: 0,
       promptIdx: 0,
       typed: "",
       completing: false,
       screen: "playing",
-    }),
+    });
+    writeSave(0, 0);
+  },
 
-  restart: () =>
+  restart: () => {
+    clearSave();
     set({
       lvl: 0,
       promptIdx: 0,
       typed: "",
       completing: false,
       screen: "intro",
-    }),
+    });
+  },
 }));
