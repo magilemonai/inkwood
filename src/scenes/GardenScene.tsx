@@ -8,25 +8,45 @@ function sub(p: number, start: number, duration: number): number {
 
 // ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
 
-/** Oak trunk — slight leftward lean, subtle burl, NOT a potato */
-const TRUNK = `
+/** Oak trunk that SPLITS into two main limbs at the crown.
+ *  One continuous shape — trunk widens, then forks left and right.
+ *  This is the whole wood structure below the canopy. */
+const TRUNK_AND_LIMBS = `
   M112 195
   C111 189, 110 183, 109 177
   C108 171, 107 166, 106 160
-  C105 154, 103 150, 104 145
-  C105 140, 106 136, 106 130
-  C106 124, 105 118, 106 112
-  C107 108, 110 104, 114 101
-  L130 101
-  C133 104, 135 108, 136 112
+  C105 155, 104 150, 105 145
+  C106 140, 106 135, 106 128
+  C106 122, 105 116, 106 110
+  C107 106, 110 102, 114 98
+  C110 92, 100 82, 88 72
+  C80 65, 72 58, 65 52
+  L70 50
+  C78 54, 86 62, 94 70
+  C104 80, 112 90, 118 98
+  C120 94, 124 86, 130 78
+  C138 68, 148 60, 160 54
+  C170 48, 180 46, 190 44
+  L192 48
+  C182 50, 172 54, 162 60
+  C150 68, 140 76, 134 84
+  C128 94, 133 102, 136 110
   C137 118, 137 124, 137 130
   C137 136, 138 142, 138 148
-  C138 154, 139 160, 138 166
-  C137 172, 136 178, 135 184
-  C134 189, 133 192, 132 195
+  C138 154, 138 160, 137 166
+  C136 172, 135 178, 134 184
+  C133 189, 132 192, 132 195
   Z`;
 
-/** Canopy — irregular, with deep indentations and asymmetry */
+/** Secondary branches off the two main limbs — small forks */
+const FORKS = [
+  // off left limb, forks upward near top
+  `M82 68 C76 60, 68 52, 60 46 L63 44 C70 50, 78 58, 86 66 Z`,
+  // off right limb, forks upward
+  `M155 58 C162 50, 170 44, 178 38 L180 42 C172 48, 164 54, 158 62 Z`,
+  // off right limb, smaller fork downward
+  `M164 56 C172 60, 182 60, 192 62 L192 65 C182 64, 172 64, 166 60 Z`,
+];
 const CANOPY = `
   M32 88
   C28 80, 32 72, 40 66
@@ -51,43 +71,6 @@ const CANOPY = `
   C50 100, 42 95, 36 92
   C32 90, 30 88, 32 88
   Z`;
-
-/** 3 major limbs — clean tapered curves flowing from trunk into canopy.
- *  A real oak splits: trunk to 2-3 main limbs, canopy fills the rest. */
-const LIMBS = [
-  // Left limb — curves gracefully left and upward from mid-trunk
-  `M108 130
-   C102 120, 90 105, 75 90
-   C65 80, 55 72, 48 62
-   L52 60
-   C58 68, 68 78, 78 88
-   C92 102, 106 118, 114 134 Z`,
-  // Center limb — rises straight up from the trunk crown
-  `M116 104
-   C115 90, 118 74, 120 58
-   C121 48, 122 40, 124 34
-   L128 35
-   C127 42, 126 50, 126 60
-   C125 76, 128 92, 130 106 Z`,
-  // Right limb — curves right and slightly upward
-  `M132 115
-   C140 108, 155 98, 172 90
-   C185 84, 196 80, 206 76
-   L207 80
-   C198 84, 187 88, 174 94
-   C158 102, 144 112, 136 120 Z`,
-];
-
-/** A few secondary forks — just 3, clean and short */
-const FORKS = [
-  // off left limb, a short upward fork
-  `M72 88 C66 80, 58 72, 52 66 L55 68 C60 74, 68 82, 76 92 Z`,
-  // off center limb, a fork to the left
-  `M120 62 C112 56, 104 52, 96 48 L98 50 C106 54, 114 60, 124 66 Z`,
-  // off right limb, a fork upward
-  `M174 90 C180 82, 188 76, 194 68 L196 71 C190 78, 182 86, 178 94 Z`,
-];
-
 
 /** Roots — spreading from trunk base */
 const ROOTS = [
@@ -236,21 +219,17 @@ function GardenScene({ progress: p }: SceneProps) {
         transform="translate(4, 3) scale(0.85)"
         style={{ transformOrigin: "125px 60px" }} />
 
-      {/* Limbs — 3 clean major limbs + 3 secondary forks */}
+      {/* Trunk + limbs — one integrated shape that splits at the crown */}
+      <path d={TRUNK_AND_LIMBS}
+        fill={`hsl(30, ${trunkS}%, ${trunkL}%)`} />
+
+      {/* Small forks off the main limbs */}
       <g opacity={0.4 + p * 0.3}>
-        {LIMBS.map((d, i) => (
-          <path key={i} d={d}
-            fill={`hsl(30, ${trunkS}%, ${trunkL + 3}%)`} />
-        ))}
         {FORKS.map((d, i) => (
           <path key={`f${i}`} d={d}
-            fill={`hsl(30, ${trunkS}%, ${trunkL + 5}%)`} />
+            fill={`hsl(30, ${trunkS}%, ${trunkL + 4}%)`} />
         ))}
       </g>
-
-      {/* Trunk */}
-      <path d={TRUNK}
-        fill={`hsl(30, ${trunkS}%, ${trunkL}%)`} />
 
       {/* Roots */}
       <g opacity={0.3 + rootGlow * 0.7}>
@@ -300,21 +279,29 @@ function GardenScene({ progress: p }: SceneProps) {
         )}
       </g>
 
-      {/* ── WILDFLOWERS — simple, delicate: stem + small color blob ── */}
+      {/* ── FLOWERS — petal style with soft muted colors ── */}
       {flowers.map((f, i) => {
-        const fp = sub(p, f.delay, 0.25);
+        const fp = sub(p, f.delay, 0.22);
         if (fp <= 0) return null;
         const baseY = 196 + (i % 2) * 2;
         const headY = baseY - f.stemH * fp;
+        const ps = f.size * fp;
         return (
-          <g key={i} opacity={fp * 0.9}>
-            {/* Stem */}
+          <g key={i} opacity={fp}>
             <path
-              d={`M${f.x} ${baseY} Q${f.x + 1.5} ${(baseY + headY) / 2} ${f.x - 0.5} ${headY}`}
-              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.2} />
-            {/* Bloom — a soft small circle, not individual petals */}
-            <circle cx={f.x} cy={headY} r={f.size * 0.5 * fp} fill={f.color} opacity={0.8} />
-            <circle cx={f.x} cy={headY} r={f.size * 0.2 * fp} fill="#f0e880" opacity={0.7} />
+              d={`M${f.x} ${baseY} Q${f.x + 2} ${(baseY + headY) / 2} ${f.x} ${headY}`}
+              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.3} />
+            {[0, 72, 144, 216, 288].map((ang, j) => {
+              const px = f.x + Math.cos((ang * Math.PI) / 180) * ps * 0.9;
+              const py = headY + Math.sin((ang * Math.PI) / 180) * ps * 0.9;
+              return (
+                <ellipse key={j} cx={px} cy={py}
+                  rx={ps * 0.5} ry={ps * 0.32}
+                  fill={f.color} opacity={0.85}
+                  transform={`rotate(${ang + 90}, ${px}, ${py})`} />
+              );
+            })}
+            <circle cx={f.x} cy={headY} r={ps * 0.25} fill="#e8d060" />
           </g>
         );
       })}
