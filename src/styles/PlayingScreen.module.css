@@ -250,19 +250,29 @@
   }
 }
 
-/* Portrait orientation — constrain scene to landscape ratio */
+/* Portrait orientation — flex column so scene + typing stack without scrolling */
 @media (orientation: portrait) {
+  .container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .sceneContainer {
-    /* Force a landscape aspect ratio so the full scene is visible,
-       positioned at the top of the viewport */
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .header {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: auto;
-    /* Scene height = viewport width * 0.625 (250/400 aspect ratio) */
-    height: 62.5vw;
-    max-height: 55vh;
-    max-height: 55dvh;
+    z-index: 10;
+  }
+
+  .typingArea {
+    position: relative;
+    flex: 0 0 auto;
   }
 }
