@@ -4,7 +4,7 @@ import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
-import { startAmbient, stopAmbient, playChime, playTypeClick, toggleMute, isMuted } from "../audio";
+import { startAmbient, stopAmbient, playCompletionSweep, playTypeClick, toggleMute, isMuted } from "../audio";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -62,15 +62,15 @@ export default function PlayingScreen() {
   useEffect(() => {
     if (isComplete && !completing) {
       startCompletion();
-      playChime(level.accent);
+      playCompletionSweep();
     }
-  }, [isComplete, completing, startCompletion, level.accent]);
+  }, [isComplete, completing, startCompletion]);
 
   // ── Ambient audio — start/switch on level change ──
   const [audioMuted, setAudioMuted] = useState(isMuted);
   useEffect(() => {
     const actIdx = getActIndex(lvl);
-    startAmbient(actIdx);
+    startAmbient(actIdx, lvl);
     return () => { stopAmbient(); };
   }, [lvl]);
 
@@ -206,7 +206,7 @@ export default function PlayingScreen() {
             }}
           >
             {isComplete
-              ? "\u2713 well done"
+              ? "well done"
               : hasError
                 ? "backspace to correct"
                 : showTapOverlay

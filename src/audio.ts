@@ -2,31 +2,43 @@
  * Inkwood Audio — Web Audio API synthesis
  *
  * No audio files. Everything is synthesized:
- * - Ambient pads per act (layered detuned oscillators + filter)
- * - Completion chime on phrase finish
- * - Progress-reactive harmonic shifts
+ * - Ambient pads per act with per-scene tonal variation
+ * - Subtle filter sweep on phrase completion (no chime)
+ * - Intro drone that builds from silence
+ * - Very quiet type clicks
  */
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let ambientNodes: OscillatorNode[] = [];
 let ambientGain: GainNode | null = null;
+let ambientFilter: BiquadFilterNode | null = null;
 let lfo: OscillatorNode | null = null;
 let lfoGain: GainNode | null = null;
 let currentAct = -1;
+let currentScene = -1;
 let muted = false;
 
-// Save mute preference
+// Intro drone state
+let introNodes: OscillatorNode[] = [];
+let introGain: GainNode | null = null;
+
 const MUTE_KEY = "inkwood-mute";
 try {
   muted = localStorage.getItem(MUTE_KEY) === "1";
 } catch { /* ignore */ }
 
+// ── HARD VOLUME CAP ──
+// All audio goes through masterGain which is capped at 0.15.
+// Individual voices are further attenuated. This prevents
+// any combination of sounds from hurting the listener.
+const MASTER_VOLUME = 0.15;
+
 function getCtx(): AudioContext {
   if (!ctx) {
     ctx = new AudioContext();
     masterGain = ctx.createGain();
-    masterGain.gain.value = muted ? 0 : 1;
+    masterGain.gain.value = muted ? 0 : MASTER_VOLUME;
     masterGain.connect(ctx.destination);
   }
   if (ctx.state === "suspended") {
@@ -35,110 +47,173 @@ function getCtx(): AudioContext {
   return ctx;
 }
 
-// ── Act ambient definitions ──────────────────────────────
-// Each act has a root note, chord intervals, filter freq, and character
+// ── Act + scene ambient definitions ──────────────────────
 
 interface ActAmbient {
-  /** Root frequency in Hz */
   root: number;
-  /** Intervals as frequency ratios (from root) */
   ratios: number[];
-  /** Oscillator type for each voice */
   types: OscillatorType[];
-  /** Low-pass filter cutoff */
   filterFreq: number;
-  /** LFO speed (Hz) — slower = more meditative */
   lfoRate: number;
-  /** Overall volume */
   volume: number;
 }
 
+// Per-scene filter offsets — each scene within an act shifts the
+// low-pass cutoff and adds a subtle frequency detune to feel different
+const SCENE_OFFSETS: { filterShift: number; detuneShift: number }[] = [
+  { filterShift: 0,   detuneShift: 0 },    // 0: Garden
+  { filterShift: -30, detuneShift: -5 },    // 1: Cottage (warmer, lower)
+  { filterShift: 40,  detuneShift: 8 },     // 2: Stars (brighter)
+  { filterShift: -50, detuneShift: -3 },    // 3: Well (darker, deeper)
+  { filterShift: -20, detuneShift: 2 },     // 4: Bridge (slightly warmer)
+  { filterShift: 20,  detuneShift: -8 },    // 5: Library (mysterious)
+  { filterShift: -10, detuneShift: 5 },     // 6: Stones (airy)
+  { filterShift: 30,  detuneShift: -2 },    // 7: Sanctum (shimmery)
+  { filterShift: 50,  detuneShift: 10 },    // 8: Tree (bright, open)
+  { filterShift: 60,  detuneShift: 12 },    // 9: World (fullest, warmest)
+];
+
 const ACT_AMBIENTS: ActAmbient[] = [
-  // Act I: Awakening — warm, gentle, nature-like
-  // Key of C major: C3, E3, G3, C4 (root, major 3rd, 5th, octave)
+  // Act I: Awakening — warm, gentle
   {
     root: 130.81,
     ratios: [1, 1.25, 1.5, 2],
     types: ["sine", "sine", "triangle", "sine"],
-    filterFreq: 400,
-    lfoRate: 0.08,
-    volume: 0.06,
+    filterFreq: 300,
+    lfoRate: 0.06,
+    volume: 0.012,
   },
-  // Act II: Discovery — mysterious, deeper, minor
-  // Key of A minor: A2, C3, E3, A3
+  // Act II: Discovery — mysterious, deeper
   {
     root: 110,
     ratios: [1, 1.2, 1.5, 2],
     types: ["sine", "triangle", "sine", "sine"],
-    filterFreq: 350,
-    lfoRate: 0.06,
-    volume: 0.06,
+    filterFreq: 260,
+    lfoRate: 0.05,
+    volume: 0.012,
   },
-  // Act III: The Nexus — mystical, shimmering
-  // Key of D: D3, F#3, A3, D4
+  // Act III: The Nexus — mystical
   {
     root: 146.83,
     ratios: [1, 1.26, 1.5, 2],
     types: ["sine", "sine", "sine", "triangle"],
-    filterFreq: 500,
-    lfoRate: 0.1,
-    volume: 0.055,
+    filterFreq: 340,
+    lfoRate: 0.07,
+    volume: 0.011,
   },
-  // Act IV: Restoration — grand, warm, full
-  // Key of G major: G2, B2, D3, G3
+  // Act IV: Restoration — grand, full
   {
     root: 98,
     ratios: [1, 1.25, 1.5, 2, 3],
     types: ["sine", "sine", "triangle", "sine", "sine"],
-    filterFreq: 450,
-    lfoRate: 0.07,
-    volume: 0.06,
+    filterFreq: 320,
+    lfoRate: 0.05,
+    volume: 0.012,
   },
 ];
 
-// ── Ambient pad ──────────────────────────────────────────
+// ── Intro drone ──────────────────────────────────────────
 
-export function startAmbient(actIndex: number) {
-  if (actIndex === currentAct) return;
-  stopAmbient();
-  currentAct = actIndex;
-
+export function startIntroDrone() {
+  stopIntroDrone();
   const ac = getCtx();
-  const def = ACT_AMBIENTS[actIndex] ?? ACT_AMBIENTS[0];
 
-  // Create gain for this ambient group
-  ambientGain = ac.createGain();
-  ambientGain.gain.value = 0;
+  introGain = ac.createGain();
+  introGain.gain.value = 0;
 
-  // Low-pass filter for warmth
   const filter = ac.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = def.filterFreq;
-  filter.Q.value = 0.7;
+  filter.frequency.value = 200;
+  filter.Q.value = 0.5;
 
-  // LFO for gentle volume modulation
-  lfo = ac.createOscillator();
-  lfoGain = ac.createGain();
-  lfo.type = "sine";
-  lfo.frequency.value = def.lfoRate;
-  lfoGain.gain.value = def.volume * 0.3; // modulation depth
-  lfo.connect(lfoGain);
-  lfoGain.connect(ambientGain.gain);
-  lfo.start();
-
-  // Create oscillator voices
-  ambientNodes = def.ratios.map((ratio, i) => {
+  // Very low, very quiet drone — builds from nothing
+  const freqs = [65.41, 98]; // C2, G2
+  introNodes = freqs.map((f) => {
     const osc = ac.createOscillator();
-    osc.type = def.types[i] ?? "sine";
-    osc.frequency.value = def.root * ratio;
-    // Slight detune for richness (each voice slightly different)
-    osc.detune.value = (i - def.ratios.length / 2) * 3;
+    osc.type = "sine";
+    osc.frequency.value = f;
     osc.connect(filter);
     osc.start();
     return osc;
   });
 
-  filter.connect(ambientGain);
+  filter.connect(introGain);
+  introGain.connect(masterGain!);
+
+  // Fade in very slowly over 8 seconds to barely audible
+  const now = ac.currentTime;
+  introGain.gain.setValueAtTime(0, now);
+  introGain.gain.linearRampToValueAtTime(0.008, now + 8);
+}
+
+export function stopIntroDrone() {
+  if (!ctx || introNodes.length === 0) return;
+  const ac = ctx;
+
+  if (introGain) {
+    introGain.gain.setValueAtTime(introGain.gain.value, ac.currentTime);
+    introGain.gain.linearRampToValueAtTime(0, ac.currentTime + 1.5);
+  }
+
+  const nodes = [...introNodes];
+  const oldGain = introGain;
+  setTimeout(() => {
+    nodes.forEach((n) => { try { n.stop(); n.disconnect(); } catch { /* */ } });
+    try { oldGain?.disconnect(); } catch { /* */ }
+  }, 2000);
+
+  introNodes = [];
+  introGain = null;
+}
+
+// ── Ambient pad ──────────────────────────────────────────
+
+export function startAmbient(actIndex: number, sceneIndex: number = 0) {
+  // If same act, just shift the filter for scene variation
+  if (actIndex === currentAct && sceneIndex !== currentScene) {
+    currentScene = sceneIndex;
+    shiftForScene(sceneIndex);
+    return;
+  }
+
+  stopAmbient();
+  stopIntroDrone(); // stop intro drone when gameplay starts
+  currentAct = actIndex;
+  currentScene = sceneIndex;
+
+  const ac = getCtx();
+  const def = ACT_AMBIENTS[actIndex] ?? ACT_AMBIENTS[0];
+  const sceneOff = SCENE_OFFSETS[sceneIndex] ?? SCENE_OFFSETS[0];
+
+  ambientGain = ac.createGain();
+  ambientGain.gain.value = 0;
+
+  ambientFilter = ac.createBiquadFilter();
+  ambientFilter.type = "lowpass";
+  ambientFilter.frequency.value = def.filterFreq + sceneOff.filterShift;
+  ambientFilter.Q.value = 0.7;
+
+  // LFO for gentle volume breathing
+  lfo = ac.createOscillator();
+  lfoGain = ac.createGain();
+  lfo.type = "sine";
+  lfo.frequency.value = def.lfoRate;
+  lfoGain.gain.value = def.volume * 0.25;
+  lfo.connect(lfoGain);
+  lfoGain.connect(ambientGain.gain);
+  lfo.start();
+
+  ambientNodes = def.ratios.map((ratio, i) => {
+    const osc = ac.createOscillator();
+    osc.type = def.types[i] ?? "sine";
+    osc.frequency.value = def.root * ratio;
+    osc.detune.value = (i - def.ratios.length / 2) * 3 + sceneOff.detuneShift;
+    osc.connect(ambientFilter!);
+    osc.start();
+    return osc;
+  });
+
+  ambientFilter.connect(ambientGain);
   ambientGain.connect(masterGain!);
 
   // Fade in over 3 seconds
@@ -146,79 +221,85 @@ export function startAmbient(actIndex: number) {
   ambientGain.gain.linearRampToValueAtTime(def.volume, ac.currentTime + 3);
 }
 
+/** Shift filter and detune for scene variation within same act */
+function shiftForScene(sceneIndex: number) {
+  if (!ctx || !ambientFilter) return;
+  const ac = ctx;
+  const actDef = ACT_AMBIENTS[currentAct] ?? ACT_AMBIENTS[0];
+  const sceneOff = SCENE_OFFSETS[sceneIndex] ?? SCENE_OFFSETS[0];
+
+  // Smooth transition over 2 seconds
+  ambientFilter.frequency.setValueAtTime(ambientFilter.frequency.value, ac.currentTime);
+  ambientFilter.frequency.linearRampToValueAtTime(
+    actDef.filterFreq + sceneOff.filterShift,
+    ac.currentTime + 2
+  );
+
+  // Shift oscillator detune
+  ambientNodes.forEach((osc, i) => {
+    const baseDet = (i - ambientNodes.length / 2) * 3;
+    osc.detune.setValueAtTime(osc.detune.value, ac.currentTime);
+    osc.detune.linearRampToValueAtTime(baseDet + sceneOff.detuneShift, ac.currentTime + 2);
+  });
+}
+
 export function stopAmbient() {
   if (!ctx || ambientNodes.length === 0) return;
-
   const ac = ctx;
-  const fadeTime = 2;
 
-  // Fade out
   if (ambientGain) {
     ambientGain.gain.setValueAtTime(ambientGain.gain.value, ac.currentTime);
-    ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + fadeTime);
+    ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + 2);
   }
 
-  // Stop after fade
   const nodes = [...ambientNodes];
   const oldLfo = lfo;
-  const oldAmbientGain = ambientGain;
+  const oldGain = ambientGain;
   const oldLfoGain = lfoGain;
+  const oldFilter = ambientFilter;
 
   setTimeout(() => {
-    nodes.forEach((n) => { try { n.stop(); n.disconnect(); } catch { /* already stopped */ } });
-    try { oldLfo?.stop(); oldLfo?.disconnect(); } catch { /* ignore */ }
-    try { oldLfoGain?.disconnect(); } catch { /* ignore */ }
-    try { oldAmbientGain?.disconnect(); } catch { /* ignore */ }
-  }, fadeTime * 1000 + 100);
+    nodes.forEach((n) => { try { n.stop(); n.disconnect(); } catch { /* */ } });
+    try { oldLfo?.stop(); oldLfo?.disconnect(); } catch { /* */ }
+    try { oldLfoGain?.disconnect(); } catch { /* */ }
+    try { oldFilter?.disconnect(); } catch { /* */ }
+    try { oldGain?.disconnect(); } catch { /* */ }
+  }, 2500);
 
   ambientNodes = [];
   lfo = null;
   lfoGain = null;
   ambientGain = null;
+  ambientFilter = null;
   currentAct = -1;
+  currentScene = -1;
 }
 
-// ── Completion chime ─────────────────────────────────────
+// ── Phrase completion — subtle filter sweep ──────────────
+// Instead of a doorbell chime, briefly open the low-pass filter
+// wider, creating a momentary brightening of the ambient sound.
+// This feels like the world "breathing in" after each incantation.
 
-export function playChime(accentHex?: string) {
-  const ac = getCtx();
-
-  // Parse accent color to determine chime character
-  // Default to a warm bell tone
-  const baseFreq = 523.25; // C5
-  const harmonics = [1, 2, 3, 5.04]; // bell-like partial series
-  const gains = [0.5, 0.25, 0.12, 0.06];
-
-  const chimeGain = ac.createGain();
-  chimeGain.gain.value = 0;
-  chimeGain.connect(masterGain!);
-
-  // Quick attack, slow decay
+export function playCompletionSweep() {
+  if (!ctx || !ambientFilter || !ambientGain) return;
+  const ac = ctx;
   const now = ac.currentTime;
-  chimeGain.gain.setValueAtTime(0, now);
-  chimeGain.gain.linearRampToValueAtTime(0.08, now + 0.02);
-  chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+  const actDef = ACT_AMBIENTS[currentAct] ?? ACT_AMBIENTS[0];
+  const sceneOff = SCENE_OFFSETS[currentScene] ?? SCENE_OFFSETS[0];
+  const baseFreq = actDef.filterFreq + sceneOff.filterShift;
 
-  harmonics.forEach((ratio, i) => {
-    const osc = ac.createOscillator();
-    osc.type = "sine";
-    osc.frequency.value = baseFreq * ratio;
-    // Slight randomness for naturalness
-    osc.detune.value = (Math.random() - 0.5) * 4;
+  // Brief filter sweep up then back down
+  ambientFilter.frequency.cancelScheduledValues(now);
+  ambientFilter.frequency.setValueAtTime(baseFreq, now);
+  ambientFilter.frequency.linearRampToValueAtTime(baseFreq + 200, now + 0.3);
+  ambientFilter.frequency.linearRampToValueAtTime(baseFreq, now + 2.0);
 
-    const partialGain = ac.createGain();
-    partialGain.gain.value = gains[i] ?? 0.1;
-    osc.connect(partialGain);
-    partialGain.connect(chimeGain);
-
-    osc.start(now);
-    osc.stop(now + 3);
-  });
-
-  // Cleanup
-  setTimeout(() => {
-    try { chimeGain.disconnect(); } catch { /* ignore */ }
-  }, 3500);
+  // Subtle volume swell
+  const currentVol = ambientGain.gain.value;
+  ambientGain.gain.cancelScheduledValues(now);
+  ambientGain.gain.setValueAtTime(currentVol, now);
+  ambientGain.gain.linearRampToValueAtTime(currentVol * 1.4, now + 0.3);
+  ambientGain.gain.linearRampToValueAtTime(actDef.volume, now + 2.0);
 }
 
 // ── Typing sound — very subtle click ─────────────────────
@@ -229,8 +310,7 @@ export function playTypeClick() {
   const ac = getCtx();
   const now = ac.currentTime;
 
-  // Throttle to avoid overwhelming on fast typing
-  if (now - lastTypeTime < 0.03) return;
+  if (now - lastTypeTime < 0.04) return;
   lastTypeTime = now;
 
   const osc = ac.createOscillator();
@@ -238,16 +318,16 @@ export function playTypeClick() {
   osc.frequency.value = 800 + Math.random() * 200;
 
   const clickGain = ac.createGain();
-  clickGain.gain.setValueAtTime(0.015, now);
-  clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+  clickGain.gain.setValueAtTime(0.003, now);
+  clickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
 
   osc.connect(clickGain);
   clickGain.connect(masterGain!);
   osc.start(now);
-  osc.stop(now + 0.06);
+  osc.stop(now + 0.05);
 
   setTimeout(() => {
-    try { clickGain.disconnect(); } catch { /* ignore */ }
+    try { clickGain.disconnect(); } catch { /* */ }
   }, 200);
 }
 
@@ -255,9 +335,9 @@ export function playTypeClick() {
 
 export function toggleMute(): boolean {
   muted = !muted;
-  try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch { /* ignore */ }
+  try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch { /* */ }
   if (masterGain) {
-    masterGain.gain.value = muted ? 0 : 1;
+    masterGain.gain.value = muted ? 0 : MASTER_VOLUME;
   }
   return muted;
 }
@@ -270,6 +350,7 @@ export function isMuted(): boolean {
 
 export function disposeAudio() {
   stopAmbient();
+  stopIntroDrone();
   if (ctx) {
     ctx.close();
     ctx = null;

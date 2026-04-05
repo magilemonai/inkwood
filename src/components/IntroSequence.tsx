@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
+import { startIntroDrone, stopIntroDrone } from "../audio";
 import s from "../styles/Intro.module.css";
 
 /**
@@ -115,6 +116,12 @@ export default function IntroSequence() {
   const { startGame } = useGameStore();
   const [time, setTime] = useState(0);
   const [showTitle, setShowTitle] = useState(false);
+
+  // Start intro drone on mount
+  useEffect(() => {
+    startIntroDrone();
+    return () => { stopIntroDrone(); };
+  }, []);
 
   // Keyboard: space/enter to skip or begin
   useEffect(() => {

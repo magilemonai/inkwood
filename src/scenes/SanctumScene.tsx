@@ -160,11 +160,11 @@ function SanctumScene({ progress: p }: SceneProps) {
 
   // Spirit figures in a loose circle in the clearing
   const spirits = [
-    { x: 155, y: 210, h: 32, delay: 0.55 },
-    { x: 180, y: 215, h: 28, delay: 0.6 },
-    { x: 200, y: 208, h: 35, delay: 0.65 },
-    { x: 220, y: 214, h: 30, delay: 0.7 },
-    { x: 245, y: 211, h: 33, delay: 0.75 },
+    { x: 155, y: 165, h: 32, delay: 0.55 },
+    { x: 180, y: 168, h: 28, delay: 0.6 },
+    { x: 200, y: 162, h: 35, delay: 0.65 },
+    { x: 220, y: 167, h: 30, delay: 0.7 },
+    { x: 245, y: 164, h: 33, delay: 0.75 },
   ];
 
   // Stars
@@ -348,25 +348,25 @@ function SanctumScene({ progress: p }: SceneProps) {
       {mandalaP > 0 && (
         <g opacity={mandalaP * 0.5}>
           {/* Mandala glow background */}
-          <ellipse cx={200} cy={225} rx={40} ry={10} fill="url(#mandalaGrad)" />
+          <ellipse cx={200} cy={160} rx={40} ry={10} fill="url(#mandalaGrad)" />
           {/* Outer ring */}
           <ellipse
-            cx={200} cy={225} rx={32} ry={8}
+            cx={200} cy={160} rx={32} ry={8}
             fill="none" stroke="#d0b870" strokeWidth={0.6} opacity={0.4}
           />
           {/* Inner dashed ring */}
           <ellipse
-            cx={200} cy={225} rx={22} ry={5.5}
+            cx={200} cy={160} rx={22} ry={5.5}
             fill="none" stroke="#d0b870" strokeWidth={0.4}
             strokeDasharray="3 2" opacity={0.35}
           />
-          {/* Compass markers - N, S, E, W */}
-          <line x1={200} y1={225 - 8} x2={200} y2={225 - 12} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
-          <line x1={200} y1={225 + 8} x2={200} y2={225 + 12} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
-          <line x1={200 - 32} y1={225} x2={200 - 37} y2={225} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
-          <line x1={200 + 32} y1={225} x2={200 + 37} y2={225} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
+          {/* Compass markers */}
+          <line x1={200} y1={160 - 8} x2={200} y2={160 - 12} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
+          <line x1={200} y1={160 + 8} x2={200} y2={160 + 12} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
+          <line x1={200 - 32} y1={160} x2={200 - 37} y2={160} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
+          <line x1={200 + 32} y1={160} x2={200 + 37} y2={160} stroke="#d0b870" strokeWidth={0.5} opacity={0.4} />
           {/* Center dot */}
-          <circle cx={200} cy={225} r={1.5} fill="#d0b870" opacity={0.5} />
+          <circle cx={200} cy={160} r={1.5} fill="#d0b870" opacity={0.5} />
         </g>
       )}
 

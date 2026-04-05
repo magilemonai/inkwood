@@ -160,12 +160,12 @@ function StonesScene({ progress: p }: SceneProps) {
       {/* ── CENTRAL GLOW ── */}
       <ellipse cx="200" cy="155" rx="140" ry="60" fill="url(#stonesGlow)" />
 
-      {/* ── RITUAL CIRCLE ── */}
+      {/* ── RITUAL CIRCLE — raised above text overlay ── */}
       {p > 0.65 && (
         <g opacity={sub(p, 0.65, 0.2)}>
-          <ellipse cx="200" cy="195" rx={120 * sub(p, 0.65, 0.15)} ry={20 * sub(p, 0.65, 0.15)}
+          <ellipse cx="200" cy="160" rx={120 * sub(p, 0.65, 0.15)} ry={20 * sub(p, 0.65, 0.15)}
             fill="none" stroke="#88a8c8" strokeWidth="0.8" opacity="0.35" strokeDasharray="6 8" />
-          <ellipse cx="200" cy="195" rx={90 * sub(p, 0.7, 0.15)} ry={14 * sub(p, 0.7, 0.15)}
+          <ellipse cx="200" cy="160" rx={90 * sub(p, 0.7, 0.15)} ry={14 * sub(p, 0.7, 0.15)}
             fill="none" stroke="#88a8c8" strokeWidth="0.5" opacity="0.2" strokeDasharray="3 5" />
         </g>
       )}
@@ -293,7 +293,7 @@ function StonesScene({ progress: p }: SceneProps) {
 
       {/* ── ENERGY PULSE at completion ── */}
       {p > 0.9 && (
-        <ellipse cx="200" cy="180" rx={80 * sub(p, 0.9, 0.1)} ry={25 * sub(p, 0.9, 0.1)}
+        <ellipse cx="200" cy="155" rx={80 * sub(p, 0.9, 0.1)} ry={25 * sub(p, 0.9, 0.1)}
           fill="#88a8c8" opacity={(1 - sub(p, 0.9, 0.1)) * 0.15} />
       )}
 
