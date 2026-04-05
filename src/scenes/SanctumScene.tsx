@@ -1,7 +1,6 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
-import { GlowFilter, MistFilter, SoftLightFilter } from "../svg/filters";
-import { Hill, Wisp, GrassRow } from "../svg/primitives";
+import { GlowFilter } from "../svg/filters";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {
@@ -47,33 +46,19 @@ function ForestTree({
             Z`}
         fill={color}
       />
-      {/* Canopy - multiple organic blobs */}
-      <ellipse
-        cx={x + lx}
-        cy={topY + cw * 0.35}
-        rx={cw * 0.6}
-        ry={cw * 0.55}
-        fill={color}
-      />
-      <ellipse
-        cx={x + lx - cw * 0.25}
-        cy={topY + cw * 0.15}
-        rx={cw * 0.45}
-        ry={cw * 0.4}
-        fill={color}
-      />
-      <ellipse
-        cx={x + lx + cw * 0.3}
-        cy={topY + cw * 0.2}
-        rx={cw * 0.4}
-        ry={cw * 0.38}
-        fill={color}
-      />
-      <ellipse
-        cx={x + lx + cw * 0.05}
-        cy={topY - cw * 0.05}
-        rx={cw * 0.35}
-        ry={cw * 0.32}
+      {/* Canopy - single irregular bezier silhouette */}
+      <path
+        d={`M${x + lx - cw * 0.6} ${topY + cw * 0.6}
+            C${x + lx - cw * 0.7} ${topY + cw * 0.3},
+             ${x + lx - cw * 0.55} ${topY - cw * 0.1},
+             ${x + lx - cw * 0.25} ${topY - cw * 0.15}
+            C${x + lx - cw * 0.1} ${topY - cw * 0.25},
+             ${x + lx + cw * 0.1} ${topY - cw * 0.22},
+             ${x + lx + cw * 0.3} ${topY - cw * 0.1}
+            C${x + lx + cw * 0.55} ${topY + cw * 0.05},
+             ${x + lx + cw * 0.65} ${topY + cw * 0.35},
+             ${x + lx + cw * 0.55} ${topY + cw * 0.6}
+            Z`}
         fill={color}
       />
     </g>
@@ -228,8 +213,6 @@ function SanctumScene({ progress: p }: SceneProps) {
         <GlowFilter id="moonGlow" radius={18} color="#d0b870" opacity={0.5} />
         <GlowFilter id="spiritGlow" radius={5} color="#d0b870" opacity={0.3} />
         <GlowFilter id="beamGlow" radius={4} color="#d0b870" opacity={0.15} />
-        <MistFilter id="groundMist" scale={0.01} opacity={0.35} />
-        <SoftLightFilter id="ambientWash" color="#d0b870" elevation={25} intensity={0.3} />
 
         {/* Sky gradient */}
         <linearGradient id="sanctumSky" x1="0" y1="0" x2="0" y2="1">
@@ -329,8 +312,9 @@ function SanctumScene({ progress: p }: SceneProps) {
       </g>
 
       <g className="midLayer">
-      {/* ── Distant hills ── */}
-      <Hill y={200} height={15} color={`hsl(220, ${10 + p * 8}%, ${5 + p * 3}%)`} seed={0.5} />
+      {/* ── Distant hills — hand-crafted ── */}
+      <path d="M0 200 C30 196, 60 202, 90 198 C120 194, 150 200, 180 196 C210 192, 240 198, 270 194 C300 190, 330 196, 360 192 C380 190, 395 195, 400 193 L400 250 L0 250 Z"
+        fill={`hsl(220, ${10 + p * 8}%, ${5 + p * 3}%)`} />
 
       {/* ── Left forest trees ── */}
       <ForestTree x={-10} y={240} height={190} trunkWidth={12} canopyWidth={45} lean={3}
@@ -356,9 +340,9 @@ function SanctumScene({ progress: p }: SceneProps) {
       <ForestTree x={285} y={244} height={140} trunkWidth={7} canopyWidth={27} lean={-4}
         color={`hsl(125, ${7 + p * 5}%, ${5 + p * 3}%)`} />
 
-      {/* ── Clearing ground ── */}
-      <Hill y={220} height={8} color={`hsl(100, ${12 + p * 10}%, ${6 + p * 5}%)`} seed={2.1} />
-      <rect x={130} y={220} width={140} height={30} fill={`hsl(100, ${12 + p * 10}%, ${6 + p * 5}%)`} rx={3} />
+      {/* ── Clearing ground — hand-crafted ── */}
+      <path d="M130 222 C150 218, 170 220, 200 218 C230 216, 250 220, 270 218 L270 250 L130 250 Z"
+        fill={`hsl(100, ${12 + p * 10}%, ${6 + p * 5}%)`} />
 
       {/* ── Ground mandala ── */}
       {mandalaP > 0 && (
@@ -409,35 +393,45 @@ function SanctumScene({ progress: p }: SceneProps) {
         />
       ))}
 
-      {/* ── Grass rows in clearing ── */}
-      <GrassRow y={228} color={`hsl(100, ${18 + p * 15}%, ${10 + p * 8}%)`} count={15} maxHeight={8} progress={p} />
-      <GrassRow y={235} color={`hsl(95, ${15 + p * 12}%, ${8 + p * 6}%)`} count={10} maxHeight={6} progress={p * 0.7} />
+      {/* ── Clearing grass tufts ── */}
+      {[
+        { x: 142, y: 224 }, { x: 160, y: 222 }, { x: 178, y: 220 },
+        { x: 195, y: 219 }, { x: 212, y: 220 }, { x: 228, y: 222 },
+        { x: 245, y: 224 }, { x: 260, y: 222 },
+      ].map((g, i) => (
+        <g key={`cg${i}`} opacity={0.3 + p * 0.4}>
+          <line x1={g.x - 1} y1={g.y} x2={g.x - 3} y2={g.y - 5 * p}
+            stroke={`hsl(100, ${18 + p * 15}%, ${10 + p * 8}%)`}
+            strokeWidth={0.6} strokeLinecap="round" />
+          <line x1={g.x + 1} y1={g.y} x2={g.x + 2} y2={g.y - 6 * p}
+            stroke={`hsl(95, ${15 + p * 12}%, ${12 + p * 8}%)`}
+            strokeWidth={0.6} strokeLinecap="round" />
+        </g>
+      ))}
 
-      {/* ── Ground mist ── */}
-      <rect
-        x={120} y={210} width={160} height={40}
-        fill="#b0a880"
-        opacity={(0.3 + p * 0.15) * 0.25}
-        filter="url(#groundMist)"
-        rx={5}
-      />
+      {/* ── Ground mist — organic wisps ── */}
+      <path d="M135 225 C155 222, 180 224, 200 221 C220 224, 245 222, 265 225"
+        fill="none" stroke="#b0a880" strokeWidth={4}
+        strokeLinecap="round" opacity={(0.3 + p * 0.15) * 0.12} />
 
       </g>
 
       <g className="fgLayer">
-      {/* ── Spirit wisps / fireflies ── */}
+      {/* ── Spirit wisps / fireflies — inlined ── */}
       {wisps.map((w, i) => {
         const wp = sub(p, w.delay, 0.12);
-        return wp > 0 ? (
-          <Wisp
-            key={i}
-            x={w.x + Math.sin(i * 2.3) * 5}
-            y={w.y + Math.cos(i * 1.7) * 3}
-            color={w.color}
-            radius={1.8 + (i % 3) * 0.4}
-            opacity={wp * 0.5}
-          />
-        ) : null;
+        if (wp <= 0) return null;
+        const drift = Math.sin(p * Math.PI * 3 + i * 2.3) * 5;
+        const bob = Math.cos(p * Math.PI * 4 + i * 1.7) * 3;
+        const r = 1.8 + (i % 3) * 0.4;
+        return (
+          <g key={`wisp${i}`}>
+            <circle cx={w.x + drift} cy={w.y + bob} r={r * 2.5}
+              fill={w.color} opacity={wp * 0.04} />
+            <circle cx={w.x + drift} cy={w.y + bob} r={r}
+              fill={w.color} opacity={wp * 0.4} />
+          </g>
+        );
       })}
 
       {/* ── Spirit figures ── */}
@@ -456,7 +450,19 @@ function SanctumScene({ progress: p }: SceneProps) {
       })}
 
       {/* ── Foreground grass edges ── */}
-      <GrassRow y={245} color={`hsl(110, ${12 + p * 10}%, ${5 + p * 4}%)`} count={20} maxHeight={14} progress={p} />
+      {[125, 140, 158, 175, 192, 210, 228, 248, 265].map((x, i) => (
+        <g key={`fg${i}`} opacity={0.3 + p * 0.4}>
+          <line x1={x - 1} y1={245} x2={x - 3} y2={245 - 8 * p}
+            stroke={`hsl(110, ${12 + p * 10}%, ${5 + p * 4}%)`}
+            strokeWidth={0.8} strokeLinecap="round" />
+          <line x1={x + 1} y1={245} x2={x + 2} y2={245 - 10 * p}
+            stroke={`hsl(105, ${10 + p * 8}%, ${6 + p * 5}%)`}
+            strokeWidth={0.8} strokeLinecap="round" />
+          <line x1={x + 3} y1={245} x2={x + 5} y2={245 - 6 * p}
+            stroke={`hsl(115, ${14 + p * 10}%, ${4 + p * 4}%)`}
+            strokeWidth={0.7} strokeLinecap="round" />
+        </g>
+      ))}
       </g>
 
       {/* Atmospheric particles — fireflies and spirit motes */}
