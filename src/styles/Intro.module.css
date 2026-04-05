@@ -1,5 +1,6 @@
 .container {
   height: 100vh;
+  height: 100dvh;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -53,4 +54,14 @@
   color: #504838;
   letter-spacing: 0.08em;
   z-index: 10;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 2rem;
+  }
+  .beginBtn {
+    padding: 0.6rem 2rem;
+    font-size: 0.9rem;
+  }
 }

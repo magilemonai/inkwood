@@ -1,5 +1,6 @@
 .container {
   height: 100vh;
+  height: 100dvh; /* dynamic viewport height for iOS Safari */
   position: relative;
   user-select: none;
   overflow: hidden;
@@ -178,14 +179,90 @@
   height: 1px;
 }
 
-/* ── Mobile ── */
+/* ══════ MOBILE / PORTRAIT ══════ */
+
+/* Tablet and smaller */
 @media (max-width: 640px) {
   .typingArea {
-    padding: 0.7rem 1rem 1.2rem;
+    padding: 0.5rem 0.8rem 0.8rem;
   }
 
   .promptBox {
-    font-size: 1.1rem;
-    padding: 0.8rem 1rem;
+    font-size: 1.05rem;
+    padding: 0.7rem 0.8rem;
+    min-height: 2.8rem;
+    line-height: 1.5;
+    margin-bottom: 0.3rem;
+  }
+
+  .flavor {
+    font-size: 0.78rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+  }
+
+  .header {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .headerTitle {
+    font-size: 0.9rem;
+  }
+
+  .headerLogo {
+    font-size: 0.7rem;
+  }
+
+  .headerDots {
+    font-size: 0.45rem;
+  }
+
+  .subInfo {
+    font-size: 0.65rem;
+  }
+}
+
+/* Small phone / keyboard likely open — extremely compact */
+@media (max-height: 500px) {
+  .header {
+    display: none; /* hide header entirely when keyboard is eating the screen */
+  }
+
+  .typingArea {
+    padding: 0.3rem 0.8rem 0.5rem;
+  }
+
+  .flavor {
+    display: none; /* hide flavor text to save space */
+  }
+
+  .promptBox {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.7rem;
+    min-height: 2rem;
+    line-height: 1.4;
+    margin-bottom: 0.2rem;
+  }
+
+  .subInfo {
+    font-size: 0.6rem;
+    padding: 0;
+  }
+}
+
+/* Portrait orientation — constrain scene to landscape ratio */
+@media (orientation: portrait) {
+  .sceneContainer {
+    /* Force a landscape aspect ratio so the full scene is visible,
+       positioned at the top of the viewport */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    /* Scene height = viewport width * 0.625 (250/400 aspect ratio) */
+    height: 62.5vw;
+    max-height: 55vh;
+    max-height: 55dvh;
   }
 }
