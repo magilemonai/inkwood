@@ -39,7 +39,7 @@ async function screenshot(sceneIdx, progressPct = 0) {
   const scene = SCENES[sceneIdx];
   const page = await browser.newPage();
   await page.setViewportSize({ width: 1400, height: 800 });
-  await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await page.goto(BASE_URL + '?dev', { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
 
   // Open dev panel and jump to scene
