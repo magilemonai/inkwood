@@ -2,6 +2,7 @@ import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
 
 // ─── THE WHISPERING LIBRARY ──────────────────────────────
@@ -126,7 +127,19 @@ const WISPS = [
   { x: 240, y: 100, delay: 0.74, color: "#c088b0" },
 ];
 
+const DUST_CONFIG = {
+  count: 20,
+  bounds: { x: 100, y: 30, width: 200, height: 130 },
+  colors: ["#e0c8d8", "#c088b0", "#d8b8c8", "#c898b8"],
+  sizeRange: [0.3, 0.8] as [number, number],
+  speedRange: [1, 3] as [number, number],
+  driftX: 0.5,
+  driftY: -2,
+  lifeRange: [5, 10] as [number, number],
+};
+
 function LibraryScene({ progress: p }: SceneProps) {
+  const dustParticles = useParticles(DUST_CONFIG, p > 0.15);
   const chamberH = 280 - p * 10;
   const chamberS = 12 + p * 28;
   const chamberL = 5 + p * 14;
@@ -392,19 +405,8 @@ function LibraryScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── DUST MOTES ── */}
-      {pageLightP > 0 && Array.from({ length: 15 }).map((_, i) => {
-        const px = 100 + (i * 29) % 200;
-        const baseY = 40 + (i * 37) % 120;
-        const drift = Math.sin(p * Math.PI * 2 + i * 1.1) * 4;
-        const rise = p * 15 * ((i % 3) / 3);
-        return (
-          <circle key={`dust${i}`} cx={px + drift} cy={baseY - rise}
-            r={0.4 + (i % 3) * 0.2}
-            fill={i % 3 === 0 ? "#e0c8d8" : "#c088b0"}
-            opacity={pageLightP * 0.12} />
-        );
-      })}
+      {/* ── DUST MOTES — physics-based floating particles ── */}
+      {p > 0.15 && <ParticleField particles={dustParticles} opacity={0.15} />}
 
       {/* ── WARM WASH at high progress ── */}
       {wordP > 0 && (

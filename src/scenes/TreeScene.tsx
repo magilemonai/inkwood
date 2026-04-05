@@ -2,6 +2,7 @@ import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
 
 // ─── THE GREAT TREE ────────────────────────────────────────
@@ -163,7 +164,20 @@ const LEVEL_GEMS = [
 
 // ─── SCENE ─────────────────────────────────────────────────
 
+const LEAF_SPARK_CONFIG = {
+  count: 30,
+  bounds: { x: 20, y: 2, width: 360, height: 60 },
+  colors: ["#d8e8c8", "#c8d8b8", "#e0f0d0", "#b8c8a8"],
+  sizeRange: [0.3, 1.0] as [number, number],
+  speedRange: [2, 5] as [number, number],
+  driftX: 0.5,
+  driftY: -2,
+  lifeRange: [3, 6] as [number, number],
+};
+
 function TreeScene({ progress: p }: SceneProps) {
+  const heartPhaseForParticles = p > 0.75;
+  const leafParticles = useParticles(LEAF_SPARK_CONFIG, heartPhaseForParticles);
   // Three-phase progress (3 prompts → each is 1/3)
   const rootPhase = sub(p, 0, 0.33);      // roots glow
   const branchPhase = sub(p, 0.33, 0.33); // branches glow
@@ -334,18 +348,8 @@ function TreeScene({ progress: p }: SceneProps) {
         </g>
       )}
 
-      {/* ── LEAF SPARKS — tiny points of light on the canopy in phase 3 ── */}
-      {heartPhase > 0.3 && Array.from({ length: 20 }).map((_, i) => {
-        const lp = sub(heartPhase, 0.3 + i * 0.03, 0.1);
-        if (lp <= 0) return null;
-        // Distribute across canopy area
-        const lx = 30 + (i * 47 + 13) % 340;
-        const ly = 8 + (i * 23 + 7) % 52;
-        return (
-          <circle key={i} cx={lx} cy={ly} r={0.8 + (i % 3) * 0.3}
-            fill="#d8e8c8" opacity={lp * 0.35} />
-        );
-      })}
+      {/* ── LEAF SPARKS — physics-based particles in the canopy ── */}
+      {heartPhaseForParticles && <ParticleField particles={leafParticles} opacity={0.4} />}
 
       {/* ── BOTTOM GRADIENT — fades to dark below roots, allows
            roots to peek through behind the text overlay ── */}

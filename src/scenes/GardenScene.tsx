@@ -1,7 +1,8 @@
 import { sub } from "./util";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
 
 // ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
@@ -129,7 +130,20 @@ const STONES = [
 
 // ─── SCENE COMPONENT ───────────────────────────────────────
 
+const POLLEN_CONFIG = {
+  count: 18,
+  bounds: { x: 30, y: 40, width: 350, height: 140 },
+  colors: ["#f0e870", "#e8d860", "#f0f088", "#d8c850"],
+  sizeRange: [0.4, 1.0] as [number, number],
+  speedRange: [2, 6] as [number, number],
+  driftX: 1.5,
+  driftY: -3,
+  lifeRange: [4, 8] as [number, number],
+};
+
 function GardenScene({ progress: p }: SceneProps) {
+  const pollenParticles = useParticles(POLLEN_CONFIG, p > 0.55);
+
   const skyH = 180 + p * 30;
   const skyS = 8 + p * 30;
   const skyL = 12 + p * 22;
@@ -318,18 +332,8 @@ function GardenScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── POLLEN MOTES — subtle ── */}
-      {p > 0.6 && Array.from({ length: 16 }).map((_, i) => {
-        const mx = 40 + (i * 53 + 17) % 340;
-        const my = 50 + (i * 37 + 11) % 130;
-        const mp = sub(p, 0.6 + i * 0.02, 0.15);
-        const drift = Math.sin(p * Math.PI * 3 + i * 1.2) * 4;
-        return mp > 0 ? (
-          <circle key={i} cx={mx + drift} cy={my - mp * 8}
-            r={0.7 + (i % 3) * 0.2}
-            fill="#f0e870" opacity={mp * 0.2} />
-        ) : null;
-      })}
+      {/* ── POLLEN — physics-based drifting particles ── */}
+      {p > 0.55 && <ParticleField particles={pollenParticles} opacity={0.25} />}
     </svg>
   );
 }

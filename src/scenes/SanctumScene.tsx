@@ -2,6 +2,7 @@ import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
 
@@ -165,7 +166,19 @@ function SpiritFigure({
   );
 }
 
+const FIREFLY_CONFIG = {
+  count: 25,
+  bounds: { x: 130, y: 60, width: 140, height: 120 },
+  colors: ["#e8d090", "#d0b870", "#f0e0a0", "#c8a850"],
+  sizeRange: [0.4, 0.9] as [number, number],
+  speedRange: [3, 8] as [number, number],
+  driftX: 0,
+  driftY: -1,
+  lifeRange: [3, 7] as [number, number],
+};
+
 function SanctumScene({ progress: p }: SceneProps) {
+  const fireflyParticles = useParticles(FIREFLY_CONFIG, p > 0.25);
   // Ambient brightening
   const ambL = 3 + p * 10;
   const ambS = 10 + p * 15;
@@ -489,19 +502,8 @@ function SanctumScene({ progress: p }: SceneProps) {
       ))}
       </g>
 
-      {/* Atmospheric particles — fireflies and spirit motes */}
-      {Array.from({ length: 40 }).map((_, i) => {
-        const px = (i * 47 + 13) % 400;
-        const baseY = (i * 71 + 29) % 220 + 15;
-        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
-        const py = baseY - p * 30 * ((i % 5) / 5);
-        const size = 0.6 + (i % 4) * 0.3;
-        const opacity = (0.1 + (i % 3) * 0.08) * (0.3 + p * 0.7);
-        return (
-          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
-            fill={i % 4 === 0 ? "#e8d090" : "#d0b870"} opacity={opacity} />
-        );
-      })}
+      {/* ── FIREFLIES — physics-based drifting particles ── */}
+      {p > 0.25 && <ParticleField particles={fireflyParticles} opacity={0.3} />}
     </svg>
   );
 }
