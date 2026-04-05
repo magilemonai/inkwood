@@ -99,7 +99,7 @@ function StarScene({ progress: p }: SceneProps) {
   const treeP = sub(p, 0.02, 0.25);
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         {/* Filters */}
         <GlowFilter id="moonGlow" radius={18} color="#c8c8ff" opacity={0.35} />

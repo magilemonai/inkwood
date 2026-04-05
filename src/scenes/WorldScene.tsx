@@ -57,7 +57,7 @@ function WorldScene({ progress: p }: SceneProps) {
   ];
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         <GlowFilter id="nodeGlow" radius={8} color="#d8c890" opacity={0.4} />
         <GlowFilter id="leyGlow" radius={3} color="#d8c890" opacity={0.3} />

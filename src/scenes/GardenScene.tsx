@@ -162,7 +162,7 @@ function GardenScene({ progress: p }: SceneProps) {
   ];
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         <GlowFilter id="sunGlow" radius={18} color="#f5e060" opacity={0.35} />
         <GlowFilter id="rootGlow" radius={4} color="#6bbf6b" opacity={0.5} />

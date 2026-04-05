@@ -223,7 +223,7 @@ function SanctumScene({ progress: p }: SceneProps) {
   ];
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         <GlowFilter id="moonGlow" radius={18} color="#d0b870" opacity={0.5} />
         <GlowFilter id="spiritGlow" radius={5} color="#d0b870" opacity={0.3} />

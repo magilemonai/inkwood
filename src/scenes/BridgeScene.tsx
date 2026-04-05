@@ -116,7 +116,7 @@ function BridgeScene({ progress: p }: SceneProps) {
   }
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         {/* Filters */}
         <GlowFilter id="carvingGlow" radius={4} color="#7aaa6a" opacity={0.6} />

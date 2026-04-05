@@ -105,7 +105,7 @@ function LibraryScene({ progress: p }: SceneProps) {
   const tomeP = sub(p, 0.8, 0.15);
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         {/* Filters */}
         <GlowFilter id="crystalGlow" radius={8} color="#c088b0" opacity={0.5} />

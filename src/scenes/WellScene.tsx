@@ -108,7 +108,7 @@ function WellScene({ progress: p }: SceneProps) {
   ];
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         {/* Filters */}
         <GlowFilter id="runeGlow" radius={5} color="#50b8b8" opacity={0.7} />

@@ -55,7 +55,7 @@ function CottageScene({ progress: p }: SceneProps) {
   const candleLit = [c1, c2, c3];
 
   return (
-    <svg viewBox="0 0 400 250" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         <GlowFilter id="flameGlow" radius={10} color="#e89a30" opacity={0.5} />
         <GlowFilter id="flameCore" radius={3} color="#ffe080" opacity={0.7} />
@@ -205,40 +205,46 @@ function CottageScene({ progress: p }: SceneProps) {
       <rect x="0" y="190" width="400" height="60"
         fill={`rgb(${r + 3},${g + 2},${b})`} />
 
-      {/* ── CAT — sitting on floor below window ── */}
+      {/* ── CAT — classic sitting silhouette based on reference.
+           Large round head (1/3 body), proud chest, round haunches,
+           tail curves up behind. Facing right. ── */}
       {catP > 0 && (
         <g opacity={catP * 0.9}>
-          {/* Body — wide haunches tapering to narrow neck, then
-              widening again into a round head with ears on top */}
           <path d={`
-            M48 190
-            C48 183, 50 176, 54 172
-            C58 168, 60 165, 62 162
-            C63 160, 63 158, 62 156
-            C61 154, 58 152, 56 150
-            C54 148, 52 145, 52 142
-            C52 139, 54 136, 58 136
-            C62 136, 66 138, 68 140
-            L70 136
-            C72 134, 74 135, 73 138
-            C73 140, 72 142, 70 143
-            C72 144, 74 146, 76 148
-            C78 150, 79 153, 78 156
-            C77 158, 76 160, 74 162
-            C76 164, 78 168, 80 172
-            C82 176, 82 183, 80 190
+            M72 190
+            C72 186, 70 180, 66 176
+            C62 170, 58 164, 56 158
+            C54 152, 54 148, 56 144
+            C58 140, 60 138, 62 136
+            C63 134, 62 130, 60 128
+            C58 126, 56 122, 56 118
+            C56 114, 58 110, 62 108
+            L64 104
+            C65 102, 67 103, 66 106
+            C66 109, 68 110, 70 110
+            C72 110, 74 108, 76 106
+            L78 102
+            C80 100, 82 102, 80 104
+            C78 106, 78 110, 80 112
+            C84 114, 86 118, 86 122
+            C86 126, 84 128, 82 130
+            C80 132, 80 134, 80 136
+            C80 138, 82 140, 84 142
+            C86 146, 88 150, 88 156
+            C88 162, 86 168, 84 174
+            C82 180, 82 186, 82 190
             Z
           `} fill={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`} />
-          {/* Tail — curls forward along floor */}
-          <path d="M48 188 C42 186, 34 184, 28 186 C24 188, 26 190, 30 189 C34 188, 38 190, 42 190"
+          {/* Tail — curves up behind the body and loops over */}
+          <path d="M72 184 C66 176, 58 166, 54 154 C50 142, 48 132, 52 124 C55 118, 60 120, 58 126 C56 132, 58 138, 62 144"
             fill="none" stroke={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`}
-            strokeWidth="3" strokeLinecap="round" />
-          {/* Eye */}
-          <circle cx="66" cy="146" r="1.3" fill="#e89a30" opacity={catP * 0.7} />
+            strokeWidth="3.5" strokeLinecap="round" />
+          {/* Eye — amber glint */}
+          <circle cx="76" cy="118" r="1.3" fill="#e89a30" opacity={catP * 0.7} />
           {/* Whiskers */}
           <g opacity={catP * 0.25}>
-            <line x1="76" y1="150" x2="84" y2="148" stroke="#c8a870" strokeWidth="0.4" />
-            <line x1="76" y1="152" x2="84" y2="153" stroke="#c8a870" strokeWidth="0.4" />
+            <line x1="84" y1="122" x2="92" y2="120" stroke="#c8a870" strokeWidth="0.4" />
+            <line x1="84" y1="124" x2="92" y2="125" stroke="#c8a870" strokeWidth="0.4" />
           </g>
         </g>
       )}
