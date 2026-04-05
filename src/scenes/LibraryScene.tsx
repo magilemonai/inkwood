@@ -7,21 +7,21 @@ function sub(p: number, start: number, duration: number): number {
 }
 
 // ─── THE WHISPERING LIBRARY ──────────────────────────────
-// A vast underground library cavern. Shelves of books line the
-// walls. Crystals grow from floor and ceiling. In the center,
-// a reading pedestal holds a single ancient tome.
+// A sacred underground library. Words are precious and few here.
+// Books don't sit on shelves — each rests on its own stone pedestal
+// or altar, honored like relics. Crystals grow from the cavern.
+// A central archway frames the space. The hero tome sits center.
 //
-// Phrase 1 "open, sleeping pages": The tome's pages spread apart
-// like wings, revealing golden light within. Crystals brighten.
-// The cavern illuminates with warm mauve light.
+// Phrase 1 "open, sleeping pages": The tome opens. Books on their
+// pedestals begin to glow. Crystals brighten. Some books lift off
+// their altars and float, orbiting slowly.
 //
-// Phrase 2 "speak again, forgotten words": Rune symbols rise off
-// the open tome and float upward. The room fills with golden
-// dust motes. Books on shelves begin to glow faintly in sympathy.
+// Phrase 2 "speak again, forgotten words": Rune symbols rise from
+// the open tome. The chamber fills with warm light. Floating books
+// orbit wider. Wisps drift through the space.
 
 // ─── HAND-CRAFTED PATHS ──────────────────────────────────
 
-/** Cavern ceiling — Gothic pointed arch */
 const VAULT = `
   M0 0 L0 65 C25 55, 55 40, 85 30
   C115 22, 145 14, 175 8
@@ -30,7 +30,6 @@ const VAULT = `
   C320 30, 350 40, 375 55
   L400 65 L400 0 Z`;
 
-/** Left cavern wall */
 const WALL_LEFT = `
   M0 65 C25 55, 45 42, 62 35
   C72 30, 78 32, 82 38
@@ -39,7 +38,6 @@ const WALL_LEFT = `
   C68 158, 66 172, 65 185
   L64 250 L0 250 Z`;
 
-/** Right cavern wall */
 const WALL_RIGHT = `
   M400 65 C375 55, 355 42, 338 35
   C328 30, 322 32, 318 38
@@ -48,40 +46,46 @@ const WALL_RIGHT = `
   C332 158, 334 172, 335 185
   L336 250 L400 250 Z`;
 
-// Bookshelf books — colored spines on left and right walls
-const LEFT_BOOKS = [
-  { x: 20, h: 24, w: 4, color: "#5a2030" },
-  { x: 25, h: 28, w: 3, color: "#2a3a5a" },
-  { x: 29, h: 20, w: 5, color: "#3a5a2a" },
-  { x: 35, h: 26, w: 3, color: "#5a4a20" },
-  { x: 39, h: 30, w: 4, color: "#4a2a5a" },
-  { x: 44, h: 22, w: 3, color: "#2a5a4a" },
-  { x: 48, h: 26, w: 4, color: "#5a3838" },
-  { x: 53, h: 18, w: 3, color: "#384858" },
+/** Central archway — frames the space */
+const ARCHWAY = `
+  M150 185 L150 100 Q150 70, 200 60 Q250 70, 250 100 L250 185`;
+
+// Sacred book pedestals — each holds one precious book
+const BOOK_ALTARS = [
+  // Left side — two pedestals against the wall
+  { x: 75,  y: 160, bookColor: "#7a3030", bookW: 12, bookH: 8, delay: 0.08 },
+  { x: 105, y: 155, bookColor: "#304070", bookW: 10, bookH: 7, delay: 0.14 },
+  // Right side
+  { x: 295, y: 158, bookColor: "#508030", bookW: 11, bookH: 8, delay: 0.12 },
+  { x: 325, y: 162, bookColor: "#805030", bookW: 10, bookH: 7, delay: 0.18 },
+  // Flanking the archway
+  { x: 140, y: 148, bookColor: "#603060", bookW: 9,  bookH: 6, delay: 0.10 },
+  { x: 260, y: 150, bookColor: "#306050", bookW: 10, bookH: 7, delay: 0.16 },
 ];
 
-const RIGHT_BOOKS = [
-  { x: 345, h: 26, w: 4, color: "#4a2838" },
-  { x: 350, h: 22, w: 3, color: "#2a3848" },
-  { x: 354, h: 28, w: 4, color: "#384a2a" },
-  { x: 359, h: 20, w: 3, color: "#4a3a20" },
-  { x: 363, h: 24, w: 4, color: "#3a284a" },
-  { x: 368, h: 30, w: 3, color: "#284a3a" },
-  { x: 372, h: 22, w: 4, color: "#4a3030" },
-  { x: 377, h: 26, w: 3, color: "#303a5a" },
+// Floating books — lift off altars and orbit
+const FLOATING_BOOKS = [
+  { startX: 75,  startY: 155, endX: 110, endY: 90,  color: "#8b4513", rot: -15, delay: 0.35 },
+  { startX: 295, startY: 153, endX: 270, endY: 85,  color: "#6a3070", rot: 12,  delay: 0.40 },
+  { startX: 140, startY: 143, endX: 160, endY: 75,  color: "#2a5a4a", rot: -20, delay: 0.45 },
+  { startX: 260, startY: 145, endX: 240, endY: 80,  color: "#5a2a2a", rot: 18,  delay: 0.50 },
+  { startX: 105, startY: 150, endX: 130, endY: 95,  color: "#3a3a6a", rot: -8,  delay: 0.55 },
+  { startX: 325, startY: 157, endX: 300, endY: 100, color: "#6a5a20", rot: 22,  delay: 0.58 },
 ];
 
-// Crystal formations
+// Crystals
 const CRYSTALS = [
-  { x: 55, baseY: 250, h: 22, angle: -6, from: "floor" as const },
-  { x: 85, baseY: 250, h: 16, angle: 4, from: "floor" as const },
-  { x: 320, baseY: 250, h: 25, angle: 6, from: "floor" as const },
-  { x: 350, baseY: 250, h: 18, angle: -4, from: "floor" as const },
-  { x: 110, baseY: 0, h: 16, angle: 175, from: "ceil" as const },
-  { x: 290, baseY: 0, h: 20, angle: -170, from: "ceil" as const },
+  { x: 50,  baseY: 250, h: 25, angle: -8,  from: "floor" as const },
+  { x: 82,  baseY: 250, h: 18, angle: 5,   from: "floor" as const },
+  { x: 318, baseY: 250, h: 28, angle: 8,   from: "floor" as const },
+  { x: 350, baseY: 250, h: 20, angle: -5,  from: "floor" as const },
+  { x: 370, baseY: 250, h: 15, angle: 10,  from: "floor" as const },
+  { x: 100, baseY: 0,   h: 18, angle: 175, from: "ceil" as const },
+  { x: 285, baseY: 0,   h: 22, angle: -170,from: "ceil" as const },
+  { x: 175, baseY: 0,   h: 14, angle: 168, from: "ceil" as const },
 ];
 
-// Rune symbols that rise from the tome
+// Runes
 const RUNES = [
   "M0-4 L2-6 L4-4 M2-6 L2-8",
   "M0-3 C2-5, 4-5, 6-3 C4-1, 2-1, 0-3",
@@ -92,39 +96,36 @@ const RUNES = [
 ];
 
 const RUNE_FLOATERS = [
-  { x: 168, startY: 140, endY: 30, runeIdx: 0, delay: 0.55, drift: -12 },
-  { x: 190, startY: 138, endY: 20, runeIdx: 1, delay: 0.60, drift: 6 },
-  { x: 210, startY: 136, endY: 25, runeIdx: 2, delay: 0.65, drift: -4 },
-  { x: 232, startY: 140, endY: 35, runeIdx: 3, delay: 0.70, drift: 10 },
-  { x: 178, startY: 142, endY: 40, runeIdx: 4, delay: 0.75, drift: -16 },
-  { x: 222, startY: 139, endY: 38, runeIdx: 5, delay: 0.78, drift: 14 },
-  { x: 200, startY: 135, endY: 15, runeIdx: 0, delay: 0.82, drift: -2 },
-  { x: 185, startY: 143, endY: 45, runeIdx: 3, delay: 0.88, drift: -20 },
-  { x: 215, startY: 141, endY: 42, runeIdx: 5, delay: 0.92, drift: 18 },
+  { x: 170, startY: 140, endY: 25, runeIdx: 0, delay: 0.58, drift: -12 },
+  { x: 192, startY: 138, endY: 18, runeIdx: 1, delay: 0.63, drift: 5 },
+  { x: 208, startY: 136, endY: 22, runeIdx: 2, delay: 0.68, drift: -4 },
+  { x: 230, startY: 140, endY: 30, runeIdx: 3, delay: 0.73, drift: 10 },
+  { x: 180, startY: 142, endY: 35, runeIdx: 4, delay: 0.78, drift: -18 },
+  { x: 220, startY: 139, endY: 32, runeIdx: 5, delay: 0.82, drift: 15 },
+  { x: 200, startY: 135, endY: 12, runeIdx: 0, delay: 0.86, drift: -2 },
+  { x: 188, startY: 143, endY: 40, runeIdx: 3, delay: 0.90, drift: -22 },
+  { x: 212, startY: 141, endY: 38, runeIdx: 5, delay: 0.93, drift: 20 },
+];
+
+// Wisps
+const WISPS = [
+  { x: 110, y: 80,  delay: 0.5,  color: "#c088b0" },
+  { x: 190, y: 55,  delay: 0.56, color: "#d0a0c0" },
+  { x: 270, y: 70,  delay: 0.62, color: "#c088b0" },
+  { x: 150, y: 110, delay: 0.68, color: "#d8b0c8" },
+  { x: 240, y: 100, delay: 0.74, color: "#c088b0" },
 ];
 
 function LibraryScene({ progress: p }: SceneProps) {
-  // Chamber ambient
-  const chamberH = 275 - p * 10;
-  const chamberS = 8 + p * 22;
-  const chamberL = 4 + p * 12;
+  const chamberH = 280 - p * 10;
+  const chamberS = 12 + p * 28;
+  const chamberL = 5 + p * 14;
 
-  // Book opening — pages spread apart like wings
   const openP = sub(p, 0.05, 0.42);
-  // How far pages spread: 0 = closed, 1 = fully open
   const spread = openP;
-
-  // Light from the open book
   const pageLightP = sub(p, 0.15, 0.35);
-
-  // Crystal glow
   const crystalP = sub(p, 0.08, 0.4);
-
-  // Word rising phase
   const wordP = sub(p, 0.5, 0.5);
-
-  // Shelf sympathy glow
-  const sympathyP = sub(p, 0.6, 0.3);
 
   return (
     <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
@@ -132,15 +133,21 @@ function LibraryScene({ progress: p }: SceneProps) {
         <GlowFilter id="pageGlow" radius={10} color="#c088b0" opacity={0.4} />
         <GlowFilter id="crystalGlow" radius={6} color="#c088b0" opacity={0.5} />
         <GlowFilter id="runeGlow" radius={4} color="#d8a8c8" opacity={0.5} />
+        <GlowFilter id="bookAltarGlow" radius={4} color="#c088b0" opacity={0.3} />
 
         <linearGradient id="libSky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={`hsl(${chamberH}, ${chamberS}%, ${chamberL}%)`} />
-          <stop offset="100%" stopColor={`hsl(${chamberH + 5}, ${chamberS - 3}%, ${chamberL + 2}%)`} />
+          <stop offset="100%" stopColor={`hsl(${chamberH + 5}, ${chamberS - 3}%, ${chamberL + 3}%)`} />
         </linearGradient>
 
         <radialGradient id="bookLight" cx="50%" cy="58%" r="40%">
-          <stop offset="0%" stopColor="#e0c0d8" stopOpacity={pageLightP * 0.18} />
-          <stop offset="50%" stopColor="#c088b0" stopOpacity={pageLightP * 0.06} />
+          <stop offset="0%" stopColor="#e0c0d8" stopOpacity={pageLightP * 0.22} />
+          <stop offset="50%" stopColor="#c088b0" stopOpacity={pageLightP * 0.08} />
+          <stop offset="100%" stopColor="#c088b0" stopOpacity={0} />
+        </radialGradient>
+
+        <radialGradient id="archGlow" cx="50%" cy="45%" r="35%">
+          <stop offset="0%" stopColor="#c088b0" stopOpacity={p * 0.08} />
           <stop offset="100%" stopColor="#c088b0" stopOpacity={0} />
         </radialGradient>
       </defs>
@@ -150,19 +157,19 @@ function LibraryScene({ progress: p }: SceneProps) {
 
       {/* ── VAULT CEILING ── */}
       <path d={VAULT}
-        fill={`hsl(${chamberH - 5}, ${chamberS - 4}%, ${Math.max(2, chamberL - 2)}%)`} />
+        fill={`hsl(${chamberH - 5}, ${chamberS - 2}%, ${Math.max(2, chamberL - 2)}%)`} />
 
       {/* Vault ribs */}
       {[
-        "M200 2 C200 6, 200 10, 200 14",
+        "M200 2 L200 14",
         "M130 10 C155 12, 178 14, 200 14",
         "M270 10 C245 12, 222 14, 200 14",
         "M80 28 C120 20, 160 15, 200 14",
         "M320 28 C280 20, 240 15, 200 14",
       ].map((d, i) => (
         <path key={`rib${i}`} d={d} fill="none"
-          stroke={`hsl(${chamberH}, ${chamberS - 2}%, ${chamberL + 4}%)`}
-          strokeWidth={1} opacity={0.15 + p * 0.12} />
+          stroke={`hsl(${chamberH}, ${chamberS}%, ${chamberL + 5}%)`}
+          strokeWidth={1.2} opacity={0.15 + p * 0.15} />
       ))}
 
       {/* ── WALLS ── */}
@@ -172,57 +179,49 @@ function LibraryScene({ progress: p }: SceneProps) {
         fill={`hsl(${chamberH}, ${chamberS - 2}%, ${chamberL + 1}%)`} />
 
       {/* Wall texture */}
-      {[55, 80, 105, 130, 155].map((y, i) => (
-        <g key={`wl${i}`} opacity={0.08 + p * 0.06}>
-          <path d={`M0 ${y + i * 2} C15 ${y + 1}, 35 ${y - 1}, ${60 - i * 2} ${y + 2}`}
-            fill="none" stroke={`hsl(${chamberH}, 4%, ${chamberL + 4}%)`} strokeWidth="0.4" />
-          <path d={`M400 ${y + i * 2} C385 ${y + 1}, 365 ${y - 1}, ${340 + i * 2} ${y + 2}`}
-            fill="none" stroke={`hsl(${chamberH}, 4%, ${chamberL + 4}%)`} strokeWidth="0.4" />
+      {[50, 75, 100, 125, 150].map((y, i) => (
+        <g key={`wt${i}`} opacity={0.08 + p * 0.08}>
+          <path d={`M0 ${y + i} C15 ${y + 1}, 35 ${y - 1}, ${62 - i * 2} ${y + 2}`}
+            fill="none" stroke={`hsl(${chamberH}, 5%, ${chamberL + 5}%)`} strokeWidth="0.5" />
+          <path d={`M400 ${y + i} C385 ${y + 1}, 365 ${y - 1}, ${340 + i * 2} ${y + 2}`}
+            fill="none" stroke={`hsl(${chamberH}, 5%, ${chamberL + 5}%)`} strokeWidth="0.5" />
         </g>
       ))}
 
-      {/* ── LEFT BOOKSHELF ── */}
-      <rect x="15" y="90" width="48" height="100" rx="1"
-        fill={`hsl(25, ${20 + p * 8}%, ${6 + p * 4}%)`} />
-      {[115, 140, 165].map((sy) => (
-        <rect key={sy} x="15" y={sy} width="48" height="2"
-          fill={`hsl(25, 18%, ${10 + p * 4}%)`} />
-      ))}
-      {LEFT_BOOKS.map((b, i) => (
-        <rect key={`lb${i}`} x={b.x} y={115 - b.h} width={b.w} height={b.h}
-          fill={b.color} opacity={0.4 + p * 0.4 + (sympathyP > 0 ? sympathyP * 0.15 : 0)} rx="0.3" />
-      ))}
+      {/* ── ARCHWAY — frames the central space ── */}
+      <path d={ARCHWAY}
+        fill={`hsl(${chamberH + 2}, ${chamberS + 5}%, ${Math.max(2, chamberL - 1)}%)`} />
+      <path d={ARCHWAY}
+        fill="none" stroke={`hsl(${chamberH - 5}, ${chamberS + 3}%, ${chamberL + 6}%)`}
+        strokeWidth={2.5} />
+      {/* Glow from within the arch */}
+      <rect width="400" height="250" fill="url(#archGlow)" />
 
-      {/* ── RIGHT BOOKSHELF ── */}
-      <rect x="338" y="90" width="48" height="100" rx="1"
-        fill={`hsl(25, ${20 + p * 8}%, ${6 + p * 4}%)`} />
-      {[115, 140, 165].map((sy) => (
-        <rect key={`rs${sy}`} x="338" y={sy} width="48" height="2"
-          fill={`hsl(25, 18%, ${10 + p * 4}%)`} />
-      ))}
-      {RIGHT_BOOKS.map((b, i) => (
-        <rect key={`rb${i}`} x={b.x} y={115 - b.h} width={b.w} height={b.h}
-          fill={b.color} opacity={0.4 + p * 0.4 + (sympathyP > 0 ? sympathyP * 0.15 : 0)} rx="0.3" />
-      ))}
-
-      {/* ── BOOK LIGHT ── */}
+      {/* ── BOOK LIGHT from hero tome ── */}
       {pageLightP > 0 && <rect width="400" height="250" fill="url(#bookLight)" />}
 
       {/* ── CRYSTALS ── */}
       {CRYSTALS.map((c, i) => {
-        const cp = sub(crystalP, i * 0.06, 0.3);
+        const cp = sub(crystalP, i * 0.05, 0.3);
         if (cp <= 0) return null;
         const h = c.h * cp;
         const w = 5 + (i % 3) * 2;
         const tipY = c.from === "floor" ? c.baseY - h : c.baseY + h;
-        const brightness = 30 + p * 30;
+        const brightness = 30 + p * 35;
         return (
           <g key={`cr${i}`} opacity={cp * 0.8}>
             <polygon
-              points={`${c.x - w / 2},${c.baseY} ${c.x},${tipY} ${c.x + w / 2},${c.baseY}`}
-              fill={`hsl(290, ${25 + p * 20}%, ${brightness}%)`}
+              points={`${c.x - w / 2},${c.baseY} ${c.x - 1},${tipY} ${c.x + w * 0.3},${tipY + (c.from === "floor" ? 2 : -2)} ${c.x + w / 2},${c.baseY}`}
+              fill={`hsl(290, ${25 + p * 25}%, ${brightness}%)`}
               transform={`rotate(${c.angle}, ${c.x}, ${c.baseY})`}
-              filter={cp > 0.5 ? "url(#crystalGlow)" : undefined}
+              filter={cp > 0.4 ? "url(#crystalGlow)" : undefined}
+            />
+            {/* Secondary shard */}
+            <polygon
+              points={`${c.x + w * 0.15},${c.baseY} ${c.x + w * 0.2},${tipY + (c.from === "floor" ? h * 0.3 : -h * 0.3)} ${c.x + w * 0.45},${c.baseY}`}
+              fill={`hsl(300, ${20 + p * 20}%, ${brightness + 8}%)`}
+              opacity={0.6}
+              transform={`rotate(${c.angle + 4}, ${c.x}, ${c.baseY})`}
             />
           </g>
         );
@@ -231,87 +230,117 @@ function LibraryScene({ progress: p }: SceneProps) {
       {/* ── FLOOR ── */}
       <path d={`M64 185 C120 180, 170 178, 200 177 C230 178, 280 180, 336 185 L336 250 L64 250 Z`}
         fill={`hsl(${chamberH + 5}, ${chamberS - 4}%, ${chamberL - 1}%)`} />
+      {/* Floor tile lines */}
+      {[190, 200, 215, 232].map((y, i) => (
+        <path key={`fl${i}`}
+          d={`M${70 + i * 5} ${y} C${150 - i * 3} ${y + 1}, ${250 + i * 3} ${y + 1}, ${330 - i * 5} ${y}`}
+          fill="none" stroke={`hsl(${chamberH}, 4%, ${chamberL + 3}%)`}
+          strokeWidth="0.4" opacity={0.12 + p * 0.08} />
+      ))}
 
-      {/* ── PEDESTAL ── */}
+      {/* ── BOOK ALTARS — sacred pedestals with individual books ── */}
+      {BOOK_ALTARS.map((a, i) => {
+        const ap = sub(p, a.delay, 0.2);
+        const glowing = pageLightP > 0;
+        return (
+          <g key={`altar${i}`} opacity={0.4 + ap * 0.6}>
+            {/* Stone pedestal */}
+            <path d={`M${a.x - 8} ${a.y + 10} L${a.x - 5} ${a.y} L${a.x + 5} ${a.y} L${a.x + 8} ${a.y + 10} Z`}
+              fill={`hsl(${chamberH + 3}, ${chamberS - 5}%, ${chamberL + 3}%)`} />
+            {/* Pedestal top */}
+            <ellipse cx={a.x} cy={a.y} rx={7} ry={2}
+              fill={`hsl(${chamberH + 2}, ${chamberS - 3}%, ${chamberL + 5}%)`} />
+            {/* The sacred book */}
+            <rect x={a.x - a.bookW / 2} y={a.y - a.bookH - 1} width={a.bookW} height={a.bookH}
+              fill={a.bookColor} opacity={0.6 + ap * 0.4} rx={0.5}
+              filter={glowing ? "url(#bookAltarGlow)" : undefined} />
+            {/* Book spine line */}
+            <line x1={a.x} y1={a.y - a.bookH - 1} x2={a.x} y2={a.y - 1}
+              stroke="#e8d8c0" strokeWidth={0.3} opacity={0.3 + ap * 0.2} />
+            {/* Subtle glow when awakened */}
+            {glowing && (
+              <circle cx={a.x} cy={a.y - a.bookH / 2} r={6}
+                fill={a.bookColor} opacity={pageLightP * 0.06} />
+            )}
+          </g>
+        );
+      })}
+
+      {/* ── HERO PEDESTAL — center, larger ── */}
       <path d="M178 165 C180 158, 188 154, 200 152 C212 154, 220 158, 222 165 L225 175 L175 175 Z"
-        fill={`hsl(${chamberH + 3}, ${chamberS - 3}%, ${chamberL + 4}%)`} />
+        fill={`hsl(${chamberH + 3}, ${chamberS - 3}%, ${chamberL + 5}%)`} />
       <ellipse cx="200" cy="152" rx="24" ry="5"
-        fill={`hsl(${chamberH + 2}, ${chamberS - 2}%, ${chamberL + 6}%)`} />
+        fill={`hsl(${chamberH + 2}, ${chamberS - 2}%, ${chamberL + 7}%)`} />
 
-      {/* ── THE HERO TOME ── */}
+      {/* ── HERO TOME — opens as pages spread ── */}
       <g>
-        {/* Book spine — always visible at center */}
         <rect x="197" y="140" width="6" height="14" rx="1"
-          fill={`hsl(280, ${15 + p * 10}%, ${12 + p * 6}%)`} />
+          fill={`hsl(280, ${15 + p * 12}%, ${12 + p * 8}%)`} />
 
-        {/* LEFT PAGE SPREAD — fan out to the left as book opens */}
+        {/* LEFT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          // Pages spread: closed (width 0) → fully open (40px wide)
-          const pageW = spread * 40;
-          const pageH = 12;
-          const baseX = 197;
-          const baseY = 141;
+          const pageW = spread * 38;
           return (
             <g>
-              {/* Page surface — cream colored */}
-              <rect x={baseX - pageW} y={baseY + 1} width={pageW} height={pageH}
-                fill="#e8e0d0" opacity={spread * 0.7} rx="0.5" />
-              {/* Text lines on page */}
+              <rect x={197 - pageW - 2} y="140" width={pageW + 2} height={15} rx="1"
+                fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
+              <rect x={197 - pageW} y="141" width={pageW} height={13} rx="0.5"
+                fill="#e8e0d0" opacity={spread * 0.7} />
               {spread > 0.3 && [0, 3, 6, 9].map((dy) => (
-                <line key={`tl${dy}`}
-                  x1={baseX - pageW + 3} y1={baseY + 3 + dy}
-                  x2={baseX - pageW + pageW * 0.7} y2={baseY + 3 + dy}
-                  stroke="#c088b0" strokeWidth="0.3"
-                  opacity={spread * 0.3 + wordP * 0.2} />
+                <line key={`tl${dy}`} x1={197 - pageW + 3} y1={143 + dy}
+                  x2={197 - pageW + pageW * 0.7} y2={143 + dy}
+                  stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
-              {/* Cover — darker, behind the page */}
-              <rect x={baseX - pageW - 2} y={baseY} width={pageW + 2} height={pageH + 2}
-                fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`}
-                opacity={spread * 0.8} rx="1" />
-              {/* Cover emboss */}
-              <rect x={baseX - pageW} y={baseY + 2} width={pageW - 2} height={pageH - 2}
-                fill="none" stroke={`hsl(40, ${8 + p * 10}%, ${14 + p * 6}%)`}
-                strokeWidth="0.4" opacity={spread * 0.25} rx="0.5" />
             </g>
           );
         })()}
 
-        {/* RIGHT PAGE SPREAD — mirror */}
+        {/* RIGHT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 40;
-          const pageH = 12;
-          const baseX = 203;
-          const baseY = 141;
+          const pageW = spread * 38;
           return (
             <g>
-              <rect x={baseX} y={baseY + 1} width={pageW} height={pageH}
-                fill="#ede5d8" opacity={spread * 0.7} rx="0.5" />
+              <rect x="203" y="140" width={pageW + 2} height={15} rx="1"
+                fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
+              <rect x="203" y="141" width={pageW} height={13} rx="0.5"
+                fill="#ede5d8" opacity={spread * 0.7} />
               {spread > 0.3 && [0, 3, 6, 9].map((dy) => (
-                <line key={`tr${dy}`}
-                  x1={baseX + 3} y1={baseY + 3 + dy}
-                  x2={baseX + pageW * 0.7} y2={baseY + 3 + dy}
-                  stroke="#c088b0" strokeWidth="0.3"
-                  opacity={spread * 0.3 + wordP * 0.2} />
+                <line key={`tr${dy}`} x1="206" y1={143 + dy}
+                  x2={203 + pageW * 0.7} y2={143 + dy}
+                  stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
-              <rect x={baseX} y={baseY} width={pageW + 2} height={pageH + 2}
-                fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`}
-                opacity={spread * 0.8} rx="1" />
-              <rect x={baseX + 2} y={baseY + 2} width={pageW - 2} height={pageH - 2}
-                fill="none" stroke={`hsl(40, ${8 + p * 10}%, ${14 + p * 6}%)`}
-                strokeWidth="0.4" opacity={spread * 0.25} rx="0.5" />
             </g>
           );
         })()}
 
-        {/* Golden light from within the open book */}
+        {/* Book glow */}
         {spread > 0.2 && (
-          <ellipse cx="200" cy="148" rx={25 * spread} ry={8 * spread}
-            fill="#c088b0" opacity={spread * 0.05}
-            filter="url(#pageGlow)" />
+          <ellipse cx="200" cy="148" rx={30 * spread} ry={10 * spread}
+            fill="#c088b0" opacity={spread * 0.06} filter="url(#pageGlow)" />
         )}
       </g>
 
-      {/* ── RISING RUNES — words lift off the open tome ── */}
+      {/* ── FLOATING BOOKS — lift off altars and orbit ── */}
+      {FLOATING_BOOKS.map((fb, i) => {
+        const fp = sub(p, fb.delay, 0.2);
+        if (fp <= 0) return null;
+        const x = fb.startX + (fb.endX - fb.startX) * fp;
+        const y = fb.startY + (fb.endY - fb.startY) * fp;
+        const rot = fb.rot * fp;
+        return (
+          <g key={`fb${i}`} transform={`translate(${x}, ${y}) rotate(${rot})`}
+            opacity={0.5 + fp * 0.5}>
+            <rect x={-7} y={-5} width={14} height={10} rx={1}
+              fill={fb.color} filter={fp > 0.3 ? "url(#bookAltarGlow)" : undefined} />
+            <rect x={-5.5} y={-4} width={11} height={8} rx={0.5}
+              fill="#e8d8c0" opacity={0.5} />
+            <line x1={0} y1={-5} x2={0} y2={5}
+              stroke="#e8d8c0" strokeWidth={0.3} opacity={0.3} />
+          </g>
+        );
+      })}
+
+      {/* ── RISING RUNES ── */}
       {RUNE_FLOATERS.map((rf, i) => {
         const rp = sub(p, rf.delay, 0.1);
         if (rp <= 0) return null;
@@ -330,24 +359,39 @@ function LibraryScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── DUST MOTES — catching the book light ── */}
-      {pageLightP > 0 && Array.from({ length: 12 }).map((_, i) => {
-        const px = 120 + (i * 29) % 160;
-        const baseY = 50 + (i * 37) % 100;
-        const drift = Math.sin(p * Math.PI * 2 + i * 1.1) * 4;
-        const rise = p * 15 * ((i % 3) / 3);
-        const op = pageLightP * 0.1 * (1 - (i % 3) * 0.2);
+      {/* ── WISPS ── */}
+      {WISPS.map((w, i) => {
+        const wp = sub(p, w.delay, 0.15);
+        if (wp <= 0) return null;
+        const drift = Math.sin(p * Math.PI * 3 + i * 2) * 6;
+        const bob = Math.cos(p * Math.PI * 4 + i * 1.5) * 4;
         return (
-          <circle key={`dust${i}`} cx={px + drift} cy={baseY - rise}
-            r={0.4 + (i % 3) * 0.2}
-            fill={i % 3 === 0 ? "#e0c8d8" : "#c088b0"} opacity={op} />
+          <g key={`wisp${i}`}>
+            <circle cx={w.x + drift} cy={w.y + bob} r={4}
+              fill={w.color} opacity={wp * 0.04} />
+            <circle cx={w.x + drift} cy={w.y + bob} r={1.5}
+              fill={w.color} opacity={wp * 0.3} />
+          </g>
         );
       })}
 
-      {/* ── CHAMBER WARM WASH ── */}
+      {/* ── DUST MOTES ── */}
+      {pageLightP > 0 && Array.from({ length: 15 }).map((_, i) => {
+        const px = 100 + (i * 29) % 200;
+        const baseY = 40 + (i * 37) % 120;
+        const drift = Math.sin(p * Math.PI * 2 + i * 1.1) * 4;
+        const rise = p * 15 * ((i % 3) / 3);
+        return (
+          <circle key={`dust${i}`} cx={px + drift} cy={baseY - rise}
+            r={0.4 + (i % 3) * 0.2}
+            fill={i % 3 === 0 ? "#e0c8d8" : "#c088b0"}
+            opacity={pageLightP * 0.12} />
+        );
+      })}
+
+      {/* ── WARM WASH at high progress ── */}
       {wordP > 0 && (
-        <rect width="400" height="250" fill="#c088b0"
-          opacity={wordP * 0.03} />
+        <rect width="400" height="250" fill="#c088b0" opacity={wordP * 0.04} />
       )}
     </svg>
   );

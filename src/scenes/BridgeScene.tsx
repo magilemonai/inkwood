@@ -177,11 +177,8 @@ function BridgeScene({ progress: p }: SceneProps) {
   // Inner cliff face — slightly lighter than main cliff
   const faceL = cliffL + 3;
 
-  // Mist opacity — thins as bridge forms
-  const mistOpacity = Math.max(0, 0.2 - p * 0.18);
-
   return (
-    <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 -25 400 275" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         <GlowFilter id="stoneGlow" radius={5} color="#7aaa6a" opacity={0.5} />
         <GlowFilter id="lanternGlow" radius={8} color="#d0b870" opacity={0.5} />
@@ -199,8 +196,8 @@ function BridgeScene({ progress: p }: SceneProps) {
         </linearGradient>
       </defs>
 
-      {/* ── SKY ── */}
-      <rect width="400" height="250" fill="url(#bridgeSky)" />
+      {/* ── SKY — extends above to give visual buffer ── */}
+      <rect x="0" y="-25" width="400" height="275" fill="url(#bridgeSky)" />
 
       {/* ── CHASM MIST — organic wisps rising from the void ── */}
       {[
