@@ -99,9 +99,6 @@ const BRIDGE_ARCH = `
   C162 116, 168 118, 175 120
   C182 124, 190 130, 195 134`;
 
-/** Well structure — tiny, on left foreground */
-const WELL_POSTS = `
-  M68 162 L68 155 L74 152 L80 155 L80 162`;
 
 // Location markers for ley line connections
 const LEY_POINTS = [
