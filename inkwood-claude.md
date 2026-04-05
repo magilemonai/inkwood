@@ -1,224 +1,202 @@
-# CLAUDE.md — Inkwood: A Cozy Typing Puzzle Game
+# CLAUDE.md — Inkwood
 
-This file documents the design intent, technical decisions, and creative context for **Inkwood**, built as a React artifact in Claude.ai. Use this as a reference when continuing development.
+## What Is Inkwood
 
----
+A cozy, meditative typing game where the player is a forest scribe whose typed words bring a dormant world back to life. 10 levels across 4 acts. The thematic watchwords are **numinous** and **nourishing**.
 
-## Project Overview
-
-**Inkwood** is a cozy, single-player typing puzzle game where the player takes on the role of a forest scribe whose written words have literal power. Typing phrases causes the in-game scene to animate in real time — the core loop is: *type accurately → world comes alive*.
-
-The game was designed to feel meditative and rewarding, closer to *Stardew Valley* in tone than *Mavis Beacon*. It is forgiving (errors are correctable via backspace, no fail states) and atmospheric above all else.
+The core loop: *type a phrase → watch the scene transform*. Each phrase is a command — an incantation the world obeys.
 
 ---
 
-## Design Pillars
+## Stack
 
-| Pillar | Description |
+- **Vite + React 18 + TypeScript** — standalone web app
+- **Zustand** — game state (store.ts)
+- **Framer Motion** — screen transitions
+- **CSS Modules** — scoped styles
+- **Inline SVG** — all scene art (hand-crafted bezier paths)
+- **GitHub Pages** — auto-deploy on push to main via `.github/workflows/deploy.yml`
+
+## Project Structure
+
+```
+src/
+├── App.tsx                    # Screen router with AnimatePresence
+├── store.ts                   # Zustand state + localStorage save
+├── levels.ts                  # All 10 level definitions (data)
+├── types.ts                   # TypeScript interfaces
+├── hooks/useCompletionTimer.ts
+├── components/
+│   ├── PlayingScreen.tsx      # Main gameplay (scene + typing overlay)
+│   ├── SceneRenderer.tsx      # Static switch mapping scene keys to components
+│   ├── IntroSequence.tsx      # Animated intro (dormant world → title)
+│   ├── OutroSequence.tsx      # Animated outro (panoramic landscape)
+│   ├── ActTransition.tsx      # Interstitial animations between acts
+│   ├── LevelWinScreen.tsx     # Level completion screen
+│   ├── ErrorBoundary.tsx      # Scene crash safety net
+│   └── DevPanel.tsx           # F2 level-skip panel (all builds)
+├── scenes/                    # One file per scene, each exports memo'd component
+│   ├── GardenScene.tsx        # ✅ Rebuilt with hand-crafted paths
+│   ├── CottageScene.tsx       # ✅ Rebuilt
+│   ├── StarScene.tsx          # ✅ Polished
+│   ├── WellScene.tsx          # ✅ Rebuilt (cross-section concept)
+│   ├── BridgeScene.tsx        # ✅ Rebuilt (assembly-from-nothing concept)
+│   ├── LibraryScene.tsx       # ❌ Needs rebuild
+│   ├── StonesScene.tsx        # ⚠️ Acceptable, not rebuilt
+│   ├── SanctumScene.tsx       # ⚠️ Acceptable, not rebuilt
+│   ├── TreeScene.tsx          # ✅ Rebuilt (tree-as-world concept)
+│   └── WorldScene.tsx         # ❌ Needs rebuild
+├── svg/
+│   ├── filters.tsx            # GlowFilter (only one still in use)
+│   ├── primitives.tsx         # Flower, Star, Hill, etc. (mostly deprecated)
+│   └── palettes.ts            # Color systems (unused, may remove)
+└── styles/                    # CSS Modules per component
+```
+
+---
+
+## Game Flow
+
+```
+intro → playing → [levelWin | actTransition] → playing → ... → outro
+```
+
+- **Intro:** Animated dormant-world vignettes → title → Begin
+- **Playing:** Scene fills viewport, typing overlay at bottom
+- **Level Win:** Brief narrative text, space/enter to continue
+- **Act Transition:** 7-second animated interstitial (after levels 2, 5, 8)
+- **Outro:** Panoramic landscape assembling → "The forest remembers."
+
+---
+
+## Scene Architecture
+
+Every scene is `({ progress: number }) => SVG` wrapped in `React.memo`.
+
+Progress is quantized to 0.01 increments before passing to scenes, so memo actually prevents re-renders on every keystroke.
+
+### Key Patterns
+
+- **`sub(p, start, duration)`** — clamp progress into a sub-range for staggered entry
+- **Covering layers** — the "alive" state renders ON TOP of the "structure" with opacity tied to progress (canopy over branches, warm light over cold room, water over dry stone)
+- **Assembly animations** — things BUILD themselves rather than fading in (Bridge stones, Well water rising)
+- **Absence → presence** — scenes start from meaningful emptiness, not dim versions
+
+### Art Standards (see SCENE_ART_GUIDE.md)
+
+- Main elements are hand-crafted bezier `<path>` with 15-30+ control points
+- Must pass the "black silhouette on white" test
+- All content above y=170 (visible above typing overlay)
+- `overflow="hidden" preserveAspectRatio="xMidYMid slice"` on all SVGs
+- GlowFilter sparingly (1-2 per scene max for performance)
+- No SVG primitives (rect, ellipse, circle) for organic things
+
+---
+
+## Narrative
+
+### Prompts Are Incantations
+
+Every typed phrase should feel like casting a spell — a **command** the world obeys. Not a description, not a fortune cookie. Direct imperatives.
+
+**Good:** "stand tall again guardians of old" (command → stones rise)
+**Bad:** "every old word finds its voice again" (passive, vague)
+
+### Text Economy
+
+- Flavor text: ONE sentence max
+- Win text: 1-2 short sentences
+- The words are precious and few. They are magical.
+
+### Current Prompts and Alignment
+
+| Level | Prompts | Alignment |
+|---|---|---|
+| Garden | "wake now, sleeping roots" / "bloom, every waiting flower" | Strong |
+| Cottage | "little candle burn bright" / "fill every room with warmth" | Strong |
+| Stars | "Orion Vega Sirius Lyra" / "burn again with ancient fire" | Strong |
+| Well | "deep water remember your name" / "rise and carry the old songs home" | Excellent |
+| Bridge | "stone, recall the crossing" / "spirits, walk the old paths" | Excellent |
+| Library | "open, sleeping pages" / "speak again, forgotten words" | Good |
+| Stones | "stand tall again guardians of old" / "remember what was promised" | Strong |
+| Sanctum | "moonlight, gather where spirits convene" / "return to your seats, ancient ones" | Good |
+| Tree | "roots deeper than memory" / "branches wider than sky" / "awaken, heart of all things" | Strong |
+| World | "garden bloom, hearth burn bright" / "stars remember, spirits sing" / "the ancient order is restored" | Good |
+
+---
+
+## Six-Persona Critique Protocol
+
+When evaluating the game's state, run critiques from these six perspectives. Each has a specific lens and set of concerns. The full current critique is in **PERSONAS.md**.
+
+### 1. Code Reviewer
+**Lens:** Correctness, performance, React patterns, SVG rendering efficiency.
+**Cares about:** Bugs, memory leaks, unnecessary re-renders, timer cleanup, TypeScript strictness, SVG filter performance on low-end devices.
+
+### 2. Narrative Director
+**Lens:** Story arc, typed phrases, flavor text, mystical tone.
+**Cares about:** Do prompts feel like incantations or fortune cookies? Rate each prompt 1-5 for "spell-casting power." Does the story escalate? Is text trimmed to the minimum? Does each prompt map to a specific visual change?
+
+### 3. UX Researcher
+**Lens:** Discoverability, flow state, friction points, accessibility.
+**Cares about:** Can a new player figure out what to do? Is the typing area visible and inviting? Do transitions feel smooth? Mobile keyboard support? Is the emotional experience consistent across all levels?
+
+### 4. Design Director
+**Lens:** Visual quality, animation polish, does this dazzle?
+**Cares about:** Grade each scene A-F. Does it pass the silhouette test? Are we using complex paths or primitive shapes? What specific technique would elevate each scene? Reference real games (Journey, Gris, Alto's Adventure). Identify the single most beautiful and ugliest moment per scene.
+
+### 5. Product Lead
+**Lens:** Prioritization, creative trade-offs, user delight as north star.
+**Cares about:** What 5 changes would make someone screenshot and share? What's blocking a public release? Balance artistic ambition with deliverability. Keep alpha testers in mind.
+
+### 6. Alpha Tester Panel
+**Lens:** Four composite users (fast typist, non-gamer on phone, patient explorer, impatient user).
+**Cares about:** Is this actually fun? Where did I get confused? Where did I get bored? Would I show this to a friend? Which level made me feel something?
+
+### Running a Critique
+
+1. Read the current state of relevant files (levels.ts, scenes, components)
+2. Write honest assessments — don't be gentle. If something is mediocre, say so.
+3. Grade scenes A-F, rate prompts 1-5
+4. End with a prioritized action stack (top 10 items, ranked by impact/effort)
+5. Save to PERSONAS.md
+
+---
+
+## Key Technical Decisions
+
+| Decision | Rationale |
 |---|---|
-| **Cozy** | Warm palette, slow animations, no timers, no punishment for errors |
-| **Reactive** | Every keystroke drives visual change — typing feels powerful |
-| **Layered** | Each level has multiple prompts; progress within a level accumulates |
-| **Authored** | Each scene has its own flavor text, color identity, and visual logic |
+| Zustand over useState | Clean separation of game logic, derived helpers, persistence |
+| Progress quantization (0.01) | Makes React.memo on scenes actually skip re-renders |
+| `completingRef` guard in hook | Prevents strict-mode double-fire of completion timer |
+| Framer Motion `AnimatePresence mode="wait"` | Smooth cross-fade between screens |
+| `useState` lazy init for level snapshot | Prevents flash of next level during exit animation |
+| `SceneRenderer` switch component | Avoids dynamic component creation during render (lint rule) |
+| localStorage save/resume | Persists lvl + promptIdx, clears on game completion |
+| 1.5s breathing pause between prompts | Fast typists see the animation they earned |
+| Dev panel (F2) in all builds | Essential for testing during active development |
 
 ---
 
-## Creative Concept
+## Development Workflow
 
-The original concept brief:
-- **Mechanic:** Live typing of prompted phrases solves environmental puzzles
-- **Theme:** Cozy forest scribe — words have literal in-world power
-- **Player feedback:** Character-level coloring (correct = accent color, error = red) with animated cursor
-- **Difficulty tone:** Learn-to-type pacing but wrapped in narrative flavor, not a typing trainer
+1. Make changes on `claude/add-story-levels-tEA7p` branch
+2. Push to feature branch
+3. Merge to `main` and push → triggers GitHub Pages auto-deploy (~30s)
+4. Test on live URL: `https://magilemonai.github.io/inkwood/`
+5. Use F2 to jump between scenes for testing
 
-### Rejected alternatives considered:
-- Timer-based pressure mechanics → rejected to preserve the cozy feel
-- Score/WPM tracking as primary feedback → deferred to a future enhancement
-- Randomized prompts → rejected in favor of authored, scene-specific phrases with narrative meaning
+### Before Public Release
 
----
-
-## Level Structure
-
-Each level has:
-- A `title` and `flavor` line (shown below the scene)
-- A `scene` key mapping to a dedicated SVG component
-- An `accent` color (used for correct characters, UI highlights, progress bars)
-- A `bg` color (dark base for the level's atmosphere)
-- An array of `prompts` — typed in sequence; completing all prompts clears the level
-- A `winText` string — narrative text shown on the level-complete screen, advancing the story
-
-### Story Arc
-
-The game tells a four-act story about a scribe who discovers and restores an ancient nexus of spirit powers. The tone is mystical and slightly numinous without breaking the cozy atmosphere.
-
-- **Act I: Awakening** (Levels 1–3) — The scribe discovers their power and begins to sense something deeper
-- **Act II: Discovery** (Levels 4–6) — Ancient structures reveal a hidden network of spirit magic
-- **Act III: The Nexus** (Levels 7–9) — The heart of the mystery — standing stones, spirit council, the Great Tree
-- **Act IV: Restoration** (Level 10) — All locations connect into a unified, living world
-
-Each level has a `winText` field — narrative text shown on the level-complete screen that advances the story.
-
-### Current Levels
-
-#### Level 1 — The Sleeping Garden
-- **Scene:** `GardenScene` · **Accent:** `#6bbf6b` (green) · **BG:** `#080e08`
-- **Prompts:** `["warm summer rain", "roots reach deep, leaves touch light"]`
-- **Animation:** Sky brightens, sun rises, clouds appear, rain falls mid-progress and fades, flowers bloom staggered, grass greens
-
-#### Level 2 — The Dark Cottage
-- **Scene:** `CottageScene` · **Accent:** `#e89a30` (amber) · **BG:** `#0d0905`
-- **Prompts:** `["little candle burn bright", "amber glow fills every room"]`
-- **Animation:** Three candles light sequentially, window brightens, mug steam, cat silhouette fades in late
-
-#### Level 3 — The Night Sky
-- **Scene:** `StarScene` · **Accent:** `#9090f8` (indigo) · **BG:** `#03030e`
-- **Prompts:** `["Orion Vega Sirius Lyra", "the sky blooms with ancient fire"]`
-- **Animation:** Stars appear one-by-one, moon brightens and rises, constellation lines, treeline silhouette
-
-#### Level 4 — The Dry Well
-- **Scene:** `WellScene` · **Accent:** `#50b8b8` (teal) · **BG:** `#040a0a`
-- **Prompts:** `["deep water remember your name", "rise and carry the old songs home"]`
-- **Animation:** Water rises in the well, glowing runes appear on stones, rope/bucket lower, spirit fish swim, shimmer on water surface
-
-#### Level 5 — The Forgotten Bridge
-- **Scene:** `BridgeScene` · **Accent:** `#7aaa6a` (sage) · **BG:** `#060a06`
-- **Prompts:** `["moss and stone recall the crossing", "where old paths meet spirits still walk"]`
-- **Animation:** Bridge arch over misty chasm, moss fades as carvings glow, spirit lanterns appear, ghostly footprints at completion
-
-#### Level 6 — The Whispering Library
-- **Scene:** `LibraryScene` · **Accent:** `#c088b0` (mauve) · **BG:** `#0a0608`
-- **Prompts:** `["open the pages let wisdom rise", "every old word finds its voice again"]`
-- **Animation:** Underground chamber, books float upward and rotate, crystals grow and glow, spirit wisps drift, Chronicle tome glows at end
-
-#### Level 7 — The Spirit Stones
-- **Scene:** `StonesScene` · **Accent:** `#88a8c8` (silver-blue) · **BG:** `#050608`
-- **Prompts:** `["stand tall again guardians of old", "the circle remembers what was promised"]`
-- **Animation:** Standing stones rise from ground, runes glow on each, ley lines connect between stones, ground circle pattern, energy pulse at full
-
-#### Level 8 — The Moonlit Sanctum
-- **Scene:** `SanctumScene` · **Accent:** `#d0b870` (pale gold) · **BG:** `#08080a`
-- **Prompts:** `["moonlight gathers where spirits convene", "the ancient ones return to their seats"]`
-- **Animation:** Forest clearing, moon brightens, moonbeams descend, ground mandala appears, translucent spirit figures fade in
-
-#### Level 9 — The Great Tree
-- **Scene:** `TreeScene` · **Accent:** `#b8c8a8` (sage-silver) · **BG:** `#060806`
-- **Prompts:** `["roots deeper than memory", "branches wider than sky", "nexus of all living things awaken"]`
-- **Animation:** Roots grow outward with ley-line glow, trunk energy flow, branches extend, leaf canopy fills, spirit lights in crown, final radiance
-
-#### Level 10 — The Waking World
-- **Scene:** `WorldScene` · **Accent:** `#d8c890` (warm gold) · **BG:** `#060808`
-- **Prompts:** `["the garden blooms the hearth burns bright", "every star remembers every spirit sings", "the ancient order is restored"]`
-- **Animation:** Miniature nodes for all 9 previous locations with their accent colors, ley line connections draw between them, energy pulses flow along connections, final radiance
+- [ ] Gate dev panel behind URL param or remove
+- [ ] Test on real mobile devices (iOS Safari, Android Chrome)
+- [ ] Performance profile on budget Android phone
+- [ ] Consider sound design (ambient loops, phrase-completion chime)
 
 ---
 
-## Technical Architecture
+## Reference Documents
 
-### Stack
-- **React** (hooks only: `useState`, `useEffect`, `useRef`)
-- **Inline SVG** for all scene rendering — no canvas, no external libraries
-- **No dependencies** beyond React itself
-
-### Component Map
-
-```
-Inkwood (root)
-├── GardenScene({ progress })
-├── CottageScene({ progress })
-├── StarScene({ progress })
-├── WellScene({ progress })
-├── BridgeScene({ progress })
-├── LibraryScene({ progress })
-├── StonesScene({ progress })
-├── SanctumScene({ progress })
-├── TreeScene({ progress })
-├── WorldScene({ progress })
-└── Screens: title | playing | levelWin | gameWin
-```
-
-### Progress Model
-
-Progress is a float `[0, 1]` calculated as:
-
-```js
-const promptProgress = typed.length / target.length;
-const levelProgress = (promptIdx + promptProgress) / totalPrompts;
-```
-
-`levelProgress` drives all scene animations. Individual elements within a scene use local thresholds (e.g. `Math.min(1, Math.max(0, (p - delay) / duration))`) to stagger their entry.
-
-### Typing Logic
-
-- Input is captured via a **hidden `<input>`** element that receives focus on click anywhere in the UI
-- `getCharStates(typed, target)` returns `"correct" | "error" | "pending"` per character
-- The prompt display renders character-by-character with color and an animated cursor via CSS `@keyframes blink`
-- Input is capped at `target.length` — no over-typing allowed
-- On completion, a 700ms delay fires before advancing (allows scene to settle visually)
-
-### State
-
-| State var | Purpose |
-|---|---|
-| `screen` | `"title" \| "playing" \| "levelWin" \| "gameWin"` |
-| `lvl` | Current level index (0–9) |
-| `promptIdx` | Current prompt within the level |
-| `typed` | Current typed string |
-| `completing` | Lock flag during the 700ms post-completion delay |
-
----
-
-## Visual Design Decisions
-
-- **No images or external assets** — all visuals are pure SVG with `<rect>`, `<circle>`, `<ellipse>`, `<polygon>`, `<path>`, `<line>`, and `<radialGradient>`
-- **Dark backgrounds** per level — keeps scenes atmospheric and makes accent-colored correct characters pop
-- **Accent color = correct character color** — intentional coupling so the scene and feedback share a visual identity
-- **Progress bar** is 2px, accent-colored, sits between scene and typing area — subtle but satisfying
-- **Staggered element entry** is the primary animation strategy (no tweening library)
-
----
-
-## UX Decisions
-
-- **No fail state** — errors are shown (red characters) but never penalized beyond the visual disruption
-- **Click anywhere to focus** — the entire game div re-focuses the hidden input on click
-- **autoCorrect / autoCapitalize / spellCheck all disabled** on the hidden input — critical for accurate capture
-- **`whiteSpace: "pre"`** on character spans — preserves spaces in prompts correctly
-- **Level win screen** separates levels with a beat rather than instant transition
-
----
-
-## Planned Enhancements (Backlog)
-
-These were discussed but not yet implemented:
-
-- [x] **More levels** — Expanded to 10 levels across 4 acts with narrative arc
-- [ ] **WPM + accuracy tracking** — end-of-level cozy summary card
-- [ ] **Difficulty tiers** — short phrases (beginner) vs. longer passages (scribe)
-- [ ] **Ambient audio** — Web Audio API procedural sound: rain, fire crackle, night crickets
-- [ ] **Persistent progress** — `window.storage` API to save completed levels across sessions
-- [ ] **Typing stats overlay** — optional live WPM counter (toggleable)
-- [ ] **Animated transitions** between screens (fade in/out)
-
----
-
-## Tone & Voice Reference
-
-All copy (flavor text, level titles, win screens) should adhere to this register:
-- Quiet, literary, slightly archaic
-- Second person ("your words", "the scribe's work")
-- Nature and warmth as primary metaphors
-- No exclamation points in flavor text — let the scene carry the emotion
-
-### Example flavor text style:
-> *"Frost clings to every petal. Breathe life back into the garden."*
-> *"The hearth is cold and every candle dark. Call the warmth home."*
-> *"The stars have gone to sleep. Speak their names to wake them."*
-
----
-
-## File Notes
-
-- All code lives in a single React artifact — no external files
-- This `CLAUDE.md` is the companion document for continuing development
-- When adding levels, follow the `LEVELS` array schema and create a matching `XxxScene({ progress })` SVG component
+- **SCENE_ART_GUIDE.md** — Art principles and rebuild checklist from scene iteration
+- **PERSONAS.md** — Current six-persona critique with grades and priority stack
