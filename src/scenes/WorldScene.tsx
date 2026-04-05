@@ -250,6 +250,33 @@ function WorldScene({ progress: p }: SceneProps) {
       <path d={HILLS_FAR}
         fill={`hsl(${150 - (1 - earthP) * 30}, ${farHillS}%, ${farHillL}%)`} />
 
+      {/* ── TREE SILHOUETTES on far hills — we're in a forest ── */}
+      {earthP > 0.1 && (() => {
+        const tp = sub(earthP, 0.1, 0.4);
+        // Dense treeline along far hill ridge
+        const treeXs = [15, 30, 42, 58, 72, 88, 105, 125, 155, 175, 225, 250, 275, 295, 315, 335, 355, 372, 388];
+        return (
+          <g opacity={tp * 0.6}>
+            {treeXs.map((tx, i) => {
+              const baseY = 88 + Math.sin(tx * 0.04) * 5; // follow hill contour
+              const h = 8 + (i % 3) * 4;
+              const w = 3 + (i % 2) * 2;
+              return (
+                <g key={`ft${i}`}>
+                  {/* Trunk */}
+                  <line x1={tx} y1={baseY} x2={tx} y2={baseY - h * 0.5}
+                    stroke={`hsl(${140 + (i % 3) * 5}, ${farHillS + 5}%, ${farHillL - 1}%)`}
+                    strokeWidth={1} />
+                  {/* Canopy */}
+                  <ellipse cx={tx} cy={baseY - h * 0.6} rx={w} ry={h * 0.45}
+                    fill={`hsl(${135 + (i % 4) * 5}, ${farHillS + 3}%, ${farHillL - 1}%)`} />
+                </g>
+              );
+            })}
+          </g>
+        );
+      })()}
+
       {/* ── COTTAGE silhouette on right hillside — earth phase ── */}
       {earthP > 0.3 && (() => {
         const cp = sub(earthP, 0.3, 0.3);
@@ -320,20 +347,30 @@ function WorldScene({ progress: p }: SceneProps) {
       <path d={GROUND}
         fill={`hsl(${140 - (1 - earthP) * 40}, ${groundS}%, ${groundL}%)`} />
 
-      {/* ── WELL silhouette — left foreground ── */}
-      {earthP > 0.6 && (
-        <g opacity={sub(earthP, 0.6, 0.25) * 0.6}>
-          <path d={WELL_POSTS}
-            fill="none"
-            stroke={`hsl(30, 12%, ${12 + earthP * 5}%)`}
-            strokeWidth={1.5}
-            strokeLinecap="round" />
-          {/* Bucket */}
-          <path d="M71 156 L71 160 L77 160 L77 156"
-            fill={`hsl(30, 10%, ${10 + earthP * 4}%)`}
-            strokeWidth={0.5} />
-        </g>
-      )}
+      {/* ── WELL silhouette — left hillside, opposite cottage ── */}
+      {earthP > 0.4 && (() => {
+        const wp = sub(earthP, 0.4, 0.3);
+        return (
+          <g opacity={wp * 0.8}>
+            {/* Well structure — roof + posts */}
+            <path d="M88 128 L88 120 L95 116 L102 120 L102 128"
+              fill="none"
+              stroke={`hsl(30, 12%, ${12 + earthP * 5}%)`}
+              strokeWidth={1.8} strokeLinecap="round" />
+            {/* Roof */}
+            <path d="M85 120 L95 114 L105 120"
+              fill={`hsl(25, 10%, ${10 + earthP * 4}%)`}
+              stroke={`hsl(25, 10%, ${10 + earthP * 4}%)`}
+              strokeWidth={1} />
+            {/* Rope + bucket hint */}
+            <line x1="95" y1="120" x2="95" y2="126"
+              stroke={`hsl(30, 8%, ${14 + earthP * 4}%)`}
+              strokeWidth={0.5} />
+            {/* Cyan accent glow */}
+            <circle cx="95" cy="130" r="4" fill="#50b8b8" opacity={wp * 0.06} />
+          </g>
+        );
+      })()}
 
       {/* ── FOREGROUND FLOWERS — earth phase ── */}
       {earthP > 0.5 && [
