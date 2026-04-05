@@ -1,6 +1,6 @@
-# Scene Art Guide — Lessons from the Garden Rebuild
+# Scene Art Guide — Lessons from Rebuilding Scenes 1-5
 
-This document captures what we learned rebuilding GardenScene from scratch. Every future scene rebuild should follow these principles.
+This document captures what we've learned rebuilding GardenScene, CottageScene, StarScene, WellScene, and BridgeScene. Every future scene rebuild should follow these principles.
 
 ---
 
@@ -10,78 +10,93 @@ This document captures what we learned rebuilding GardenScene from scratch. Ever
 
 ---
 
-## What Worked
+## Structural Lessons
 
-### 1. One integrated trunk-and-limb shape
-The trunk and main branches are **one continuous closed path** that forks. The trunk rises, tapers, then splits into two limbs. This looks natural because real trees don't have branches "attached" to a trunk — the wood is continuous.
+### 1. Integrated structural shapes
+The trunk and main branches should be **one continuous closed path** that forks. Walls and frames should be single paths with character. Don't attach separate shapes to each other — make them one continuous form.
 
-**Do:** `M base → C curves up → splits left → curves back → splits right → curves back → Z`
-**Don't:** Separate rectangle trunk + separate line branches stuck on top.
+**Garden tree:** trunk + two limbs = one path that starts at the base, rises, then splits.
+**Cottage window:** frame is one path, not four rectangles.
+**Well:** shaft walls are continuous with the rim.
 
-### 2. Canopy as a single complex silhouette
-The canopy is ONE path with ~25 bezier curves creating an irregular, bumpy outline that suggests leaf clusters. No smooth ellipses. The bumps and indentations are what make it read as foliage.
+### 2. Covering layers fade in with progress
+The key technique that makes scenes feel alive: render the "alive" layer ON TOP of the "structure" layer, with opacity tied to progress.
 
-**Do:** One path with many small directional changes (C curves alternating inward/outward).
-**Don't:** Overlapping `<ellipse>` elements.
+**Garden:** bare branches visible at p=0 → canopy fades in on top, covering them by p=1.
+**Cottage:** cold blue room → warm amber light overlay fades in on top.
+**Well:** dry cavern → water rises as a covering layer, hiding dry stone.
 
-### 3. Canopy renders ON TOP of branches
-The canopy is drawn AFTER the trunk/branches in SVG draw order, so it covers them. Its opacity is tied to progress — starts transparent (bare branches visible), fills in as the player types. This creates a natural "leafing out" 3D effect.
+### 3. Cross-section and unusual viewpoints
+Don't default to "side view of a thing." The Well works because it's a cross-section — you see underground. The Bridge works because the bridge DOESN'T EXIST at p=0. Choose the viewpoint that best serves the animation arc.
 
-### 4. Terrain as hand-drawn contours
-Each hill is a single path with 8-10 bezier curves creating natural undulation — gentle bumps and dips, not mathematical sine waves. Three layers (far, mid, near) at different vertical positions create depth.
+### 4. Assembly animations > reveal animations
+Things that BUILD themselves are more dramatic than things that FADE IN.
 
-### 5. Small secondary forks, not many branches
-After trying 5 branches, then 5+5+8, then back to 3+3: **fewer is better**. The tree reads best with the main forking trunk shape + 3 small secondary forks. More branches = visual noise, not detail.
+**Bridge:** stones float up from mist and lock into position. Each one glows briefly as it settles. This is more visually compelling than a bridge that fades from transparent to opaque.
+**Well:** water rises to fill the channel, runes drift downstream. Motion, not just opacity.
 
-### 6. Petal-style flowers work at this scale
-Five small ellipse petals arranged in a circle around a center dot reads clearly as a flower at 400×250 viewport scale. But they need:
-- **Muted colors** (#d88090, not #e87090) — less saturated than you'd think
-- **Small size** (5-7px, not 9-11px)
-- **Soft stems** with a slight curve
-
-### 7. Roots that glow with progress
-Roots are thick bezier strokes spreading from the trunk base. At low progress they're dark wood color. As progress increases, a green glow line traces over them (using GlowFilter). This ties to the prompt "wake now, sleeping roots" — the player SEES the roots waking.
-
-### 8. Clouds belong to the sky, not the tree
-Clouds overlapping the tree canopy looked wrong. Position them in clear sky areas only.
-
----
-
-## What Didn't Work
-
-### 1. Geometric primitives for organic things
-`<rect>`, `<ellipse>`, `<circle>` for trunks, canopies, terrain. These always look mechanical, no matter how many you stack.
-
-### 2. Too many branches
-5 main branches + 5 sub-branches + 8 twigs = a messy spider web. Branches crossing each other is visual chaos. The eye can't parse the structure.
-
-### 3. Uniform-width stroked lines for branches
-`strokeWidth={4}` on a path gives you a toothpick. Real branches taper from thick to thin. Use **closed tapered paths** (two edges converging) or integrate them into the trunk shape.
-
-### 4. Branches emerging from one point
-All branches radiating from the trunk crown looks like a palm tree or a fan. Real oaks have the trunk split into 2-3 main limbs at different heights.
-
-### 5. Overly bright saturated flowers
-#e87090 at size 10 against a naturalistic scene looks like clip art. Mute the colors and shrink the size.
-
-### 6. Bird silhouette as a reward
-Too small at this viewport size to read as anything but a blob. Don't add tiny reward elements that can't be parsed.
-
-### 7. Procedural generation for art
-`Hill()`, `GrassRow()`, `TreeSilhouette()` — these primitives generate acceptable filler but never good art. Hand-drawn paths with intentional character > algorithm with parameters.
+### 5. The scene should start with ABSENCE
+The most dramatic transformations start from nothing:
+- Garden: bare branches, no leaves → full canopy
+- Cottage: cold dark blue room → warm amber
+- Bridge: two broken cliff stumps → complete arch
+- Well: dry stone channel → flowing river
 
 ---
 
 ## Animation Arc Template
 
-Each scene should have a clear two-phrase animation mapping:
-
-| Phrase | Visual Change | Technique |
+| Phrase | What changes | Best technique |
 |---|---|---|
-| First phrase | The environment itself changes (terrain greens, structure appears, light shifts) | Color transitions, opacity changes, shape reveals |
-| Second phrase | Life appears (flowers bloom, spirits manifest, details emerge) | Staggered element appearance, glow effects |
+| First phrase | The STRUCTURE appears or transforms | Assembly, color shift, water/light rising |
+| Second phrase | LIFE appears | Staggered small elements (flowers, spirits, runes, footprints) |
 
-The player should be able to look at the scene and understand what their words DID.
+The player should be able to look at the scene and understand what their words DID. The Stones scene remains the gold standard: "stand tall again" → stones rise. "remember what was promised" → ley lines connect them.
+
+---
+
+## Element-Specific Lessons
+
+### Trees
+- Trunk + limbs as ONE integrated path that forks — not separate shapes
+- Canopy as ONE complex irregular silhouette (~25 curves) — not overlapping ellipses
+- Render order: branches first, canopy on top (fading in with progress)
+- Secondary forks: max 3, small, inside the canopy bounds
+- At this viewport scale, individual leaves are not visible — the canopy OUTLINE suggests foliage through its bumpiness
+
+### Cats (and other small creatures)
+- Head must be ~1/3 of body height. A small head looks alien.
+- Use a reference silhouette and trace the proportions
+- Ears as prominent triangular points
+- Tail should follow the reference pose (curving up, wrapping around, etc.)
+- One eye glint (amber) + subtle whiskers is enough detail at this scale
+- Test the silhouette: if it reads as "cat" in solid black, it works
+
+### Interior scenes
+- Color temperature shift is the key dramatic element: cold blue (10,12,28) → warm amber (44,28,14)
+- Position ALL interactive elements above y=170 (the typing overlay zone)
+- Window is the scenic anchor — it shows the most dramatic color change
+- Candle flames: ellipses are fine for fire (fire IS soft and round)
+- Steam: asymmetric wispy bezier curves, 3 of different lengths. NOT mirror-symmetric.
+
+### Water
+- Water rising as a covering layer is inherently dramatic — use it
+- Surface shimmer: a thin white ellipse at the water line
+- Runes glowing when submerged: only show rune if `waterLevel < rune.y`
+- Flowing runes: interpolate position from start to end, fade out as they travel
+
+### Stone/cliff
+- Hand-drawn cliff faces with irregular edges (many bezier curves)
+- Stone texture: subtle horizontal lines at varying y positions, low opacity
+- Broken stumps suggest history — something WAS here and is gone
+- Assembly animation: stones rising from below with a brief glow lock
+
+### Night sky
+- Moon crescent: the dark masking circle must match the sky color at that y-position, not a hardcoded color (causes visible rectangle)
+- Stars work as circles — they ARE dots. This is the one place primitives are correct.
+- Constellation lines: use strokeDashoffset for drawing animation
+- Shooting stars: more in the final 10% creates a climactic crescendo
+- Tree tops catching moonlight: proximity-based glow (closer to moon = brighter)
 
 ---
 
@@ -89,36 +104,52 @@ The player should be able to look at the scene and understand what their words D
 
 1. Sky gradient
 2. Sun/moon + glow
-3. Clouds (in clear sky, NOT overlapping main subject)
-4. Far terrain (lowest opacity, simplest)
-5. Mid terrain
-6. **Main subject wood/stone structure** (trunk, branches, walls, etc.)
-7. **Main subject covering layer** (canopy, roof, etc.) — fades in with progress
-8. Near terrain / ground
-9. Ground details (stones, grass tufts)
-10. Small animated elements (flowers, spirits, etc.)
-11. Atmospheric particles (pollen, dust, embers)
+3. Background elements (distant hills, clouds)
+4. Main structure (trunk, walls, cliffs, well shaft)
+5. **Covering/alive layer** (canopy, warm light, water) — fades in with progress
+6. Ground / earth surface
+7. Ground details (stones, grass tufts, broken stumps)
+8. Small animated elements (flowers, spirits, lanterns, footprints, runes)
+9. Atmospheric particles (pollen, dust, mist)
+10. UI overlays (warm light wash)
 
 ---
 
 ## Color Principles
 
-- **Dormant (p=0):** Low saturation (5-10%), low lightness (10-15%), grey-brown tones
-- **Alive (p=1):** Medium saturation (30-40%), medium lightness (20-28%), warm greens/golds
-- **Never fully bright.** Even at p=1, the scene should feel like dusk/dawn, not noon. Max lightness ~28%.
-- **Accent color** (from level definition) is used for glow effects and typed text, not for the scene itself.
+- **Dormant (p=0):** Low saturation (5-10%), low-medium lightness (8-15%), desaturated cool tones
+- **Alive (p=1):** Medium saturation (25-40%), medium lightness (18-28%), warm or vivid accent
+- **Temperature shift is the most powerful color tool.** Cold blue → warm amber (Cottage) is more dramatic than dark green → bright green (Garden).
+- **Accent color** (from level definition) is for glow effects and typed text, not the scene base.
 
 ---
 
-## Checklist for Rebuilding a Scene
+## Common Mistakes to Avoid
 
-- [ ] Main structural element is a single complex bezier path (not primitives)
-- [ ] Passes the "black silhouette on white" test — looks organic, not geometric
-- [ ] Terrain is hand-drawn contours (3 layers minimum)
-- [ ] Rendering order places covering layers (canopy, roof) AFTER structure
-- [ ] Covering layer opacity tied to progress (bare→covered transition)
+1. **Geometric primitives for organic things** — `<rect>`, `<ellipse>` for trunks, canopies, walls
+2. **Too many small branches** — 13 crossing sticks = visual noise
+3. **Uniform-width stroked lines** — toothpicks. Use closed tapered paths.
+4. **Elements below y=170** — hidden behind the typing overlay
+5. **Mirror-symmetric steam/smoke** — looks artificial
+6. **Small creature heads** — head must be proportionally large (1/3 body)
+7. **Hardcoded masking colors** — must match the background dynamically
+8. **Side-view default** — consider cross-section, overhead, or absent-then-assembled approaches
+9. **Rectangles with glow filters** — a glowing rectangle is never beautiful
+10. **SVG paths extending past x=0-400** — causes spillover on wide screens
+
+---
+
+## Rebuild Checklist
+
+- [ ] Main structural element is a complex bezier path (not primitives)
+- [ ] Passes the "black silhouette on white" test
+- [ ] Uses the covering-layer technique (alive fades in on top of structure)
+- [ ] All interactive content above y=170 (visible above typing overlay)
 - [ ] Each prompt maps to a specific, visible visual change
-- [ ] Colors transition from desaturated/dark to warmer/brighter
-- [ ] Max 3-5 secondary elements (forks, details) — complexity through path quality, not element count
-- [ ] Small details (stones, grass, motes) placed intentionally, not procedurally
-- [ ] No primitives from `svg/primitives.tsx` for main elements (OK for Flower, particles)
+- [ ] Color transitions from desaturated/cool to warmer/vivid
+- [ ] Assembly or motion animation (not just opacity fade)
+- [ ] Scene starts with meaningful ABSENCE (not just a dim version)
+- [ ] Max 3-5 secondary elements — quality over quantity
+- [ ] `overflow="hidden"` and `preserveAspectRatio="xMidYMid slice"` on SVG
+- [ ] No elements extending past x=0-400 range
+- [ ] Small creatures tested against reference silhouette
