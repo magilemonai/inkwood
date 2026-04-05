@@ -40,7 +40,7 @@ export default function PlayingScreen() {
   const rawProgress = useGameStore((g) => g.levelProgress());
   const isComplete = useGameStore((g) => g.isComplete());
 
-  const inputRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
 
   const { accent } = level;
@@ -83,31 +83,12 @@ export default function PlayingScreen() {
     return () => clearTimeout(timer);
   }, [lvl, promptIdx]);
 
-  // Keep contentEditable div empty (we track text in state, not DOM)
-  useEffect(() => {
-    if (inputRef.current && inputRef.current.textContent !== "") {
-      inputRef.current.textContent = "";
-    }
-  }, [typed]);
 
-  const handleBeforeInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    const ie = e.nativeEvent as InputEvent;
-    if (completing) { e.preventDefault(); return; }
-
-    if (ie.inputType === "insertText" && ie.data) {
-      e.preventDefault();
-      const newVal = typed + ie.data;
-      if (newVal.length <= target.length) {
-        playTypeClick();
-        typeChar(newVal);
-      }
-    } else if (ie.inputType === "deleteContentBackward") {
-      e.preventDefault();
-      typeChar(typed.slice(0, -1));
-    } else {
-      e.preventDefault(); // block paste, etc.
-    }
-  }, [typed, target, completing, typeChar]);
+  const handleType = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    if (newVal.length > typed.length) playTypeClick();
+    typeChar(newVal);
+  };
 
   const focusInput = () => {
     inputRef.current?.focus();
@@ -238,22 +219,20 @@ export default function PlayingScreen() {
           </span>
         </div>
 
-        {/* ContentEditable div — iOS doesn't show form accessory bar for these */}
-        <div
+        <input
           ref={inputRef}
           className={s.hiddenInput}
-          contentEditable
-          suppressContentEditableWarning
-          onBeforeInput={handleBeforeInput}
+          type="text"
+          value={typed}
+          onChange={handleType}
           onFocus={() => setInputFocused(true)}
           onBlur={() => setInputFocused(false)}
+          autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
           enterKeyHint="done"
-          role="textbox"
           aria-label="Type the incantation"
-          tabIndex={0}
         />
       </div>
     </div>
