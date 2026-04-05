@@ -1,8 +1,9 @@
 import { sub } from "./util";
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
-import { useParticles, ParticleField } from "../hooks/useParticles";
+import { useParticles } from "../hooks/useParticles";
+import ParticleField from "../components/ParticleField";
 
 
 // ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
