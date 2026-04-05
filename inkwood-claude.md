@@ -251,7 +251,7 @@ Screenshots are saved to `./screenshots/` (gitignored). Claude can then read the
 
 ### Before Public Release
 
-- [ ] Gate dev panel behind URL param or remove
+- [x] Gate dev panel behind `?dev` URL param
 - [ ] Test on real mobile devices (iOS Safari, Android Chrome)
 - [ ] Performance profile on budget Android phone
 - [ ] Consider sound design (ambient loops, phrase-completion chime)
@@ -266,27 +266,25 @@ Screenshots are saved to `./screenshots/` (gitignored). Claude can then read the
 |---|---|---|---|
 | Garden | ✅ Rebuilt | B | Integrated trunk-limb path, canopy covering layer, hand-crafted terrain |
 | Cottage | ✅ Rebuilt | B- | Blue→amber temperature shift, cat from reference, candle glow |
-| Stars | ✅ Polished | B+ | Moon crescent fixed, tree-top moonlight, 6 comets, constellation drawing |
+| Stars | ✅ Polished | B+ | Moon crescent fixed, tree-top moonlight, 6 comets, constellation drawing. Treeline still uses TreeSilhouette primitive. |
 | Well | ✅ Rebuilt | A- | Cross-section concept, underground river, runes flowing downstream |
-| Bridge | ✅ Rebuilt | B+ | Assembly-from-nothing, stones float into arch, spirit footprints |
-| Library | ❌ Needs rebuild | D+ | Agent-generated, noisy texture filters, rectangles. Needs breakthrough concept |
-| Stones | ⚠️ Acceptable | C+ | Original bezier stones decent, ground/sky flat |
-| Sanctum | ⚠️ Acceptable | C+ | Spirit figures and moonbeams work, trees are primitive |
-| Tree | ✅ Rebuilt | Needs validation | Tree-as-world concept, three-phase glow, accent gems. Just deployed. |
-| World | ❌ Needs rebuild | D | Network diagram. Must become visual culmination |
+| Bridge | ✅ Rebuilt | B+ | Tall jagged cliffs, irregular bezier stones, organic mist wisps, cliff-top vegetation |
+| Library | ✅ Rebuilt | B+ | Enormous tome opens on pedestal, runes rise off pages, Gothic vaulted chamber |
+| Stones | ⚠️ Acceptable | C+ | Original bezier stones decent, ground/sky flat. Still uses primitives. |
+| Sanctum | ⚠️ Acceptable | C+ | Spirit figures and moonbeams work, trees use primitives |
+| Tree | ✅ Rebuilt | B+ | Tree-as-world concept, three-phase glow, accent gems |
+| World | ✅ Rebuilt | B+ | Panoramic landscape assembles from barren terrain, callbacks to all previous levels |
 
 ### Priority Stack
-1. **Validate Tree** — screenshot and iterate until it's genuinely the best scene
-2. **Rebuild Library** — needs a breakthrough concept like Well's cross-section
-3. **Rebuild World** — the finale must feel like culmination
-4. **Sound design** — visual-only has hit diminishing returns. Audio is zero-to-one.
-5. **Polish Stones & Sanctum** — decent but below rebuilt-scene standard
-6. **Real device testing** — mobile is completely untested
+1. **Polish Stones & Sanctum** — decent but below rebuilt-scene standard, still use primitives
+2. **Hand-draw StarScene treeline** — replace TreeSilhouette primitive
+3. **Sound design** — visual-only has hit diminishing returns. Audio is zero-to-one.
+4. **Real device testing** — mobile is completely untested
+5. **Clean up unused imports** — StonesScene and SanctumScene still import old primitives
 
 ### Known Issues
-- Dev panel (F2) is accessible in production — gate before public release
-- Bridge mist reads as grey blobs — cliffs need more prominence
-- Some scenes still import unused filter/primitive modules from old agent code
+- StonesScene and SanctumScene still import TextureFilter, MistFilter, Hill, Wisp, GrassRow from old code
+- StarScene treeline uses TreeSilhouette primitive
 - Mobile keyboard focus untested on real devices
 
 ---
