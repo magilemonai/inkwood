@@ -218,7 +218,8 @@ export default function PlayingScreen() {
           </span>
         </div>
 
-        {/* Hidden input */}
+        {/* Hidden input — positioned off-screen to capture mobile keyboard
+             without showing iOS form navigation bar */}
         <input
           ref={inputRef}
           className={s.hiddenInput}
@@ -226,15 +227,16 @@ export default function PlayingScreen() {
           onChange={handleType}
           onFocus={() => setInputFocused(true)}
           onBlur={() => setInputFocused(false)}
-          autoComplete="one-time-code"
+          autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
+          enterKeyHint="done"
           data-lpignore="true"
           data-1p-ignore="true"
-          inputMode="text"
-          name="inkwood-spell"
-          id="inkwood-spell"
+          data-form-type="other"
+          aria-label="Type the incantation"
+          style={{ fontSize: '16px' }}
         />
       </div>
     </div>
