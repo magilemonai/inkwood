@@ -187,6 +187,25 @@ When evaluating the game's state, run critiques from these six perspectives. Eac
 4. Test on live URL: `https://magilemonai.github.io/inkwood/`
 5. Use F2 to jump between scenes for testing
 
+### Visual Self-Verification
+
+Claude can verify its own SVG art using `scripts/screenshot.mjs`:
+
+```bash
+# Build first, then start preview server
+npx vite build && npx vite preview --port 4173 &
+
+# Screenshot a scene at a specific progress percentage
+node scripts/screenshot.mjs 0          # Garden at 0%
+node scripts/screenshot.mjs 3 50       # Well at 50%
+node scripts/screenshot.mjs 8 95       # Tree at 95%
+node scripts/screenshot.mjs all        # All scenes at 0%
+```
+
+Screenshots are saved to `./screenshots/` (gitignored). Claude can then read these images with the Read tool to see what the SVG actually looks like, enabling iterative art refinement without waiting for human screenshots.
+
+**Always screenshot after art changes.** Don't commit blind — verify visually first.
+
 ### Before Public Release
 
 - [ ] Gate dev panel behind URL param or remove

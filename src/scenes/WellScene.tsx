@@ -38,9 +38,9 @@ function WellScene({ progress: p }: SceneProps) {
 
   // Colors shift dormant → alive
   const skyL = 10 + p * 14;
-  const stoneL = 8 + p * 4;
-  const waterS = 40 + p * 20;
-  const waterL = 12 + p * 18;
+  const stoneL = 8 + p * 6;       // brighter stones for contrast
+  const waterS = 25 + p * 8;      // muted water — cave water, not a pool
+  const waterL = 6 + p * 6;       // very dark — it's deep underground water
 
   // Wall rune positions — on the stone near the water
   const wallRunes = [
@@ -122,11 +122,11 @@ function WellScene({ progress: p }: SceneProps) {
       {p > 0.25 && (
         <g opacity={sub(p, 0.25, 0.4)}>
           <rect x="0" y={196 - p * 14} width="140" height={14 + p * 12}
-            fill={`hsl(185, ${waterS - 8}%, ${waterL - 3}%)`}
-            opacity={0.25 + p * 0.3} />
+            fill={`hsl(185, ${waterS - 10}%, ${waterL - 2}%)`}
+            opacity={0.15 + p * 0.15} />
           <rect x="260" y={196 - p * 14} width="140" height={14 + p * 12}
-            fill={`hsl(185, ${waterS - 8}%, ${waterL - 3}%)`}
-            opacity={0.25 + p * 0.3} />
+            fill={`hsl(185, ${waterS - 10}%, ${waterL - 2}%)`}
+            opacity={0.15 + p * 0.15} />
         </g>
       )}
 
@@ -134,10 +134,14 @@ function WellScene({ progress: p }: SceneProps) {
       {p > 0.04 && (
         <>
           <rect x="140" y={waterLevel} width="120" height={210 - waterLevel}
-            fill="url(#waterGrad)" opacity={0.55 + p * 0.4} />
+            fill="url(#waterGrad)" opacity={0.35 + p * 0.2} />
+          {/* Softer surface — gradient fade at the top edge */}
+          <rect x="140" y={waterLevel - 4} width="120" height="8"
+            fill={`hsl(185, ${waterS}%, ${waterL + 4}%)`}
+            opacity={(0.3 + p * 0.2) * 0.5} />
           {/* Surface shimmer */}
-          <ellipse cx="200" cy={waterLevel + 2} rx={45 * Math.min(1, p * 2)} ry="1.5"
-            fill="white" opacity={p * 0.12} />
+          <ellipse cx="200" cy={waterLevel + 1} rx={40 * Math.min(1, p * 2)} ry="1"
+            fill="white" opacity={p * 0.08} />
         </>
       )}
 

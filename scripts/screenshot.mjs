@@ -1,12 +1,12 @@
 /**
  * Screenshot tool for visual verification.
- * Takes screenshots of the live site at specific scenes/progress values.
  *
  * Usage:
- *   node scripts/screenshot.mjs [sceneIndex] [progressPercent]
- *   node scripts/screenshot.mjs 0        # Garden at 0%
- *   node scripts/screenshot.mjs 1 50     # Cottage at 50%
- *   node scripts/screenshot.mjs all      # All scenes at 0%, 50%, 100%
+ *   node scripts/screenshot.mjs <sceneIndex> [progressPercent]
+ *   node scripts/screenshot.mjs 0          # Garden at 0%
+ *   node scripts/screenshot.mjs 3 50       # Well at 50%
+ *   node scripts/screenshot.mjs 3 95       # Well at 95%
+ *   node scripts/screenshot.mjs all        # All scenes at 0%
  */
 
 import { chromium } from 'playwright-core';
@@ -17,16 +17,16 @@ const BASE_URL = 'http://localhost:4173/inkwood/';
 const SCREENSHOT_DIR = './screenshots';
 
 const SCENES = [
-  'The Sleeping Garden',
-  'The Dark Cottage',
-  'The Night Sky',
-  'The Dry Well',
-  'The Forgotten Bridge',
-  'The Whispering Library',
-  'The Spirit Stones',
-  'The Moonlit Sanctum',
-  'The Great Tree',
-  'The Waking World',
+  { name: 'The Sleeping Garden', prompts: ['wake now, sleeping roots', 'bloom, every waiting flower'] },
+  { name: 'The Dark Cottage', prompts: ['little candle burn bright', 'fill every room with warmth'] },
+  { name: 'The Night Sky', prompts: ['Orion Vega Sirius Lyra', 'burn again with ancient fire'] },
+  { name: 'The Dry Well', prompts: ['deep water remember your name', 'rise and carry the old songs home'] },
+  { name: 'The Forgotten Bridge', prompts: ['stone, recall the crossing', 'spirits, walk the old paths'] },
+  { name: 'The Whispering Library', prompts: ['open, sleeping pages', 'speak again, forgotten words'] },
+  { name: 'The Spirit Stones', prompts: ['stand tall again guardians of old', 'remember what was promised'] },
+  { name: 'The Moonlit Sanctum', prompts: ['moonlight, gather where spirits convene', 'return to your seats, ancient ones'] },
+  { name: 'The Great Tree', prompts: ['roots deeper than memory', 'branches wider than sky', 'awaken, heart of all things'] },
+  { name: 'The Waking World', prompts: ['garden bloom, hearth burn bright', 'stars remember, spirits sing', 'the ancient order is restored'] },
 ];
 
 async function screenshot(sceneIdx, progressPct = 0) {
@@ -36,85 +36,70 @@ async function screenshot(sceneIdx, progressPct = 0) {
     args: ['--no-sandbox', '--disable-gpu'],
   });
 
+  const scene = SCENES[sceneIdx];
   const page = await browser.newPage();
   await page.setViewportSize({ width: 1400, height: 800 });
   await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-
-  // Wait for app to load
   await page.waitForTimeout(2000);
 
-  // Jump to the scene using the store
-  await page.evaluate((idx) => {
-    // Access zustand store
-    const store = document.querySelector('#root')?.__zustand;
-    if (!store) {
-      // Try dispatching via the dev panel approach - simulate jumpToLevel
-      window.__INKWOOD_JUMP = idx;
-    }
-  }, sceneIdx);
-
-  // Use keyboard to skip intro if needed, then use F2 dev panel
+  // Open dev panel and jump to scene
   await page.keyboard.press('F2');
   await page.waitForTimeout(500);
-
-  // Click the scene button in the dev panel
   const buttons = await page.$$('button');
   for (const btn of buttons) {
     const text = await btn.textContent();
-    if (text && text.includes(SCENES[sceneIdx])) {
+    if (text && text.includes(scene.name)) {
       await btn.click();
       break;
     }
   }
-
   await page.waitForTimeout(500);
   await page.keyboard.press('F2'); // close dev panel
+  await page.waitForTimeout(300);
 
-  // If we need progress > 0, type characters to advance
+  // Type characters to reach desired progress
   if (progressPct > 0) {
-    // Click to focus the input
+    // Click to focus
     await page.click('body');
     await page.waitForTimeout(200);
 
-    // Get the target text and type a percentage of it
-    const targetInfo = await page.evaluate(() => {
-      const inputs = document.querySelectorAll('input');
-      for (const input of inputs) {
-        if (input.type !== 'hidden' && input.style.opacity !== '0') continue;
-        return { found: true };
-      }
-      return { found: false };
-    });
+    // Calculate total chars across all prompts
+    const allChars = scene.prompts.join('');
+    const totalChars = allChars.length;
+    const charsToType = Math.floor(totalChars * (progressPct / 100));
 
-    if (targetInfo.found) {
-      // We need to figure out how many chars to type based on progress
-      // For now, we'll type into the hidden input by dispatching events
-      // This is complex - let's just take the screenshot at whatever state we're in
+    let typed = 0;
+    for (const prompt of scene.prompts) {
+      for (const char of prompt) {
+        if (typed >= charsToType) break;
+        await page.keyboard.type(char, { delay: 10 });
+        typed++;
+      }
+      if (typed >= charsToType) break;
+      // Wait for prompt completion + breathing pause
+      await page.waitForTimeout(2000);
     }
+    await page.waitForTimeout(500);
   }
 
-  await page.waitForTimeout(1000);
-
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
-  const filename = `${SCREENSHOT_DIR}/scene-${sceneIdx}-${SCENES[sceneIdx].replace(/\s+/g, '_')}-${progressPct}pct.png`;
+  const safeName = scene.name.replace(/\s+/g, '_');
+  const filename = `${SCREENSHOT_DIR}/scene-${sceneIdx}-${safeName}-${progressPct}pct.png`;
   await page.screenshot({ path: filename, fullPage: false });
+  console.log(`Saved: ${filename}`);
 
-  console.log(`Screenshot saved: ${filename}`);
   await browser.close();
   return filename;
 }
 
-// Parse args
 const args = process.argv.slice(2);
 const sceneArg = args[0] || '0';
 const progressArg = parseInt(args[1] || '0');
 
 if (sceneArg === 'all') {
-  // Screenshot all scenes at 0%
   for (let i = 0; i < SCENES.length; i++) {
     await screenshot(i, 0);
   }
 } else {
-  const idx = parseInt(sceneArg);
-  const file = await screenshot(idx, progressArg);
+  await screenshot(parseInt(sceneArg), progressArg);
 }
