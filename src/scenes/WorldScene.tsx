@@ -105,7 +105,7 @@ const LEY_POINTS = [
   { x: 45,  y: 172, label: "garden" },   // foreground left
   { x: 312, y: 112, label: "cottage" },  // right hillside
   { x: 280, y: 55,  label: "stars" },    // upper right sky
-  { x: 74,  y: 155, label: "well" },     // left foreground
+  { x: 95,  y: 128, label: "well" },     // left hillside (matches well visual)
   { x: 165, y: 126, label: "bridge" },   // mid area
   { x: 350, y: 165, label: "stones" },   // right foreground
   { x: 200, y: 40,  label: "tree" },     // center top

@@ -118,32 +118,38 @@ function WellScene({ progress: p }: SceneProps) {
         </g>
       ))}
 
-      {/* ── RIVER FLOWING LEFT AND RIGHT beyond cavern ── */}
-      {p > 0.25 && (
-        <g opacity={sub(p, 0.25, 0.4)}>
-          <rect x="0" y={196 - p * 14} width="140" height={14 + p * 12}
-            fill={`hsl(185, ${waterS - 10}%, ${waterL - 2}%)`}
-            opacity={0.15 + p * 0.15} />
-          <rect x="260" y={196 - p * 14} width="140" height={14 + p * 12}
-            fill={`hsl(185, ${waterS - 10}%, ${waterL - 2}%)`}
-            opacity={0.15 + p * 0.15} />
-        </g>
-      )}
-
-      {/* ── WATER RISING in central cavern ── */}
-      {p > 0.04 && (
-        <>
-          <rect x="140" y={waterLevel} width="120" height={210 - waterLevel}
-            fill="url(#waterGrad)" opacity={0.35 + p * 0.2} />
-          {/* Softer surface — gradient fade at the top edge */}
-          <rect x="140" y={waterLevel - 4} width="120" height="8"
-            fill={`hsl(185, ${waterS}%, ${waterL + 4}%)`}
-            opacity={(0.3 + p * 0.2) * 0.5} />
-          {/* Surface shimmer */}
-          <ellipse cx="200" cy={waterLevel + 1} rx={40 * Math.min(1, p * 2)} ry="1"
-            fill="white" opacity={p * 0.08} />
-        </>
-      )}
+      {/* ── UNDERGROUND RIVER — water fills the ENTIRE cavern channel ──
+           The river flows from left to right through the cavern.
+           As water rises, it fills left channel, central shaft, and right channel. */}
+      {p > 0.04 && (() => {
+        const waterOp = 0.35 + p * 0.2;
+        // River level rises across the full width
+        const riverLevel = waterLevel + 8; // slightly higher in the side channels
+        return (
+          <>
+            {/* Left river channel — water flowing from left */}
+            <rect x="0" y={Math.max(riverLevel, 185)} width="140" height={210 - Math.max(riverLevel, 185)}
+              fill={`hsl(185, ${waterS - 5}%, ${waterL}%)`}
+              opacity={waterOp * 0.7} />
+            {/* Central shaft — deepest, water rises highest here */}
+            <rect x="140" y={waterLevel} width="120" height={210 - waterLevel}
+              fill="url(#waterGrad)" opacity={waterOp} />
+            {/* Right river channel — water flowing to right */}
+            <rect x="260" y={Math.max(riverLevel, 185)} width="140" height={210 - Math.max(riverLevel, 185)}
+              fill={`hsl(185, ${waterS - 5}%, ${waterL}%)`}
+              opacity={waterOp * 0.7} />
+            {/* Surface shimmer — spans full river width */}
+            <ellipse cx="200" cy={waterLevel + 1} rx={50 * Math.min(1, p * 2)} ry="1.5"
+              fill="white" opacity={p * 0.06} />
+            {/* Left channel surface */}
+            <line x1="0" y1={Math.max(riverLevel, 185) + 1} x2="140" y2={Math.max(riverLevel, 185) + 1}
+              stroke="white" strokeWidth="0.5" opacity={p * 0.04} />
+            {/* Right channel surface */}
+            <line x1="260" y1={Math.max(riverLevel, 185) + 1} x2="400" y2={Math.max(riverLevel, 185) + 1}
+              stroke="white" strokeWidth="0.5" opacity={p * 0.04} />
+          </>
+        );
+      })()}
 
       {/* ── RUNES ON CAVERN WALLS — glow when water reaches them ── */}
       {wallRunes.map((r, i) => {

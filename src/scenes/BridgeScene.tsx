@@ -178,7 +178,7 @@ function BridgeScene({ progress: p }: SceneProps) {
   const faceL = cliffL + 3;
 
   return (
-    <svg viewBox="0 -25 400 275" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="0 -75 400 325" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
       <defs>
         <GlowFilter id="stoneGlow" radius={5} color="#7aaa6a" opacity={0.5} />
         <GlowFilter id="lanternGlow" radius={8} color="#d0b870" opacity={0.5} />
@@ -196,8 +196,8 @@ function BridgeScene({ progress: p }: SceneProps) {
         </linearGradient>
       </defs>
 
-      {/* ── SKY — extends above to give visual buffer ── */}
-      <rect x="0" y="-25" width="400" height="275" fill="url(#bridgeSky)" />
+      {/* ── SKY — extends well above to give visual buffer ── */}
+      <rect x="0" y="-75" width="400" height="325" fill="url(#bridgeSky)" />
 
       {/* ── CHASM MIST — organic wisps rising from the void ── */}
       {[

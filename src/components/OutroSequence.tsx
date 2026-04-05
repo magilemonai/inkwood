@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
+import { startAmbient, stopAmbient } from "../audio";
 import s from "../styles/Outro.module.css";
 
 /**
@@ -56,7 +57,13 @@ export default function OutroSequence() {
     return () => window.removeEventListener("keydown", handler);
   }, [restart]);
 
-  // Animation loop — runs once, never restarts
+  // Start outro ambient audio (Act IV drone)
+  useEffect(() => {
+    startAmbient(3, 9);
+    return () => { stopAmbient(); };
+  }, []);
+
+  // Animation loop — runs indefinitely until user restarts
   useEffect(() => {
     const start = performance.now();
     let frame: number;
@@ -66,20 +73,19 @@ export default function OutroSequence() {
       const elapsed = (now - start) / 1000;
       if (now - lastUpdate > 66) {
         lastUpdate = now;
-        // Clamp time at 25s — the animation freezes on the final frame
-        // while the motes/energy continue to render based on clamped time
-        setTime(Math.min(elapsed, 25));
+        // Clamp scene time at 25s so the landscape holds its final state,
+        // but pass raw elapsed so mote/pulse animations keep looping
+        setTime(elapsed <= 25 ? elapsed : 25 + (elapsed - 25) * 0.001);
         if (elapsed >= 19 && !showTextRef.current) {
           showTextRef.current = true;
           setShowText(true);
         }
       }
-      // Keep animating for 30s then stop (mote loop uses modular time)
-      if (elapsed < 30) frame = requestAnimationFrame(tick);
+      frame = requestAnimationFrame(tick); // loop forever
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, []); // no dependencies — runs exactly once
+  }, []);
 
   // Phase calculations
   const horizonDraw = sub(time, 0, 3);
