@@ -99,55 +99,55 @@ const CHASM_WALL_RIGHT = `
 // Bridge stones — bezier path data for each irregular stone block
 // Each stone has its own hand-crafted shape (not rectangles)
 const BRIDGE_STONES: { path: string; cx: number; cy: number; delay: number }[] = [
-  // Left base stones
+  // Left base — connects at cliff top (~y=55)
   { path: "M0 0 C2 -2, 14 -3, 16 0 C17 4, 16 9, 14 10 C6 11, 2 10, 0 8 C-1 5, -1 2, 0 0 Z",
-    cx: 134, cy: 96, delay: 0.04 },
+    cx: 134, cy: 58, delay: 0.04 },
   { path: "M0 0 C3 -2, 11 -2, 14 0 C15 3, 14 8, 12 10 C5 11, 1 10, 0 7 C-1 4, -1 2, 0 0 Z",
-    cx: 148, cy: 92, delay: 0.08 },
+    cx: 148, cy: 54, delay: 0.08 },
   // Left arch rise
   { path: "M0 0 C2 -3, 12 -3, 14 -1 C15 3, 14 8, 12 9 C5 10, 1 9, 0 7 C-1 4, -1 1, 0 0 Z",
-    cx: 160, cy: 86, delay: 0.12 },
+    cx: 160, cy: 48, delay: 0.12 },
   { path: "M0 0 C3 -2, 11 -3, 13 -1 C14 2, 13 7, 11 9 C5 10, 1 9, 0 6 C-1 3, -1 1, 0 0 Z",
-    cx: 172, cy: 80, delay: 0.16 },
+    cx: 172, cy: 42, delay: 0.16 },
   // Left-center
   { path: "M0 0 C2 -2, 10 -3, 13 -1 C14 2, 13 7, 11 8 C5 9, 1 8, 0 6 C-1 3, -1 1, 0 0 Z",
-    cx: 183, cy: 75, delay: 0.20 },
-  // KEYSTONE — center, larger, last to lock
+    cx: 183, cy: 37, delay: 0.20 },
+  // KEYSTONE — center, at the peak of the arch
   { path: "M0 0 C3 -4, 15 -4, 18 -1 C20 3, 19 9, 16 11 C8 12, 2 11, 0 8 C-2 4, -1 1, 0 0 Z",
-    cx: 192, cy: 72, delay: 0.28 },
+    cx: 192, cy: 33, delay: 0.28 },
   // Right-center
   { path: "M0 0 C2 -2, 10 -3, 13 -1 C14 2, 13 7, 11 8 C5 9, 1 8, 0 6 C-1 3, -1 1, 0 0 Z",
-    cx: 209, cy: 75, delay: 0.22 },
+    cx: 209, cy: 37, delay: 0.22 },
   // Right arch descent
   { path: "M0 0 C3 -2, 11 -3, 13 -1 C14 2, 13 7, 11 9 C5 10, 1 9, 0 6 C-1 3, -1 1, 0 0 Z",
-    cx: 220, cy: 80, delay: 0.18 },
+    cx: 220, cy: 42, delay: 0.18 },
   { path: "M0 0 C2 -3, 12 -3, 14 -1 C15 3, 14 8, 12 9 C5 10, 1 9, 0 7 C-1 4, -1 1, 0 0 Z",
-    cx: 232, cy: 86, delay: 0.14 },
-  // Right base stones
+    cx: 232, cy: 48, delay: 0.14 },
+  // Right base — connects at right cliff top (~y=58)
   { path: "M0 0 C3 -2, 11 -2, 14 0 C15 3, 14 8, 12 10 C5 11, 1 10, 0 7 C-1 4, -1 2, 0 0 Z",
-    cx: 246, cy: 92, delay: 0.10 },
+    cx: 246, cy: 54, delay: 0.10 },
   { path: "M0 0 C2 -2, 14 -3, 16 0 C17 4, 16 9, 14 10 C6 11, 2 10, 0 8 C-1 5, -1 2, 0 0 Z",
-    cx: 258, cy: 96, delay: 0.06 },
+    cx: 258, cy: 58, delay: 0.06 },
 ];
 
-// Spirit lanterns — light during phrase 2
+// Spirit lanterns — along the arch, above cliff tops
 const LANTERNS = [
-  { x: 145, y: 84, delay: 0.52 },
-  { x: 170, y: 72, delay: 0.58 },
-  { x: 200, y: 66, delay: 0.64 },
-  { x: 228, y: 72, delay: 0.70 },
-  { x: 253, y: 84, delay: 0.76 },
+  { x: 148, y: 44, delay: 0.52 },
+  { x: 172, y: 32, delay: 0.58 },
+  { x: 200, y: 25, delay: 0.64 },
+  { x: 228, y: 32, delay: 0.70 },
+  { x: 252, y: 44, delay: 0.76 },
 ];
 
-// Spirit footprints — walk from left to right across arch
+// Spirit footprints — walk from left to right across the high arch
 const FOOTPRINTS = [
-  { x: 140, y: 94, delay: 0.80 },
-  { x: 160, y: 86, delay: 0.83 },
-  { x: 180, y: 77, delay: 0.86 },
-  { x: 200, y: 73, delay: 0.89 },
-  { x: 220, y: 77, delay: 0.92 },
-  { x: 240, y: 86, delay: 0.95 },
-  { x: 260, y: 94, delay: 0.98 },
+  { x: 140, y: 56, delay: 0.80 },
+  { x: 160, y: 48, delay: 0.83 },
+  { x: 180, y: 39, delay: 0.86 },
+  { x: 200, y: 35, delay: 0.89 },
+  { x: 220, y: 39, delay: 0.92 },
+  { x: 240, y: 48, delay: 0.95 },
+  { x: 260, y: 56, delay: 0.98 },
 ];
 
 // Cliff-top vegetation — moss and ferns that bloom in phrase 2
@@ -290,11 +290,11 @@ function BridgeScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── BRIDGE ARCH CURVE — appears once keystone is placed ── */}
+      {/* ── BRIDGE ARCH CURVE — at cliff-top height ── */}
       {p > 0.35 && (
         <path d={`
-          M134 96 C150 85, 170 76, 200 72
-          C230 76, 250 85, 266 96
+          M134 58 C150 45, 170 36, 200 33
+          C230 36, 250 45, 266 58
         `} fill="none"
           stroke={`hsl(${cliffH}, ${cliffS + 2}%, ${cliffL + 3}%)`}
           strokeWidth="1.5"
@@ -366,7 +366,7 @@ function BridgeScene({ progress: p }: SceneProps) {
         return (
           <g opacity={mp * 0.3}>
             {[145, 165, 190, 215, 240].map((x, i) => {
-              const archY = 96 - Math.sin(((x - 134) / 132) * Math.PI) * 24;
+              const archY = 58 - Math.sin(((x - 134) / 132) * Math.PI) * 25;
               return (
                 <circle key={`moss${i}`}
                   cx={x} cy={archY + 2} r={1.5 + (i % 2)}
