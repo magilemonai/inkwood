@@ -226,10 +226,15 @@ export default function PlayingScreen() {
           onChange={handleType}
           onFocus={() => setInputFocused(true)}
           onBlur={() => setInputFocused(false)}
-          autoComplete="off"
+          autoComplete="one-time-code"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
+          data-lpignore="true"
+          data-1p-ignore="true"
+          inputMode="text"
+          name="inkwood-spell"
+          id="inkwood-spell"
         />
       </div>
     </div>
