@@ -190,13 +190,13 @@ function LibraryScene({ progress: p }: SceneProps) {
       <path d={WALL_RIGHT}
         fill={`hsl(${chamberH}, ${chamberS - 2}%, ${chamberL + 1}%)`} />
 
-      {/* Wall texture */}
-      {[50, 75, 100, 125, 150].map((y, i) => (
-        <g key={`wt${i}`} opacity={0.08 + p * 0.08}>
-          <path d={`M0 ${y + i} C15 ${y + 1}, 35 ${y - 1}, ${62 - i * 2} ${y + 2}`}
-            fill="none" stroke={`hsl(${chamberH}, 5%, ${chamberL + 5}%)`} strokeWidth="0.5" />
-          <path d={`M400 ${y + i} C385 ${y + 1}, 365 ${y - 1}, ${340 + i * 2} ${y + 2}`}
-            fill="none" stroke={`hsl(${chamberH}, 5%, ${chamberL + 5}%)`} strokeWidth="0.5" />
+      {/* Wall texture — stone lines */}
+      {[45, 60, 75, 90, 105, 120, 135, 150, 165].map((y, i) => (
+        <g key={`wt${i}`} opacity={0.1 + p * 0.1}>
+          <path d={`M0 ${y + i * 0.5} C12 ${y + 1}, 30 ${y - 1}, ${64 - i * 2} ${y + 2}`}
+            fill="none" stroke={`hsl(${chamberH}, 5%, ${chamberL + 5}%)`} strokeWidth="0.6" />
+          <path d={`M400 ${y + i * 0.5} C388 ${y + 1}, 370 ${y - 1}, ${336 + i * 2} ${y + 2}`}
+            fill="none" stroke={`hsl(${chamberH}, 5%, ${chamberL + 5}%)`} strokeWidth="0.6" />
         </g>
       ))}
 
@@ -284,23 +284,25 @@ function LibraryScene({ progress: p }: SceneProps) {
       <ellipse cx="200" cy="152" rx="24" ry="5"
         fill={`hsl(${chamberH + 2}, ${chamberS - 2}%, ${chamberL + 7}%)`} />
 
-      {/* ── HERO TOME — opens as pages spread ── */}
+      {/* ── HERO TOME — taller, narrower, opens as pages spread ── */}
       <g>
-        <rect x="197" y="140" width="6" height="14" rx="1"
+        {/* Spine */}
+        <rect x="198" y="130" width="4" height="24" rx="1"
           fill={`hsl(280, ${15 + p * 12}%, ${12 + p * 8}%)`} />
 
         {/* LEFT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 38;
+          const pageW = spread * 35;
+          const bookH = 24;
           return (
             <g>
-              <rect x={197 - pageW - 2} y="140" width={pageW + 2} height={15} rx="1"
+              <rect x={198 - pageW - 2} y="130" width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
-              <rect x={197 - pageW} y="141" width={pageW} height={13} rx="0.5"
+              <rect x={198 - pageW} y="131" width={pageW} height={bookH - 2} rx="0.5"
                 fill="#e8e0d0" opacity={spread * 0.7} />
-              {spread > 0.3 && [0, 3, 6, 9].map((dy) => (
-                <line key={`tl${dy}`} x1={197 - pageW + 3} y1={143 + dy}
-                  x2={197 - pageW + pageW * 0.7} y2={143 + dy}
+              {spread > 0.3 && [0, 4, 8, 12, 16].map((dy) => (
+                <line key={`tl${dy}`} x1={198 - pageW + 3} y1={134 + dy}
+                  x2={198 - pageW + pageW * 0.7} y2={134 + dy}
                   stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
             </g>
@@ -309,16 +311,17 @@ function LibraryScene({ progress: p }: SceneProps) {
 
         {/* RIGHT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 38;
+          const pageW = spread * 35;
+          const bookH = 24;
           return (
             <g>
-              <rect x="203" y="140" width={pageW + 2} height={15} rx="1"
+              <rect x="202" y="130" width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
-              <rect x="203" y="141" width={pageW} height={13} rx="0.5"
+              <rect x="202" y="131" width={pageW} height={bookH - 2} rx="0.5"
                 fill="#ede5d8" opacity={spread * 0.7} />
-              {spread > 0.3 && [0, 3, 6, 9].map((dy) => (
-                <line key={`tr${dy}`} x1="206" y1={143 + dy}
-                  x2={203 + pageW * 0.7} y2={143 + dy}
+              {spread > 0.3 && [0, 4, 8, 12, 16].map((dy) => (
+                <line key={`tr${dy}`} x1="205" y1={134 + dy}
+                  x2={202 + pageW * 0.7} y2={134 + dy}
                   stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
             </g>
@@ -327,8 +330,8 @@ function LibraryScene({ progress: p }: SceneProps) {
 
         {/* Book glow */}
         {spread > 0.2 && (
-          <ellipse cx="200" cy="148" rx={30 * spread} ry={10 * spread}
-            fill="#c088b0" opacity={spread * 0.06} filter="url(#pageGlow)" />
+          <ellipse cx="200" cy="142" rx={30 * spread} ry={14 * spread}
+            fill="#c088b0" opacity={spread * 0.07} filter="url(#pageGlow)" />
         )}
       </g>
 

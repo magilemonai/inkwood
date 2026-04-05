@@ -280,29 +280,42 @@ function GardenScene({ progress: p }: SceneProps) {
         )}
       </g>
 
-      {/* ── FLOWERS — petal style with soft muted colors ── */}
+      {/* ── FLOWERS — organic bezier petal shapes ── */}
       {flowers.map((f, i) => {
         const fp = sub(p, f.delay, 0.22);
         if (fp <= 0) return null;
         const baseY = 196 + (i % 2) * 2;
         const headY = baseY - f.stemH * fp;
         const ps = f.size * fp;
+        const petalCount = 4 + (i % 2); // 4 or 5 petals
         return (
           <g key={i} opacity={fp}>
+            {/* Stem — slight curve */}
             <path
-              d={`M${f.x} ${baseY} Q${f.x + 2} ${(baseY + headY) / 2} ${f.x} ${headY}`}
-              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.3} />
-            {[0, 72, 144, 216, 288].map((ang, j) => {
-              const px = f.x + Math.cos((ang * Math.PI) / 180) * ps * 0.9;
-              const py = headY + Math.sin((ang * Math.PI) / 180) * ps * 0.9;
+              d={`M${f.x} ${baseY} C${f.x + 1 + (i % 3)} ${(baseY + headY) / 2}, ${f.x - 1 + (i % 2)} ${headY + 8} ${f.x} ${headY}`}
+              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.2} strokeLinecap="round" />
+            {/* Petals — teardrop bezier shapes */}
+            {Array.from({ length: petalCount }).map((_, j) => {
+              const ang = (j * 360 / petalCount + i * 15) * Math.PI / 180;
+              const petalLen = ps * (0.8 + (j % 2) * 0.3); // vary petal sizes
+              const tipX = f.x + Math.cos(ang) * petalLen;
+              const tipY = headY + Math.sin(ang) * petalLen;
+              const cpOff = ps * 0.4;
+              const perpAng = ang + Math.PI / 2;
               return (
-                <ellipse key={j} cx={px} cy={py}
-                  rx={ps * 0.5} ry={ps * 0.32}
-                  fill={f.color} opacity={0.85}
-                  transform={`rotate(${ang + 90}, ${px}, ${py})`} />
+                <path key={j}
+                  d={`M${f.x} ${headY}
+                      C${f.x + Math.cos(perpAng) * cpOff} ${headY + Math.sin(perpAng) * cpOff},
+                       ${tipX + Math.cos(perpAng) * cpOff * 0.3} ${tipY + Math.sin(perpAng) * cpOff * 0.3},
+                       ${tipX} ${tipY}
+                      C${tipX - Math.cos(perpAng) * cpOff * 0.3} ${tipY - Math.sin(perpAng) * cpOff * 0.3},
+                       ${f.x - Math.cos(perpAng) * cpOff} ${headY - Math.sin(perpAng) * cpOff},
+                       ${f.x} ${headY}`}
+                  fill={f.color} opacity={0.75} />
               );
             })}
-            <circle cx={f.x} cy={headY} r={ps * 0.25} fill="#e8d060" />
+            {/* Center — small dot */}
+            <circle cx={f.x} cy={headY} r={ps * 0.2} fill="#e8d060" opacity={0.9} />
           </g>
         );
       })}

@@ -249,6 +249,20 @@ function CottageScene({ progress: p }: SceneProps) {
         </g>
       )}
 
+      {/* ── HANGING HERBS — dried bunches near the window ── */}
+      <g opacity={0.3 + p * 0.5}>
+        {/* Left bundle */}
+        <line x1="165" y1="52" x2="165" y2="62" stroke={`hsl(30, 15%, ${12 + p * 6}%)`} strokeWidth="0.5" />
+        <path d="M162 62 C163 58, 164 55, 165 52 C166 55, 167 58, 168 62 C166 63, 164 63, 162 62"
+          fill={`hsl(90, ${15 + p * 15}%, ${10 + p * 6}%)`} />
+        <path d="M160 64 C161 60, 163 56, 165 53 C164 56, 163 60, 162 64 C161 65, 160 65, 160 64"
+          fill={`hsl(35, ${20 + p * 12}%, ${12 + p * 5}%)`} />
+        {/* Right bundle */}
+        <line x1="185" y1="54" x2="185" y2="65" stroke={`hsl(30, 15%, ${12 + p * 6}%)`} strokeWidth="0.5" />
+        <path d="M182 65 C183 60, 184 57, 185 54 C186 57, 187 60, 188 65 C186 66, 184 66, 182 65"
+          fill={`hsl(80, ${12 + p * 12}%, ${9 + p * 5}%)`} />
+      </g>
+
       {/* ── FLOOR WARMTH — candlelight reflections on floorboards ── */}
       {c1 > 0.3 && (
         <ellipse cx="210" cy="198" rx="35" ry="8" fill="#e89a30" opacity={c1 * 0.04} />

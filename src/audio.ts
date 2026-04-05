@@ -74,31 +74,31 @@ const SCENE_OFFSETS: { filterShift: number; detuneShift: number }[] = [
 ];
 
 const ACT_AMBIENTS: ActAmbient[] = [
-  // Act I: Awakening — warm, gentle
+  // Act I: Awakening — warm, gentle, C major
   {
     root: 130.81,
     ratios: [1, 1.25, 1.5, 2],
     types: ["sine", "sine", "triangle", "sine"],
-    filterFreq: 300,
+    filterFreq: 280,
     lfoRate: 0.06,
     volume: 0.012,
   },
-  // Act II: Discovery — mysterious, deeper
+  // Act II: Discovery — darker, minor, lower
   {
-    root: 110,
-    ratios: [1, 1.2, 1.5, 2],
-    types: ["sine", "triangle", "sine", "sine"],
-    filterFreq: 260,
-    lfoRate: 0.05,
-    volume: 0.012,
+    root: 82.41,  // E2 — much lower than Act I
+    ratios: [1, 1.2, 1.5, 2, 2.4],
+    types: ["sine", "triangle", "sine", "sine", "triangle"],
+    filterFreq: 200,  // darker filter
+    lfoRate: 0.04,    // slower breathing
+    volume: 0.013,
   },
-  // Act III: The Nexus — mystical
+  // Act III: The Nexus — mystical shimmer, perfect fifth
   {
-    root: 146.83,
-    ratios: [1, 1.26, 1.5, 2],
-    types: ["sine", "sine", "sine", "triangle"],
-    filterFreq: 340,
-    lfoRate: 0.07,
+    root: 146.83,  // D3
+    ratios: [1, 1.335, 1.5, 2, 3],  // includes a shimmery 9th
+    types: ["sine", "sine", "sine", "triangle", "sine"],
+    filterFreq: 400,  // brighter
+    lfoRate: 0.08,    // faster shimmer
     volume: 0.011,
   },
   // Act IV: Restoration — grand, full

@@ -154,7 +154,7 @@ function WorldScene({ progress: p }: SceneProps) {
 
         {/* Dawn radiance behind the Great Tree */}
         <radialGradient id="dawnGlow" cx="50%" cy="32%" r="40%">
-          <stop offset="0%" stopColor="#ffe8a0" stopOpacity={dawnP * 0.35} />
+          <stop offset="0%" stopColor="#ffe8a0" stopOpacity={dawnP * 0.5} />
           <stop offset="40%" stopColor="#d8a050" stopOpacity={dawnP * 0.15} />
           <stop offset="100%" stopColor="#d8a050" stopOpacity={0} />
         </radialGradient>
@@ -458,7 +458,7 @@ function WorldScene({ progress: p }: SceneProps) {
         const fp = sub(p, 0.9, 0.1);
         return (
           <g>
-            <rect width="400" height="250" fill="#d8c890" opacity={fp * 0.04} />
+            <rect width="400" height="250" fill="#d8c890" opacity={fp * 0.08} />
             {/* Horizon glow */}
             <ellipse cx="200" cy="90" rx={180 * fp} ry={40 * fp}
               fill="#ffe8a0" opacity={fp * 0.06} />

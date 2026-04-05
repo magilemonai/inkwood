@@ -28,20 +28,20 @@ function sub(p: number, start: number, duration: number): number {
  *  Center at x=200, base at y=155, crown at y=55.
  *  Wide at base (~50px), narrowing at crown (~16px). */
 const TRUNK = `
-  M175 160
-  C174 154, 172 148, 173 142
-  C174 136, 170 132, 172 126
-  C173 120, 170 116, 172 110
-  C174 104, 171 98, 174 92
-  C176 86, 178 80, 180 74
-  C182 68, 186 62, 190 58
-  L210 58
-  C214 62, 218 68, 220 74
-  C222 80, 224 86, 226 92
-  C229 98, 226 104, 228 110
-  C230 116, 227 120, 228 126
-  C230 132, 226 136, 227 142
-  C228 148, 226 154, 225 160
+  M170 160
+  C168 154, 166 148, 167 142
+  C168 136, 164 132, 166 126
+  C167 120, 164 116, 166 110
+  C168 104, 165 98, 168 92
+  C170 86, 173 80, 176 74
+  C179 68, 183 62, 188 58
+  L212 58
+  C217 62, 221 68, 224 74
+  C227 80, 230 86, 232 92
+  C235 98, 232 104, 234 110
+  C236 116, 233 120, 234 126
+  C236 132, 232 136, 233 142
+  C234 148, 232 154, 230 160
   Z`;
 
 /** Bark detail lines — carved into the trunk surface */
@@ -262,9 +262,22 @@ function TreeScene({ progress: p }: SceneProps) {
 
       {/* ── CANOPY — phase 3: blooms OVER branches (covering layer) ── */}
       {heartPhase > 0 && (
-        <path d={CANOPY}
-          fill={`hsl(${120 + p * 15}, ${20 + heartPhase * 25}%, ${10 + heartPhase * 14}%)`}
-          opacity={heartPhase * 0.65} />
+        <>
+          <path d={CANOPY}
+            fill={`hsl(${120 + p * 15}, ${20 + heartPhase * 30}%, ${10 + heartPhase * 16}%)`}
+            opacity={heartPhase * 0.88} />
+          {/* Leaf texture — tiny dots across canopy for organic feel */}
+          {heartPhase > 0.3 && Array.from({ length: 25 }).map((_, i) => {
+            const lx = 25 + (i * 37 + 11) % 360;
+            const ly = 6 + (i * 23 + 5) % 55;
+            return (
+              <circle key={`lf${i}`} cx={lx} cy={ly}
+                r={0.6 + (i % 3) * 0.3}
+                fill={`hsl(${125 + (i % 4) * 5}, ${30 + heartPhase * 20}%, ${18 + heartPhase * 12}%)`}
+                opacity={sub(heartPhase, 0.3 + (i % 5) * 0.1, 0.2) * 0.4} />
+            );
+          })}
+        </>
       )}
 
       {/* ── HEART GLOW — radiance from the center trunk in phase 3 ── */}
@@ -272,9 +285,12 @@ function TreeScene({ progress: p }: SceneProps) {
         <>
           <rect width="400" height="250" fill="url(#heartRadiance)" />
           {/* Core glow point — the heart itself */}
-          <ellipse cx="200" cy="108" rx={12 + heartPhase * 8} ry={15 + heartPhase * 10}
-            fill="#b8c8a8" opacity={heartPhase * 0.15}
+          <ellipse cx="200" cy="108" rx={14 + heartPhase * 12} ry={18 + heartPhase * 14}
+            fill="#b8c8a8" opacity={heartPhase * 0.22}
             filter="url(#heartGlow)" />
+          {/* Bright inner core */}
+          <ellipse cx="200" cy="108" rx={6 + heartPhase * 4} ry={8 + heartPhase * 5}
+            fill="#d8e8c8" opacity={heartPhase * 0.15} />
         </>
       )}
 
