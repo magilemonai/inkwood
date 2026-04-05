@@ -87,10 +87,13 @@ function StarScene({ progress: p }: SceneProps) {
   // ── Constellations ──
   const constP = sub(p, 0.65, 0.25);
 
-  // ── Shooting stars ──
+  // ── Shooting stars — more in the final stretch ──
   const shoot1 = sub(p, 0.78, 0.06);
-  const shoot2 = sub(p, 0.88, 0.06);
-  const shoot3 = sub(p, 0.94, 0.05);
+  const shoot2 = sub(p, 0.85, 0.06);
+  const shoot3 = sub(p, 0.90, 0.05);
+  const shoot4 = sub(p, 0.93, 0.04);
+  const shoot5 = sub(p, 0.96, 0.04);
+  const shoot6 = sub(p, 0.98, 0.03);
 
   // ── Horizon haze ──
   const hazeP = sub(p, 0.1, 0.3);
@@ -205,10 +208,10 @@ function StarScene({ progress: p }: SceneProps) {
             filter="url(#moonGlow)"
           />
 
-          {/* Dark overlap circle to create crescent — offset to upper-left */}
+          {/* Dark overlap circle to create crescent — matches sky gradient color at this height */}
           <circle
             cx="310" cy={moonY - 4} r="15"
-            fill="#060e24"
+            fill={`hsl(228, 50%, ${4 + (moonY / 250) * 8}%)`}
           />
 
           {/* Subtle surface detail on lit crescent */}
@@ -292,6 +295,26 @@ function StarScene({ progress: p }: SceneProps) {
         />
       )}
 
+      {/* ── Extra shooting stars in final 10% — the sky comes alive ── */}
+      {shoot4 > 0 && shoot4 < 1 && (
+        <line x1={50 + shoot4 * 70} y1={20 + shoot4 * 30}
+          x2={50 + shoot4 * 70 - 28} y2={20 + shoot4 * 30 - 9}
+          stroke="white" strokeWidth={0.8} strokeLinecap="round"
+          opacity={(1 - shoot4) * 0.7} filter="url(#shootGlow)" />
+      )}
+      {shoot5 > 0 && shoot5 < 1 && (
+        <line x1={320 + shoot5 * 55} y1={40 + shoot5 * 22}
+          x2={320 + shoot5 * 55 - 32} y2={40 + shoot5 * 22 - 10}
+          stroke="white" strokeWidth={1.0} strokeLinecap="round"
+          opacity={(1 - shoot5) * 0.8} filter="url(#shootGlow)" />
+      )}
+      {shoot6 > 0 && shoot6 < 1 && (
+        <line x1={150 + shoot6 * 50} y1={55 + shoot6 * 20}
+          x2={150 + shoot6 * 50 - 22} y2={55 + shoot6 * 20 - 7}
+          stroke="white" strokeWidth={0.7} strokeLinecap="round"
+          opacity={(1 - shoot6) * 0.6} filter="url(#shootGlow)" />
+      )}
+
       </g>
 
       <g className="midLayer">
@@ -329,16 +352,16 @@ function StarScene({ progress: p }: SceneProps) {
 
       {/* Tree silhouettes — varying heights for organic skyline */}
       {TREES.map((t, i) => {
-        const tp = sub(p, 0.02 + i * 0.012, 0.15);
+        const tp = sub(p, 0.02 + i * 0.015, 0.25);
         return (
           <TreeSilhouette
             key={`tree-${i}`}
             x={t.x}
             y={222}
-            height={t.h * (0.3 + tp * 0.7)}
+            height={t.h * (0.2 + tp * 0.8)}
             spread={t.s}
             color={i % 3 === 0 ? "#050d16" : i % 3 === 1 ? "#060e18" : "#040b14"}
-            opacity={0.2 + tp * 0.8}
+            opacity={tp * 0.9}
           />
         );
       })}
@@ -346,13 +369,31 @@ function StarScene({ progress: p }: SceneProps) {
       {/* Foreground ground — darkest layer */}
       <Hill y={238} height={8} color="#020608" seed={1.2} opacity={0.5 + treeP * 0.5} />
 
-      {/* ── Subtle moonlight on treeline ── */}
-      {moonP > 0.3 && (
-        <ellipse
-          cx="320" cy="210" rx="60" ry="20"
-          fill="#9090f8"
-          opacity={moonP * 0.03}
-        />
+      {/* ── Moonlight on tree tops — builds from 50% to 100% ── */}
+      {p > 0.5 && (
+        <g opacity={sub(p, 0.5, 0.5)}>
+          {/* Broad moonlight wash on right-side trees (closest to moon) */}
+          <ellipse cx="320" cy="200" rx="80" ry="25"
+            fill="#9090f8" opacity={0.04} />
+          {/* Individual tree-top highlights — brighter near the moon */}
+          {TREES.map((t, i) => {
+            const tp = sub(p, 0.02 + i * 0.012, 0.15);
+            if (tp < 0.5) return null;
+            const h = t.h * (0.3 + tp * 0.7);
+            // Trees closer to moon (higher x) get more moonlight
+            const moonProximity = 1 - Math.abs(t.x - 320) / 400;
+            const glowStrength = moonProximity * sub(p, 0.5, 0.5) * 0.12;
+            if (glowStrength < 0.01) return null;
+            return (
+              <ellipse key={`glow-${i}`}
+                cx={t.x} cy={222 - h + 8}
+                rx={t.s * 0.6} ry={6}
+                fill="#b0b0f8"
+                opacity={glowStrength}
+              />
+            );
+          })}
+        </g>
       )}
 
       {/* ── Bottom ground — absolute dark ── */}
