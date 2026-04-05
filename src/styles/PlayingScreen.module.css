@@ -170,13 +170,20 @@
   padding: 0 0.2rem;
 }
 
-/* ── Hidden input ── */
+/* ── Hidden input — off-screen but focusable for mobile keyboard ── */
 .hiddenInput {
-  position: absolute;
+  position: fixed;
+  top: -100px;
+  left: 0;
   opacity: 0;
-  pointer-events: none;
   width: 1px;
   height: 1px;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  font-size: 16px; /* prevents iOS auto-zoom */
+  caret-color: transparent;
 }
 
 /* ══════ MOBILE / PORTRAIT ══════ */
@@ -259,8 +266,12 @@
 
   .sceneContainer {
     position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
+    /* Lock to landscape aspect ratio so SVG slice doesn't over-crop */
+    width: 100%;
+    aspect-ratio: 8 / 5;
+    flex: 0 0 auto;
+    max-height: 50vh;
+    max-height: 50dvh;
   }
 
   .header {
@@ -274,7 +285,6 @@
   .typingArea {
     position: relative;
     flex: 0 0 auto;
-    /* Solid background on portrait — no transparent gradient gap */
     background: rgba(0, 0, 0, 0.92);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
