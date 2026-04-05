@@ -19,6 +19,10 @@ let currentAct = -1;
 let currentScene = -1;
 let muted = false;
 
+// Nature texture state
+let textureSource: AudioBufferSourceNode | null = null;
+let textureGain: GainNode | null = null;
+
 // Intro drone state
 let introNodes: OscillatorNode[] = [];
 let introGain: GainNode | null = null;
@@ -74,31 +78,31 @@ const SCENE_OFFSETS: { filterShift: number; detuneShift: number }[] = [
 ];
 
 const ACT_AMBIENTS: ActAmbient[] = [
-  // Act I: Awakening — warm, gentle
+  // Act I: Awakening — warm, gentle, C major
   {
     root: 130.81,
     ratios: [1, 1.25, 1.5, 2],
     types: ["sine", "sine", "triangle", "sine"],
-    filterFreq: 300,
+    filterFreq: 280,
     lfoRate: 0.06,
     volume: 0.012,
   },
-  // Act II: Discovery — mysterious, deeper
+  // Act II: Discovery — darker, minor, lower
   {
-    root: 110,
-    ratios: [1, 1.2, 1.5, 2],
-    types: ["sine", "triangle", "sine", "sine"],
-    filterFreq: 260,
-    lfoRate: 0.05,
-    volume: 0.012,
+    root: 82.41,  // E2 — much lower than Act I
+    ratios: [1, 1.2, 1.5, 2, 2.4],
+    types: ["sine", "triangle", "sine", "sine", "triangle"],
+    filterFreq: 200,  // darker filter
+    lfoRate: 0.04,    // slower breathing
+    volume: 0.013,
   },
-  // Act III: The Nexus — mystical
+  // Act III: The Nexus — mystical shimmer, perfect fifth
   {
-    root: 146.83,
-    ratios: [1, 1.26, 1.5, 2],
-    types: ["sine", "sine", "sine", "triangle"],
-    filterFreq: 340,
-    lfoRate: 0.07,
+    root: 146.83,  // D3
+    ratios: [1, 1.335, 1.5, 2, 3],  // includes a shimmery 9th
+    types: ["sine", "sine", "sine", "triangle", "sine"],
+    filterFreq: 400,  // brighter
+    lfoRate: 0.08,    // faster shimmer
     volume: 0.011,
   },
   // Act IV: Restoration — grand, full
@@ -173,6 +177,7 @@ export function startAmbient(actIndex: number, sceneIndex: number = 0) {
   if (actIndex === currentAct && sceneIndex !== currentScene) {
     currentScene = sceneIndex;
     shiftForScene(sceneIndex);
+    startTexture(sceneIndex);
     return;
   }
 
@@ -219,6 +224,9 @@ export function startAmbient(actIndex: number, sceneIndex: number = 0) {
   // Fade in over 3 seconds
   ambientGain.gain.setValueAtTime(0, ac.currentTime);
   ambientGain.gain.linearRampToValueAtTime(def.volume, ac.currentTime + 3);
+
+  // Start nature texture layer
+  startTexture(sceneIndex);
 }
 
 /** Shift filter and detune for scene variation within same act */
@@ -244,6 +252,7 @@ function shiftForScene(sceneIndex: number) {
 }
 
 export function stopAmbient() {
+  stopTexture();
   if (!ctx || ambientNodes.length === 0) return;
   const ac = ctx;
 
@@ -273,6 +282,86 @@ export function stopAmbient() {
   ambientFilter = null;
   currentAct = -1;
   currentScene = -1;
+}
+
+// ── Nature texture layer ─────────────────────────────────
+// Synthesized ambient textures: noise through bandpass = wind,
+// filtered noise = water, etc. Layered on top of tonal pad.
+
+// Per-scene texture configs
+const SCENE_TEXTURES: { filterFreq: number; filterQ: number; volume: number; type: "wind" | "water" | "deep" | "none" }[] = [
+  { filterFreq: 800,  filterQ: 0.3, volume: 0.004, type: "wind" },   // Garden — soft breeze
+  { filterFreq: 400,  filterQ: 0.5, volume: 0.003, type: "deep" },   // Cottage — low crackle
+  { filterFreq: 1200, filterQ: 0.2, volume: 0.002, type: "wind" },   // Stars — high thin wind
+  { filterFreq: 600,  filterQ: 0.8, volume: 0.005, type: "water" },  // Well — water drip
+  { filterFreq: 500,  filterQ: 0.3, volume: 0.004, type: "wind" },   // Bridge — wind gusts
+  { filterFreq: 300,  filterQ: 0.6, volume: 0.003, type: "deep" },   // Library — deep reverb
+  { filterFreq: 700,  filterQ: 0.3, volume: 0.004, type: "wind" },   // Stones — moor wind
+  { filterFreq: 2000, filterQ: 0.4, volume: 0.003, type: "wind" },   // Sanctum — night air
+  { filterFreq: 250,  filterQ: 0.5, volume: 0.004, type: "deep" },   // Tree — earth hum
+  { filterFreq: 600,  filterQ: 0.3, volume: 0.005, type: "wind" },   // World — open wind
+];
+
+function createNoiseBuffer(ac: AudioContext, seconds: number): AudioBuffer {
+  const sampleRate = ac.sampleRate;
+  const length = sampleRate * seconds;
+  const buffer = ac.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  return buffer;
+}
+
+function startTexture(sceneIndex: number) {
+  stopTexture();
+  const ac = getCtx();
+  const config = SCENE_TEXTURES[sceneIndex] ?? SCENE_TEXTURES[0];
+  if (config.type === "none") return;
+
+  const noiseBuffer = createNoiseBuffer(ac, 4);
+
+  textureSource = ac.createBufferSource();
+  textureSource.buffer = noiseBuffer;
+  textureSource.loop = true;
+
+  const filter = ac.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = config.filterFreq;
+  filter.Q.value = config.filterQ;
+
+  textureGain = ac.createGain();
+  textureGain.gain.value = 0;
+
+  textureSource.connect(filter);
+  filter.connect(textureGain);
+  textureGain.connect(masterGain!);
+
+  textureSource.start();
+
+  // Fade in over 4s
+  textureGain.gain.setValueAtTime(0, ac.currentTime);
+  textureGain.gain.linearRampToValueAtTime(config.volume, ac.currentTime + 4);
+}
+
+function stopTexture() {
+  if (!ctx) return;
+  const ac = ctx;
+
+  if (textureGain) {
+    textureGain.gain.setValueAtTime(textureGain.gain.value, ac.currentTime);
+    textureGain.gain.linearRampToValueAtTime(0, ac.currentTime + 2);
+  }
+
+  const oldSource = textureSource;
+  const oldGain = textureGain;
+  setTimeout(() => {
+    try { oldSource?.stop(); oldSource?.disconnect(); } catch { /* */ }
+    try { oldGain?.disconnect(); } catch { /* */ }
+  }, 2500);
+
+  textureSource = null;
+  textureGain = null;
 }
 
 // ── Phrase completion — subtle filter sweep ──────────────

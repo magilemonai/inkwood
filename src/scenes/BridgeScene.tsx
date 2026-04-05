@@ -1,10 +1,9 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── THE FORGOTTEN BRIDGE ──────────────────────────────────
 // The bridge is GONE at p=0. Two massive cliff faces with broken
@@ -164,7 +163,19 @@ const VEGETATION = [
   { x: 370, y: 59, h: 5, delay: 0.63 },
 ];
 
+const MIST_CONFIG = {
+  count: 12,
+  bounds: { x: 140, y: 80, width: 120, height: 80 },
+  colors: ["#8898a8", "#90a0b0", "#7888a0"],
+  sizeRange: [0.4, 1.2] as [number, number],
+  speedRange: [1, 4] as [number, number],
+  driftX: 0,
+  driftY: -5,
+  lifeRange: [4, 9] as [number, number],
+};
+
 function BridgeScene({ progress: p }: SceneProps) {
+  const mistParticles = useParticles(MIST_CONFIG, p < 0.7);
   // Sky — dark teal, slightly brighter with progress
   const skyL = 6 + p * 12;
   const skySat = 12 + p * 10;
@@ -374,19 +385,8 @@ function BridgeScene({ progress: p }: SceneProps) {
         );
       })()}
 
-      {/* ── RISING MIST WISPS from chasm — atmospheric ── */}
-      {Array.from({ length: 6 }).map((_, i) => {
-        const wx = 150 + (i * 23) % 100;
-        const baseY = 140 + (i * 17) % 40;
-        const drift = Math.sin(p * Math.PI * 2 + i * 1.5) * 6;
-        const rise = p * 20 * ((i % 3) / 3);
-        return (
-          <circle key={`wp${i}`}
-            cx={wx + drift} cy={baseY - rise} r={0.5 + (i % 3) * 0.3}
-            fill="#8898a8"
-            opacity={Math.max(0, 0.08 - p * 0.05)} />
-        );
-      })}
+      {/* ── RISING MIST — physics particles from chasm, fade as bridge builds ── */}
+      {p < 0.7 && <ParticleField particles={mistParticles} opacity={Math.max(0, 0.15 - p * 0.12)} />}
     </svg>
   );
 }

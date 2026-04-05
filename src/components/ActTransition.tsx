@@ -1,6 +1,8 @@
 import { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
+import { startAmbient, stopAmbient } from "../audio";
+import { getActIndex } from "../levels";
 import s from "../styles/ActTransition.module.css";
 
 /* ── Transition scenes ── */
@@ -356,6 +358,15 @@ export default function ActTransition() {
   const advance = useCallback(() => {
     advanceLevel();
   }, [advanceLevel]);
+
+  // Play the NEXT act's ambient during the transition
+  // so the tonal shift is audible as a bridge between acts
+  useEffect(() => {
+    const nextLvl = lvl + 1;
+    const nextAct = getActIndex(nextLvl);
+    startAmbient(nextAct, nextLvl);
+    return () => { stopAmbient(); };
+  }, [lvl]);
 
   // Auto-advance after 7 seconds
   useEffect(() => {

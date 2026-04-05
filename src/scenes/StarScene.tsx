@@ -1,12 +1,9 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter } from "../svg/filters";
 import { Star } from "../svg/primitives";
 
-/** Helper: clamp progress into a sub-range for staggered entry */
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ── Star data: 28 stars with staggered appearance ──
 const STARS: { x: number; y: number; r: number; glow: number; delay: number }[] = [

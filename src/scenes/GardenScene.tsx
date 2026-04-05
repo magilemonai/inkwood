@@ -1,10 +1,9 @@
-import { memo } from "react";
+import { sub } from "./util";
+import { memo, useMemo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
 
@@ -48,28 +47,28 @@ const FORKS = [
   `M164 56 C172 60, 182 60, 192 62 L192 65 C182 64, 172 64, 166 60 Z`,
 ];
 const CANOPY = `
-  M32 88
-  C28 80, 32 72, 40 66
-  C46 62, 42 55, 50 50
-  C55 46, 62 44, 68 40
-  C74 37, 70 32, 78 28
-  C84 25, 80 20, 90 18
-  C98 16, 104 22, 112 19
-  C120 16, 126 20, 134 17
-  C142 15, 148 20, 156 22
-  C162 24, 158 18, 168 22
-  C176 25, 182 30, 188 34
-  C194 38, 198 44, 204 48
-  C210 53, 216 60, 218 68
-  C220 74, 222 82, 218 88
-  C215 93, 208 90, 200 94
-  C192 98, 186 92, 176 96
-  C168 100, 158 94, 148 98
-  C138 102, 128 95, 118 100
-  C108 104, 98 97, 88 100
-  C80 102, 70 95, 60 98
-  C50 100, 42 95, 36 92
-  C32 90, 30 88, 32 88
+  M30 90
+  C26 82, 30 74, 38 68
+  C44 62, 38 54, 46 48
+  C52 43, 48 36, 56 32
+  C62 28, 58 22, 66 20
+  C72 18, 78 24, 86 18
+  C92 13, 98 20, 106 16
+  C112 12, 118 22, 126 18
+  C134 14, 140 24, 150 20
+  C158 16, 164 26, 172 22
+  C180 18, 186 28, 194 32
+  C200 36, 196 42, 206 46
+  C214 50, 210 58, 218 64
+  C224 70, 226 78, 222 86
+  C220 92, 214 86, 206 92
+  C198 98, 190 88, 180 94
+  C172 100, 162 90, 152 96
+  C144 102, 136 92, 126 98
+  C116 104, 108 92, 98 98
+  C88 104, 78 94, 68 98
+  C58 102, 50 92, 42 96
+  C34 98, 28 92, 30 90
   Z`;
 
 /** Roots — spreading from trunk base */
@@ -131,7 +130,20 @@ const STONES = [
 
 // ─── SCENE COMPONENT ───────────────────────────────────────
 
+const POLLEN_CONFIG = {
+  count: 18,
+  bounds: { x: 30, y: 40, width: 350, height: 140 },
+  colors: ["#f0e870", "#e8d860", "#f0f088", "#d8c850"],
+  sizeRange: [0.4, 1.0] as [number, number],
+  speedRange: [2, 6] as [number, number],
+  driftX: 1.5,
+  driftY: -3,
+  lifeRange: [4, 8] as [number, number],
+};
+
 function GardenScene({ progress: p }: SceneProps) {
+  const pollenParticles = useParticles(POLLEN_CONFIG, p > 0.55);
+
   const skyH = 180 + p * 30;
   const skyS = 8 + p * 30;
   const skyL = 12 + p * 22;
@@ -280,45 +292,48 @@ function GardenScene({ progress: p }: SceneProps) {
         )}
       </g>
 
-      {/* ── FLOWERS — petal style with soft muted colors ── */}
+      {/* ── FLOWERS — organic bezier petal shapes ── */}
       {flowers.map((f, i) => {
         const fp = sub(p, f.delay, 0.22);
         if (fp <= 0) return null;
         const baseY = 196 + (i % 2) * 2;
         const headY = baseY - f.stemH * fp;
         const ps = f.size * fp;
+        const petalCount = 4 + (i % 2); // 4 or 5 petals
         return (
           <g key={i} opacity={fp}>
+            {/* Stem — slight curve */}
             <path
-              d={`M${f.x} ${baseY} Q${f.x + 2} ${(baseY + headY) / 2} ${f.x} ${headY}`}
-              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.3} />
-            {[0, 72, 144, 216, 288].map((ang, j) => {
-              const px = f.x + Math.cos((ang * Math.PI) / 180) * ps * 0.9;
-              const py = headY + Math.sin((ang * Math.PI) / 180) * ps * 0.9;
+              d={`M${f.x} ${baseY} C${f.x + 1 + (i % 3)} ${(baseY + headY) / 2}, ${f.x - 1 + (i % 2)} ${headY + 8} ${f.x} ${headY}`}
+              fill="none" stroke={`hsl(120, ${20 + p * 15}%, ${18 + p * 10}%)`} strokeWidth={1.2} strokeLinecap="round" />
+            {/* Petals — teardrop bezier shapes */}
+            {Array.from({ length: petalCount }).map((_, j) => {
+              const ang = (j * 360 / petalCount + i * 15) * Math.PI / 180;
+              const petalLen = ps * (0.8 + (j % 2) * 0.3); // vary petal sizes
+              const tipX = f.x + Math.cos(ang) * petalLen;
+              const tipY = headY + Math.sin(ang) * petalLen;
+              const cpOff = ps * 0.4;
+              const perpAng = ang + Math.PI / 2;
               return (
-                <ellipse key={j} cx={px} cy={py}
-                  rx={ps * 0.5} ry={ps * 0.32}
-                  fill={f.color} opacity={0.85}
-                  transform={`rotate(${ang + 90}, ${px}, ${py})`} />
+                <path key={j}
+                  d={`M${f.x} ${headY}
+                      C${f.x + Math.cos(perpAng) * cpOff} ${headY + Math.sin(perpAng) * cpOff},
+                       ${tipX + Math.cos(perpAng) * cpOff * 0.3} ${tipY + Math.sin(perpAng) * cpOff * 0.3},
+                       ${tipX} ${tipY}
+                      C${tipX - Math.cos(perpAng) * cpOff * 0.3} ${tipY - Math.sin(perpAng) * cpOff * 0.3},
+                       ${f.x - Math.cos(perpAng) * cpOff} ${headY - Math.sin(perpAng) * cpOff},
+                       ${f.x} ${headY}`}
+                  fill={f.color} opacity={0.75} />
               );
             })}
-            <circle cx={f.x} cy={headY} r={ps * 0.25} fill="#e8d060" />
+            {/* Center — small dot */}
+            <circle cx={f.x} cy={headY} r={ps * 0.2} fill="#e8d060" opacity={0.9} />
           </g>
         );
       })}
 
-      {/* ── POLLEN MOTES — subtle ── */}
-      {p > 0.6 && Array.from({ length: 16 }).map((_, i) => {
-        const mx = 40 + (i * 53 + 17) % 340;
-        const my = 50 + (i * 37 + 11) % 130;
-        const mp = sub(p, 0.6 + i * 0.02, 0.15);
-        const drift = Math.sin(p * Math.PI * 3 + i * 1.2) * 4;
-        return mp > 0 ? (
-          <circle key={i} cx={mx + drift} cy={my - mp * 8}
-            r={0.7 + (i % 3) * 0.2}
-            fill="#f0e870" opacity={mp * 0.2} />
-        ) : null;
-      })}
+      {/* ── POLLEN — physics-based drifting particles ── */}
+      {p > 0.55 && <ParticleField particles={pollenParticles} opacity={0.25} />}
     </svg>
   );
 }

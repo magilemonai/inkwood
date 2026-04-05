@@ -1,10 +1,8 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── CROSS-SECTION VIEW ────────────────────────────────────
 // Top half: sky + well structure sitting on ground
@@ -147,6 +145,19 @@ function WellScene({ progress: p }: SceneProps) {
             {/* Right channel surface */}
             <line x1="260" y1={Math.max(riverLevel, 185) + 1} x2="400" y2={Math.max(riverLevel, 185) + 1}
               stroke="white" strokeWidth="0.5" opacity={p * 0.04} />
+            {/* Flow current lines — show water direction */}
+            {p > 0.3 && [0, 1, 2].map((j) => {
+              const flowY = Math.max(riverLevel, 185) + 4 + j * 5;
+              const flowOp = sub(p, 0.3 + j * 0.1, 0.2) * 0.08;
+              return (
+                <g key={`flow${j}`} opacity={flowOp}>
+                  <path d={`M200 ${flowY} C180 ${flowY - 1}, 140 ${flowY}, 100 ${flowY + 1} C70 ${flowY + 2}, 40 ${flowY}, 0 ${flowY + 1}`}
+                    fill="none" stroke="#80d8d8" strokeWidth="0.4" />
+                  <path d={`M200 ${flowY} C220 ${flowY - 1}, 260 ${flowY}, 300 ${flowY + 1} C330 ${flowY + 2}, 360 ${flowY}, 400 ${flowY + 1}`}
+                    fill="none" stroke="#80d8d8" strokeWidth="0.4" />
+                </g>
+              );
+            })}
           </>
         );
       })()}

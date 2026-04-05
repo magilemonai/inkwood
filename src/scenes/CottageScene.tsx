@@ -1,10 +1,8 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── HAND-CRAFTED PATHS ────────────────────────────────────
 
@@ -248,6 +246,35 @@ function CottageScene({ progress: p }: SceneProps) {
           </g>
         </g>
       )}
+
+      {/* ── HANGING HERBS — dried bunches near the window ── */}
+      <g opacity={0.3 + p * 0.5}>
+        {/* Left bundle */}
+        <line x1="165" y1="52" x2="165" y2="62" stroke={`hsl(30, 15%, ${12 + p * 6}%)`} strokeWidth="0.5" />
+        <path d="M162 62 C163 58, 164 55, 165 52 C166 55, 167 58, 168 62 C166 63, 164 63, 162 62"
+          fill={`hsl(90, ${15 + p * 15}%, ${10 + p * 6}%)`} />
+        <path d="M160 64 C161 60, 163 56, 165 53 C164 56, 163 60, 162 64 C161 65, 160 65, 160 64"
+          fill={`hsl(35, ${20 + p * 12}%, ${12 + p * 5}%)`} />
+        {/* Right bundle */}
+        <line x1="185" y1="54" x2="185" y2="65" stroke={`hsl(30, 15%, ${12 + p * 6}%)`} strokeWidth="0.5" />
+        <path d="M182 65 C183 60, 184 57, 185 54 C186 57, 187 60, 188 65 C186 66, 184 66, 182 65"
+          fill={`hsl(80, ${12 + p * 12}%, ${9 + p * 5}%)`} />
+      </g>
+
+      {/* ── SMALL RUG — woven oval near the window ── */}
+      <ellipse cx="100" cy="188" rx="22" ry="6"
+        fill={`hsl(15, ${10 + p * 15}%, ${8 + p * 5}%)`}
+        opacity={0.35 + p * 0.3} />
+      <ellipse cx="100" cy="188" rx="18" ry="4.5"
+        fill={`hsl(25, ${12 + p * 12}%, ${10 + p * 6}%)`}
+        opacity={0.25 + p * 0.2} />
+      {/* Rug pattern — simple cross-weave lines */}
+      <line x1="85" y1="188" x2="115" y2="188"
+        stroke={`hsl(35, ${8 + p * 10}%, ${14 + p * 5}%)`}
+        strokeWidth="0.4" opacity={0.2 + p * 0.15} />
+      <line x1="100" y1="183" x2="100" y2="193"
+        stroke={`hsl(35, ${8 + p * 10}%, ${14 + p * 5}%)`}
+        strokeWidth="0.4" opacity={0.2 + p * 0.15} />
 
       {/* ── FLOOR WARMTH — candlelight reflections on floorboards ── */}
       {c1 > 0.3 && (

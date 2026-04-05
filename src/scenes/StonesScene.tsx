@@ -1,10 +1,8 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── THE SPIRIT STONES ────────────────────────────────────
 // 7 standing stones in a perspective arc on a misty moorland.
@@ -131,6 +129,20 @@ function StonesScene({ progress: p }: SceneProps) {
       {/* Ground base fill */}
       <rect x="0" y="200" width="400" height="50"
         fill={`hsl(${groundH}, ${groundS}%, ${groundL - 1}%)`} />
+
+      {/* Heather/moss patches — color variation on the ground */}
+      {[
+        { x: 50, y: 198, rx: 25, ry: 4, h: 300, s: 15 },
+        { x: 160, y: 195, rx: 30, ry: 5, h: 280, s: 12 },
+        { x: 280, y: 196, rx: 22, ry: 4, h: 320, s: 14 },
+        { x: 370, y: 192, rx: 18, ry: 3, h: 290, s: 10 },
+        { x: 110, y: 202, rx: 20, ry: 3, h: 310, s: 12 },
+        { x: 330, y: 200, rx: 24, ry: 4, h: 270, s: 15 },
+      ].map((patch, i) => (
+        <ellipse key={`moss${i}`} cx={patch.x} cy={patch.y} rx={patch.rx} ry={patch.ry}
+          fill={`hsl(${patch.h}, ${patch.s + p * 8}%, ${groundL + 1}%)`}
+          opacity={0.15 + p * 0.15} />
+      ))}
 
       {/* ── HEATHER TUFTS — hand-drawn grass ── */}
       {[

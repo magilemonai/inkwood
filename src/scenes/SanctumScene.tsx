@@ -1,11 +1,10 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
+import { useParticles, ParticleField } from "../hooks/useParticles";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 /** Hand-drawn tree silhouette for dense forest framing */
 function ForestTree({
@@ -17,6 +16,7 @@ function ForestTree({
   lean = 0,
   opacity = 1,
   color = "#080a04",
+  variant = 0,
 }: {
   x: number;
   y: number;
@@ -26,6 +26,7 @@ function ForestTree({
   lean?: number;
   opacity?: number;
   color?: string;
+  variant?: number;
 }) {
   const topY = y - height;
   const tw = trunkWidth;
@@ -46,33 +47,45 @@ function ForestTree({
             Z`}
         fill={color}
       />
-      {/* Canopy - bumpy irregular silhouette with 18+ control points */}
-      <path
-        d={`M${x + lx - cw * 0.55} ${topY + cw * 0.6}
-            C${x + lx - cw * 0.65} ${topY + cw * 0.45},
-             ${x + lx - cw * 0.7} ${topY + cw * 0.3},
-             ${x + lx - cw * 0.62} ${topY + cw * 0.15}
-            C${x + lx - cw * 0.55} ${topY + cw * 0.02},
-             ${x + lx - cw * 0.5} ${topY - cw * 0.08},
-             ${x + lx - cw * 0.38} ${topY - cw * 0.12}
-            C${x + lx - cw * 0.28} ${topY - cw * 0.18},
-             ${x + lx - cw * 0.2} ${topY - cw * 0.25},
-             ${x + lx - cw * 0.08} ${topY - cw * 0.22}
-            C${x + lx + cw * 0.02} ${topY - cw * 0.3},
-             ${x + lx + cw * 0.08} ${topY - cw * 0.28},
-             ${x + lx + cw * 0.15} ${topY - cw * 0.2}
-            C${x + lx + cw * 0.25} ${topY - cw * 0.15},
-             ${x + lx + cw * 0.32} ${topY - cw * 0.18},
-             ${x + lx + cw * 0.4} ${topY - cw * 0.08}
-            C${x + lx + cw * 0.48} ${topY + cw * 0.0},
-             ${x + lx + cw * 0.55} ${topY + cw * 0.05},
-             ${x + lx + cw * 0.6} ${topY + cw * 0.15}
-            C${x + lx + cw * 0.65} ${topY + cw * 0.28},
-             ${x + lx + cw * 0.62} ${topY + cw * 0.42},
-             ${x + lx + cw * 0.5} ${topY + cw * 0.6}
-            Z`}
-        fill={color}
-      />
+      {/* Canopy - bumpy irregular silhouette, varied by variant */}
+      {(() => {
+        // Per-variant offsets to make each tree unique
+        const v = variant % 4;
+        const a = v === 0 ? 0 : v === 1 ? 0.05 : v === 2 ? -0.04 : 0.03;
+        const b = v === 0 ? 0 : v === 1 ? -0.06 : v === 2 ? 0.04 : -0.05;
+        const c = v === 0 ? 0 : v === 1 ? 0.03 : v === 2 ? -0.06 : 0.04;
+        const wL = v === 1 ? 0.08 : v === 3 ? -0.06 : 0; // wider or narrower left
+        const wR = v === 2 ? 0.06 : v === 1 ? -0.04 : 0; // wider or narrower right
+        const hOff = v === 3 ? -0.05 : v === 2 ? 0.04 : 0; // taller or shorter
+        return (
+          <path
+            d={`M${x + lx - cw * (0.55 + wL)} ${topY + cw * 0.6}
+                C${x + lx - cw * (0.65 + wL)} ${topY + cw * (0.45 + a)},
+                 ${x + lx - cw * (0.7 + wL)} ${topY + cw * (0.3 + b)},
+                 ${x + lx - cw * (0.62 + a)} ${topY + cw * (0.15 + c)}
+                C${x + lx - cw * (0.55 + b)} ${topY + cw * (0.02 + a)},
+                 ${x + lx - cw * 0.5} ${topY + cw * (-0.08 + hOff)},
+                 ${x + lx - cw * (0.38 + c)} ${topY + cw * (-0.12 + hOff)}
+                C${x + lx - cw * (0.28 + a)} ${topY + cw * (-0.18 + hOff)},
+                 ${x + lx - cw * 0.2} ${topY + cw * (-0.25 + hOff)},
+                 ${x + lx - cw * (0.08 + b)} ${topY + cw * (-0.22 + hOff)}
+                C${x + lx + cw * (0.02 + c)} ${topY + cw * (-0.3 + hOff)},
+                 ${x + lx + cw * 0.08} ${topY + cw * (-0.28 + hOff)},
+                 ${x + lx + cw * (0.15 + a)} ${topY + cw * (-0.2 + hOff)}
+                C${x + lx + cw * (0.25 + b)} ${topY + cw * (-0.15 + c)},
+                 ${x + lx + cw * (0.32 + c)} ${topY + cw * (-0.18 + a)},
+                 ${x + lx + cw * (0.4 + wR)} ${topY + cw * (-0.08 + b)}
+                C${x + lx + cw * (0.48 + wR)} ${topY + cw * (0.0 + c)},
+                 ${x + lx + cw * (0.55 + wR)} ${topY + cw * (0.05 + a)},
+                 ${x + lx + cw * (0.6 + wR)} ${topY + cw * (0.15 + b)}
+                C${x + lx + cw * (0.65 + wR)} ${topY + cw * (0.28 + c)},
+                 ${x + lx + cw * 0.62} ${topY + cw * 0.42},
+                 ${x + lx + cw * (0.5 + wR)} ${topY + cw * 0.6}
+                Z`}
+            fill={color}
+          />
+        );
+      })()}
     </g>
   );
 }
@@ -153,7 +166,19 @@ function SpiritFigure({
   );
 }
 
+const FIREFLY_CONFIG = {
+  count: 25,
+  bounds: { x: 130, y: 60, width: 140, height: 120 },
+  colors: ["#e8d090", "#d0b870", "#f0e0a0", "#c8a850"],
+  sizeRange: [0.4, 0.9] as [number, number],
+  speedRange: [3, 8] as [number, number],
+  driftX: 0,
+  driftY: -1,
+  lifeRange: [3, 7] as [number, number],
+};
+
 function SanctumScene({ progress: p }: SceneProps) {
+  const fireflyParticles = useParticles(FIREFLY_CONFIG, p > 0.25);
   // Ambient brightening
   const ambL = 3 + p * 10;
   const ambS = 10 + p * 15;
@@ -329,27 +354,27 @@ function SanctumScene({ progress: p }: SceneProps) {
         fill={`hsl(220, ${10 + p * 8}%, ${5 + p * 3}%)`} />
 
       {/* ── Left forest trees ── */}
-      <ForestTree x={-10} y={240} height={190} trunkWidth={12} canopyWidth={45} lean={3}
+      <ForestTree x={-10} y={240} height={190} variant={0} trunkWidth={12} canopyWidth={45} lean={3}
         color={`hsl(120, ${8 + p * 5}%, ${4 + p * 2}%)`} />
-      <ForestTree x={30} y={245} height={210} trunkWidth={10} canopyWidth={40} lean={2}
+      <ForestTree x={30} y={245} height={210} variant={1} trunkWidth={10} canopyWidth={40} lean={2}
         color={`hsl(130, ${7 + p * 4}%, ${3 + p * 2}%)`} />
-      <ForestTree x={65} y={242} height={180} trunkWidth={9} canopyWidth={35} lean={4}
+      <ForestTree x={65} y={242} height={180} variant={2} trunkWidth={9} canopyWidth={35} lean={4}
         color={`hsl(125, ${9 + p * 5}%, ${4 + p * 2}%)`} />
-      <ForestTree x={95} y={240} height={160} trunkWidth={8} canopyWidth={30} lean={5}
+      <ForestTree x={95} y={240} height={160} variant={3} trunkWidth={8} canopyWidth={30} lean={5}
         color={`hsl(115, ${8 + p * 4}%, ${5 + p * 2}%)`} />
-      <ForestTree x={118} y={243} height={145} trunkWidth={7} canopyWidth={28} lean={4}
+      <ForestTree x={118} y={243} height={145} variant={0} trunkWidth={7} canopyWidth={28} lean={4}
         color={`hsl(120, ${7 + p * 5}%, ${5 + p * 3}%)`} />
 
       {/* ── Right forest trees ── */}
-      <ForestTree x={410} y={240} height={195} trunkWidth={12} canopyWidth={44} lean={-3}
+      <ForestTree x={410} y={240} height={195} variant={2} trunkWidth={12} canopyWidth={44} lean={-3}
         color={`hsl(120, ${8 + p * 5}%, ${4 + p * 2}%)`} />
-      <ForestTree x={375} y={244} height={205} trunkWidth={10} canopyWidth={38} lean={-2}
+      <ForestTree x={375} y={244} height={205} variant={3} trunkWidth={10} canopyWidth={38} lean={-2}
         color={`hsl(128, ${7 + p * 4}%, ${3 + p * 2}%)`} />
-      <ForestTree x={340} y={241} height={175} trunkWidth={9} canopyWidth={34} lean={-4}
+      <ForestTree x={340} y={241} height={175} variant={1} trunkWidth={9} canopyWidth={34} lean={-4}
         color={`hsl(122, ${9 + p * 5}%, ${4 + p * 2}%)`} />
-      <ForestTree x={310} y={242} height={155} trunkWidth={8} canopyWidth={30} lean={-5}
+      <ForestTree x={310} y={242} height={155} variant={0} trunkWidth={8} canopyWidth={30} lean={-5}
         color={`hsl(118, ${8 + p * 4}%, ${5 + p * 2}%)`} />
-      <ForestTree x={285} y={244} height={140} trunkWidth={7} canopyWidth={27} lean={-4}
+      <ForestTree x={285} y={244} height={140} variant={2} trunkWidth={7} canopyWidth={27} lean={-4}
         color={`hsl(125, ${7 + p * 5}%, ${5 + p * 3}%)`} />
 
       {/* ── Clearing ground — hand-crafted ── */}
@@ -477,19 +502,8 @@ function SanctumScene({ progress: p }: SceneProps) {
       ))}
       </g>
 
-      {/* Atmospheric particles — fireflies and spirit motes */}
-      {Array.from({ length: 40 }).map((_, i) => {
-        const px = (i * 47 + 13) % 400;
-        const baseY = (i * 71 + 29) % 220 + 15;
-        const drift = Math.sin(p * Math.PI * 2 + i * 0.7) * 8;
-        const py = baseY - p * 30 * ((i % 5) / 5);
-        const size = 0.6 + (i % 4) * 0.3;
-        const opacity = (0.1 + (i % 3) * 0.08) * (0.3 + p * 0.7);
-        return (
-          <circle key={`p${i}`} cx={px + drift} cy={py} r={size}
-            fill={i % 4 === 0 ? "#e8d090" : "#d0b870"} opacity={opacity} />
-        );
-      })}
+      {/* ── FIREFLIES — physics-based drifting particles ── */}
+      {p > 0.25 && <ParticleField particles={fireflyParticles} opacity={0.3} />}
     </svg>
   );
 }
