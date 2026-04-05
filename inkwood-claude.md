@@ -8,6 +8,49 @@ The core loop: *type a phrase → watch the scene transform*. Each phrase is a c
 
 ---
 
+## How We Work
+
+### Creative Process
+This project is a close collaboration. **Do not build art without discussing the concept first.** The process is:
+
+1. Read the level's prompts and think about subject matter
+2. Propose a visual concept and animation blocking to the human
+3. Discuss — the human may redirect, challenge, or refine
+4. Build it
+5. Screenshot it with `scripts/screenshot.mjs` — verify your own work before pushing
+6. Push to feature branch, merge to main, deploy
+7. The human tests on the live site and gives feedback
+8. Iterate based on feedback — this often takes 3-5 rounds per scene
+
+### The Human's Aesthetic Values
+- **Organic complexity over geometric simplicity** — complex bezier paths with character, not primitives
+- **Direct visual storytelling** — when you type "recall" and stones literally recall themselves, the game feels magical. This is the standard.
+- **Honest feedback** — the human is direct and has high standards. "I'm not trying to be mean, I'm being real with the facts." Be equally honest. Don't call mediocre work good.
+- **Details matter** — the human iterated on a cat silhouette 5 times until the proportions were right. Small things compound into the overall feeling.
+- **Novel viewpoints** — don't default to "side view of a thing." The Well cross-section and Bridge assembly-from-nothing were breakthroughs specifically because they took unexpected perspectives.
+
+### What the Human Has Praised
+- The Well cross-section: "Whoa, I can see underground" — first genuine "wow"
+- The Bridge stones assembling from nothing — "most dramatic moment"
+- Stars scene constellation drawing and comets — "I love the connection of constellations"
+- Stones scene prompt↔visual alignment — "excellent visual storytelling, best one so far"
+- The Garden canopy fading in over branches — "really nice"
+- The Cottage blue-to-amber color temperature shift
+
+### What the Human Has Rejected (Learn From These)
+- Geometric primitives for organic things (ellipses for canopies, rects for trunks)
+- Branches radiating from a single point (palm tree effect)
+- A cat with a tiny head (took 5 iterations — always use reference silhouettes)
+- Symmetric steam curves (looked like parentheses)
+- The hearth in the Cottage (didn't read as a fireplace — removed)
+- Glowing rectangles for journals or books
+- Bird silhouette too small to read
+- Too-dark intro (fixed THREE times — scenes need 15-25% lightness minimum)
+- The word "cheesy" was used for the original outro text — less text is more
+- Water that's too bright/saturated (swimming pool effect — cave water should be dark)
+
+---
+
 ## Stack
 
 - **Vite + React 18 + TypeScript** — standalone web app
@@ -212,6 +255,39 @@ Screenshots are saved to `./screenshots/` (gitignored). Claude can then read the
 - [ ] Test on real mobile devices (iOS Safari, Android Chrome)
 - [ ] Performance profile on budget Android phone
 - [ ] Consider sound design (ambient loops, phrase-completion chime)
+
+---
+
+## Current State & What's Next
+
+### Scene Quality Status (as of last update)
+
+| Scene | Status | Grade | Notes |
+|---|---|---|---|
+| Garden | ✅ Rebuilt | B | Integrated trunk-limb path, canopy covering layer, hand-crafted terrain |
+| Cottage | ✅ Rebuilt | B- | Blue→amber temperature shift, cat from reference, candle glow |
+| Stars | ✅ Polished | B+ | Moon crescent fixed, tree-top moonlight, 6 comets, constellation drawing |
+| Well | ✅ Rebuilt | A- | Cross-section concept, underground river, runes flowing downstream |
+| Bridge | ✅ Rebuilt | B+ | Assembly-from-nothing, stones float into arch, spirit footprints |
+| Library | ❌ Needs rebuild | D+ | Agent-generated, noisy texture filters, rectangles. Needs breakthrough concept |
+| Stones | ⚠️ Acceptable | C+ | Original bezier stones decent, ground/sky flat |
+| Sanctum | ⚠️ Acceptable | C+ | Spirit figures and moonbeams work, trees are primitive |
+| Tree | ✅ Rebuilt | Needs validation | Tree-as-world concept, three-phase glow, accent gems. Just deployed. |
+| World | ❌ Needs rebuild | D | Network diagram. Must become visual culmination |
+
+### Priority Stack
+1. **Validate Tree** — screenshot and iterate until it's genuinely the best scene
+2. **Rebuild Library** — needs a breakthrough concept like Well's cross-section
+3. **Rebuild World** — the finale must feel like culmination
+4. **Sound design** — visual-only has hit diminishing returns. Audio is zero-to-one.
+5. **Polish Stones & Sanctum** — decent but below rebuilt-scene standard
+6. **Real device testing** — mobile is completely untested
+
+### Known Issues
+- Dev panel (F2) is accessible in production — gate before public release
+- Bridge mist reads as grey blobs — cliffs need more prominence
+- Some scenes still import unused filter/primitive modules from old agent code
+- Mobile keyboard focus untested on real devices
 
 ---
 
