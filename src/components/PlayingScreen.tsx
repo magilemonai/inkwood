@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useGameStore } from "../store";
-import { LEVELS } from "../levels";
+import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
+import { startAmbient, stopAmbient, playCompletionSweep, playTypeClick, toggleMute, isMuted } from "../audio";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -61,8 +62,17 @@ export default function PlayingScreen() {
   useEffect(() => {
     if (isComplete && !completing) {
       startCompletion();
+      playCompletionSweep();
     }
   }, [isComplete, completing, startCompletion]);
+
+  // ── Ambient audio — start/switch on level change ──
+  const [audioMuted, setAudioMuted] = useState(isMuted);
+  useEffect(() => {
+    const actIdx = getActIndex(lvl);
+    startAmbient(actIdx, lvl);
+    return () => { stopAmbient(); };
+  }, [lvl]);
 
   // ── Focus management ──
   useEffect(() => {
@@ -74,7 +84,9 @@ export default function PlayingScreen() {
   }, [lvl, promptIdx]);
 
   const handleType = (e: React.ChangeEvent<HTMLInputElement>) => {
-    typeChar(e.target.value);
+    const newVal = e.target.value;
+    if (newVal.length > typed.length) playTypeClick();
+    typeChar(newVal);
   };
 
   const focusInput = () => {
@@ -100,6 +112,17 @@ export default function PlayingScreen() {
       <div className={s.header}>
         <span className={s.headerLogo} style={{ color: accent, opacity: 0.7 }}>
           INKWOOD
+          <button
+            onClick={(e) => { e.stopPropagation(); setAudioMuted(toggleMute()); }}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: accent, opacity: 0.4, fontSize: "0.6em", marginLeft: "0.5em",
+              fontFamily: "monospace", padding: 0,
+            }}
+            title={audioMuted ? "Unmute" : "Mute"}
+          >
+            {audioMuted ? "\u2709" : "\u266B"}
+          </button>
         </span>
         <span className={s.headerTitle}>{level.title}</span>
         <span className={s.headerDots}>
@@ -183,7 +206,7 @@ export default function PlayingScreen() {
             }}
           >
             {isComplete
-              ? "\u2713 well done"
+              ? "well done"
               : hasError
                 ? "backspace to correct"
                 : showTapOverlay

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
@@ -42,19 +42,21 @@ export default function OutroSequence() {
   const restart = useGameStore((g) => g.restart);
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
+  const showTextRef = useRef(false);
 
   // Keyboard: space/enter to restart when text is showing
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.key === " " || e.key === "Enter") && showText) {
+      if ((e.key === " " || e.key === "Enter") && showTextRef.current) {
         e.preventDefault();
         restart();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showText, restart]);
+  }, [restart]);
 
+  // Animation loop — runs once, never restarts
   useEffect(() => {
     const start = performance.now();
     let frame: number;
@@ -62,17 +64,22 @@ export default function OutroSequence() {
     const tick = () => {
       const now = performance.now();
       const elapsed = (now - start) / 1000;
-      // Throttle state updates to ~15 Hz
       if (now - lastUpdate > 66) {
         lastUpdate = now;
-        setTime(elapsed);
-        if (elapsed >= 19 && !showText) setShowText(true);
+        // Clamp time at 25s — the animation freezes on the final frame
+        // while the motes/energy continue to render based on clamped time
+        setTime(Math.min(elapsed, 25));
+        if (elapsed >= 19 && !showTextRef.current) {
+          showTextRef.current = true;
+          setShowText(true);
+        }
       }
-      if (elapsed < 28) frame = requestAnimationFrame(tick);
+      // Keep animating for 30s then stop (mote loop uses modular time)
+      if (elapsed < 30) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [showText]);
+  }, []); // no dependencies — runs exactly once
 
   // Phase calculations
   const horizonDraw = sub(time, 0, 3);

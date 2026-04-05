@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter, MistFilter } from "../svg/filters";
-import { Hill, TreeSilhouette, Star } from "../svg/primitives";
+import { Star } from "../svg/primitives";
 
 /** Helper: clamp progress into a sub-range for staggered entry */
 function sub(p: number, start: number, duration: number): number {
@@ -337,10 +337,13 @@ function StarScene({ progress: p }: SceneProps) {
         />
       )}
 
-      {/* ── Rolling hills beneath treeline ── */}
-      <Hill y={210} height={22} color="#060e18" seed={0.5} opacity={0.3 + treeP * 0.7} />
-      <Hill y={218} height={18} color="#050c14" seed={2.1} opacity={0.3 + treeP * 0.7} />
-      <Hill y={225} height={14} color="#040a10" seed={3.8} opacity={0.4 + treeP * 0.6} />
+      {/* ── Rolling hills beneath treeline — hand-crafted ── */}
+      <path d="M0 210 C30 205, 60 212, 100 208 C140 204, 180 210, 220 206 C260 202, 300 208, 340 204 C370 200, 390 206, 400 204 L400 250 L0 250 Z"
+        fill="#060e18" opacity={0.3 + treeP * 0.7} />
+      <path d="M0 220 C25 216, 55 222, 85 218 C115 214, 145 220, 175 216 C205 212, 235 218, 265 214 C295 210, 325 216, 355 212 C380 210, 395 214, 400 212 L400 250 L0 250 Z"
+        fill="#050c14" opacity={0.3 + treeP * 0.7} />
+      <path d="M0 228 C20 225, 50 230, 80 227 C110 224, 140 229, 170 226 C200 223, 230 228, 260 225 C290 222, 320 227, 350 224 C375 222, 392 226, 400 224 L400 250 L0 250 Z"
+        fill="#040a10" opacity={0.4 + treeP * 0.6} />
 
       </g>
 
@@ -350,24 +353,45 @@ function StarScene({ progress: p }: SceneProps) {
       {/* Dark ground base */}
       <rect x="0" y="220" width="400" height="30" fill="#030810" opacity={0.4 + treeP * 0.6} />
 
-      {/* Tree silhouettes — varying heights for organic skyline */}
-      {TREES.map((t, i) => {
-        const tp = sub(p, 0.02 + i * 0.015, 0.25);
-        return (
-          <TreeSilhouette
-            key={`tree-${i}`}
-            x={t.x}
-            y={222}
-            height={t.h * (0.2 + tp * 0.8)}
-            spread={t.s}
-            color={i % 3 === 0 ? "#050d16" : i % 3 === 1 ? "#060e18" : "#040b14"}
-            opacity={tp * 0.9}
-          />
-        );
-      })}
+      {/* Hand-drawn treeline silhouette — continuous irregular skyline */}
+      <path
+        d={`
+          M0 222
+          C5 220, 8 ${222 - TREES[0].h * (0.2 + treeP * 0.8)}, 10 ${222 - TREES[0].h * (0.2 + treeP * 0.8)}
+          C12 ${222 - TREES[0].h * (0.2 + treeP * 0.8) - 5}, 22 ${222 - TREES[0].h * (0.2 + treeP * 0.8) + 2}, 25 222
+          C28 ${222 - 8 * treeP}, 30 ${222 - TREES[1].h * (0.2 + treeP * 0.8)}, 35 ${222 - TREES[1].h * (0.2 + treeP * 0.8)}
+          C38 ${222 - TREES[1].h * (0.2 + treeP * 0.8) - 6}, 48 ${222 - TREES[1].h * (0.2 + treeP * 0.8) + 3}, 52 ${222 - 5 * treeP}
+          C55 222, 56 ${222 - TREES[2].h * (0.2 + treeP * 0.8)}, 58 ${222 - TREES[2].h * (0.2 + treeP * 0.8)}
+          C60 ${222 - TREES[2].h * (0.2 + treeP * 0.8) - 4}, 68 ${222 - TREES[2].h * (0.2 + treeP * 0.8) + 5}, 72 222
+          C76 ${222 - 6 * treeP}, 78 ${222 - TREES[3].h * (0.2 + treeP * 0.8)}, 82 ${222 - TREES[3].h * (0.2 + treeP * 0.8)}
+          C86 ${222 - TREES[3].h * (0.2 + treeP * 0.8) - 8}, 100 ${222 - TREES[3].h * (0.2 + treeP * 0.8) + 4}, 105 222
+          C110 ${222 - 5 * treeP}, 115 ${222 - TREES[4].h * (0.2 + treeP * 0.8)}, 120 ${222 - TREES[4].h * (0.2 + treeP * 0.8)}
+          C125 ${222 - TREES[4].h * (0.2 + treeP * 0.8) - 6}, 138 ${222 - TREES[4].h * (0.2 + treeP * 0.8) + 3}, 142 222
+          C148 ${222 - 8 * treeP}, 152 ${222 - TREES[5].h * (0.2 + treeP * 0.8)}, 155 ${222 - TREES[5].h * (0.2 + treeP * 0.8)}
+          C158 ${222 - TREES[5].h * (0.2 + treeP * 0.8) - 5}, 168 ${222 - TREES[5].h * (0.2 + treeP * 0.8) + 4}, 172 222
+          C178 ${222 - 6 * treeP}, 182 ${222 - TREES[6].h * (0.2 + treeP * 0.8)}, 185 ${222 - TREES[6].h * (0.2 + treeP * 0.8)}
+          C188 ${222 - TREES[6].h * (0.2 + treeP * 0.8) - 7}, 198 ${222 - TREES[6].h * (0.2 + treeP * 0.8) + 3}, 202 222
+          C208 ${222 - 5 * treeP}, 212 ${222 - TREES[7].h * (0.2 + treeP * 0.8)}, 215 ${222 - TREES[7].h * (0.2 + treeP * 0.8)}
+          C218 ${222 - TREES[7].h * (0.2 + treeP * 0.8) - 5}, 228 ${222 - TREES[7].h * (0.2 + treeP * 0.8) + 4}, 232 222
+          C238 ${222 - 8 * treeP}, 242 ${222 - TREES[8].h * (0.2 + treeP * 0.8)}, 245 ${222 - TREES[8].h * (0.2 + treeP * 0.8)}
+          C248 ${222 - TREES[8].h * (0.2 + treeP * 0.8) - 6}, 258 ${222 - TREES[8].h * (0.2 + treeP * 0.8) + 3}, 262 222
+          C268 ${222 - 6 * treeP}, 272 ${222 - TREES[9].h * (0.2 + treeP * 0.8)}, 275 ${222 - TREES[9].h * (0.2 + treeP * 0.8)}
+          C278 ${222 - TREES[9].h * (0.2 + treeP * 0.8) - 8}, 290 ${222 - TREES[9].h * (0.2 + treeP * 0.8) + 5}, 295 222
+          C300 ${222 - 5 * treeP}, 305 ${222 - TREES[10].h * (0.2 + treeP * 0.8)}, 308 ${222 - TREES[10].h * (0.2 + treeP * 0.8)}
+          C312 ${222 - TREES[10].h * (0.2 + treeP * 0.8) - 5}, 322 ${222 - TREES[10].h * (0.2 + treeP * 0.8) + 3}, 328 222
+          C332 ${222 - 7 * treeP}, 338 ${222 - TREES[11].h * (0.2 + treeP * 0.8)}, 342 ${222 - TREES[11].h * (0.2 + treeP * 0.8)}
+          C345 ${222 - TREES[11].h * (0.2 + treeP * 0.8) - 6}, 358 ${222 - TREES[11].h * (0.2 + treeP * 0.8) + 4}, 362 222
+          C366 ${222 - 5 * treeP}, 370 ${222 - TREES[12].h * (0.2 + treeP * 0.8)}, 375 ${222 - TREES[12].h * (0.2 + treeP * 0.8)}
+          C378 ${222 - TREES[12].h * (0.2 + treeP * 0.8) - 4}, 390 ${222 - TREES[12].h * (0.2 + treeP * 0.8) + 3}, 395 222
+          L400 222 L400 250 L0 250 Z
+        `}
+        fill="#050d16"
+        opacity={treeP * 0.9}
+      />
 
       {/* Foreground ground — darkest layer */}
-      <Hill y={238} height={8} color="#020608" seed={1.2} opacity={0.5 + treeP * 0.5} />
+      <path d="M0 238 C20 236, 50 240, 80 237 C110 234, 140 238, 170 235 C200 232, 230 237, 260 234 C290 232, 320 236, 350 233 C375 231, 392 235, 400 233 L400 250 L0 250 Z"
+        fill="#020608" opacity={0.5 + treeP * 0.5} />
 
       {/* ── Moonlight on tree tops — builds from 50% to 100% ── */}
       {p > 0.5 && (
