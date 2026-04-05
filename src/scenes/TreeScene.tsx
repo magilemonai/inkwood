@@ -56,27 +56,49 @@ const BARK_LINES = [
   "M216 132 C218 130, 220 128, 218 126 C216 124, 214 126, 216 128",
 ];
 
-/** 6 major roots — thick tapered paths spreading LEFT and RIGHT
- *  from the trunk base. Horizontally deep, not vertically. */
+/** 8 major roots — thick brown paths spreading DIAGONALLY outward.
+ *  Some snake behind the text box and emerge in corners. */
 const ROOTS = [
-  // Far left — sweeps to the left edge
-  `M178 158 C160 156, 130 160, 95 158 C65 156, 35 162, 5 160
-   L5 164 C35 166, 65 162, 95 164 C130 166, 160 162, 180 162 Z`,
-  // Mid left — curves left-up
-  `M176 154 C155 148, 125 142, 90 144 C60 146, 35 140, 10 142
-   L10 146 C35 145, 60 150, 90 148 C125 147, 155 153, 178 158 Z`,
-  // Near left — shorter, curves down-left
-  `M180 160 C165 162, 145 166, 120 165 C100 164, 80 168, 60 166
-   L60 170 C80 172, 100 168, 120 169 C145 170, 165 166, 182 164 Z`,
-  // Far right — sweeps to the right edge
-  `M222 158 C240 156, 270 160, 305 158 C335 156, 365 162, 395 160
-   L395 164 C365 166, 335 162, 305 164 C270 166, 240 162, 220 162 Z`,
-  // Mid right — curves right-up
-  `M224 154 C245 148, 275 142, 310 144 C340 146, 365 140, 390 142
-   L390 146 C365 145, 340 150, 310 148 C275 147, 245 153, 222 158 Z`,
-  // Near right — shorter
-  `M220 160 C235 162, 255 166, 280 165 C300 164, 320 168, 340 166
-   L340 170 C320 172, 300 168, 280 169 C255 170, 235 166, 218 164 Z`,
+  // Far left — sweeps diagonally to lower-left corner
+  `M178 158 C155 158, 120 165, 80 175
+   C50 185, 25 200, 5 220
+   L0 225 L0 218 C20 198, 45 182, 75 172
+   C115 162, 150 156, 180 162 Z`,
+  // Mid left — curves to mid-left
+  `M176 154 C155 148, 125 145, 90 148
+   C60 152, 35 155, 10 152
+   L10 156 C35 159, 60 156, 90 152
+   C125 149, 155 153, 178 158 Z`,
+  // Near left — diagonal down-left
+  `M180 160 C160 165, 130 178, 95 192
+   C65 205, 40 218, 20 235
+   L15 240 L10 235 C30 216, 55 202, 88 188
+   C125 175, 158 164, 182 164 Z`,
+  // Center-left short root
+  `M185 160 C175 165, 155 172, 140 170
+   C130 168, 120 172, 115 170
+   L115 174 C120 176, 130 172, 140 174
+   C155 176, 175 169, 187 164 Z`,
+  // Far right — sweeps diagonally to lower-right corner
+  `M222 158 C245 158, 280 165, 320 175
+   C350 185, 375 200, 395 220
+   L400 225 L400 218 C380 198, 355 182, 325 172
+   C285 162, 250 156, 220 162 Z`,
+  // Mid right — curves to mid-right
+  `M224 154 C245 148, 275 145, 310 148
+   C340 152, 365 155, 390 152
+   L390 156 C365 159, 340 156, 310 152
+   C275 149, 245 153, 222 158 Z`,
+  // Near right — diagonal down-right
+  `M220 160 C240 165, 270 178, 305 192
+   C335 205, 360 218, 380 235
+   L385 240 L390 235 C370 216, 345 202, 312 188
+   C275 175, 242 164, 218 164 Z`,
+  // Center-right short root
+  `M215 160 C225 165, 245 172, 260 170
+   C270 168, 280 172, 285 170
+   L285 174 C280 176, 270 172, 260 174
+   C245 176, 225 169, 213 164 Z`,
 ];
 
 /** 5 major branches — thick tapered paths spreading UP and OUT
@@ -182,22 +204,23 @@ function TreeScene({ progress: p }: SceneProps) {
       {/* ── BACKGROUND — deep green-black ── */}
       <rect width="400" height="250" fill="url(#treeBg)" />
 
-      {/* ── ROOTS — phase 1: glow outward from center ── */}
+      {/* ── ROOTS — phase 1: brown with green glow outlines ── */}
       {ROOTS.map((d, i) => {
-        // Roots light up sequentially from center outward
-        const rp = sub(rootPhase, i * 0.12, 0.35);
+        const rp = sub(rootPhase, i * 0.08, 0.3);
         return (
           <g key={`r${i}`}>
-            {/* Root structure — always visible as dark shape */}
-            <path d={d}
-              fill={`hsl(30, ${woodS}%, ${woodL - 4}%)`}
-              opacity={0.3 + rp * 0.5} />
-            {/* Ley-line energy glow — appears in phase 1 */}
+            {/* Green glow outline — appears first as ley energy */}
             {rp > 0 && (
               <path d={d}
-                fill={glowColor}
-                opacity={rp * 0.3} />
+                fill="none"
+                stroke={glowColor}
+                strokeWidth={3}
+                opacity={rp * 0.35} />
             )}
+            {/* Root body — brown wood */}
+            <path d={d}
+              fill={`hsl(28, ${woodS + 5}%, ${woodL - 2}%)`}
+              opacity={0.3 + rp * 0.6} />
           </g>
         );
       })}
@@ -207,13 +230,13 @@ function TreeScene({ progress: p }: SceneProps) {
         fill={`hsl(30, ${woodS}%, ${woodL}%)`}
         opacity={0.5 + p * 0.5} />
 
-      {/* Bark detail lines */}
-      <g opacity={0.15 + p * 0.2}>
+      {/* Bark detail lines — thicker for organic feel */}
+      <g opacity={0.2 + p * 0.25}>
         {BARK_LINES.map((d, i) => (
           <path key={i} d={d}
             fill="none"
-            stroke={`hsl(30, ${woodS - 3}%, ${woodL + 6}%)`}
-            strokeWidth="0.8"
+            stroke={`hsl(25, ${woodS}%, ${woodL + 5}%)`}
+            strokeWidth={i < 5 ? "1.5" : "1"}
             strokeLinecap="round" />
         ))}
       </g>
@@ -310,9 +333,11 @@ function TreeScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── BOTTOM FILL — ground beneath the roots ── */}
-      <rect x="0" y="165" width="400" height="85"
-        fill={`hsl(130, ${bgS - 3}%, ${bgL - 1}%)`} />
+      {/* ── BOTTOM GRADIENT — fades to dark below roots, allows
+           roots to peek through behind the text overlay ── */}
+      <rect x="0" y="168" width="400" height="82"
+        fill={`hsl(130, ${bgS - 3}%, ${bgL - 1}%)`}
+        opacity={0.6} />
     </svg>
   );
 }

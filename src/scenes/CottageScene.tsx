@@ -209,7 +209,7 @@ function CottageScene({ progress: p }: SceneProps) {
            Large round head (1/3 body), proud chest, round haunches,
            tail curves up behind. Facing right. ── */}
       {catP > 0 && (
-        <g opacity={catP * 0.9}>
+        <g opacity={catP}>
           <path d={`
             M72 190
             C72 186, 70 180, 66 176
@@ -240,9 +240,9 @@ function CottageScene({ progress: p }: SceneProps) {
             fill="none" stroke={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`}
             strokeWidth="3.5" strokeLinecap="round" />
           {/* Eye — amber glint */}
-          <circle cx="76" cy="118" r="1.3" fill="#e89a30" opacity={catP * 0.7} />
+          <circle cx="76" cy="118" r="1.3" fill="#e89a30" opacity={Math.min(1, catP * 1.2)} />
           {/* Whiskers */}
-          <g opacity={catP * 0.25}>
+          <g opacity={Math.min(0.35, catP * 0.35)}>
             <line x1="84" y1="122" x2="92" y2="120" stroke="#c8a870" strokeWidth="0.4" />
             <line x1="84" y1="124" x2="92" y2="125" stroke="#c8a870" strokeWidth="0.4" />
           </g>
