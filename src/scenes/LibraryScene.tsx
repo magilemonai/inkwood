@@ -73,16 +73,28 @@ const FLOATING_BOOKS = [
   { startX: 325, startY: 157, endX: 300, endY: 100, color: "#6a5a20", rot: 22,  delay: 0.58 },
 ];
 
-// Crystals
+// Crystal clumps — jutting from walls, floor, and ceiling
 const CRYSTALS = [
-  { x: 50,  baseY: 250, h: 25, angle: -8,  from: "floor" as const },
-  { x: 82,  baseY: 250, h: 18, angle: 5,   from: "floor" as const },
-  { x: 318, baseY: 250, h: 28, angle: 8,   from: "floor" as const },
-  { x: 350, baseY: 250, h: 20, angle: -5,  from: "floor" as const },
-  { x: 370, baseY: 250, h: 15, angle: 10,  from: "floor" as const },
-  { x: 100, baseY: 0,   h: 18, angle: 175, from: "ceil" as const },
-  { x: 285, baseY: 0,   h: 22, angle: -170,from: "ceil" as const },
-  { x: 175, baseY: 0,   h: 14, angle: 168, from: "ceil" as const },
+  // Floor clusters — left side
+  { x: 45,  baseY: 200, h: 22, angle: -10, from: "floor" as const },
+  { x: 55,  baseY: 205, h: 16, angle: -2,  from: "floor" as const },
+  { x: 62,  baseY: 198, h: 12, angle: 8,   from: "floor" as const },
+  // Floor clusters — right side
+  { x: 338, baseY: 202, h: 24, angle: 10,  from: "floor" as const },
+  { x: 348, baseY: 208, h: 18, angle: 2,   from: "floor" as const },
+  { x: 355, baseY: 200, h: 14, angle: -6,  from: "floor" as const },
+  // Wall-growing left (angled inward)
+  { x: 70,  baseY: 130, h: 15, angle: 30,  from: "floor" as const },
+  { x: 68,  baseY: 110, h: 12, angle: 35,  from: "floor" as const },
+  // Wall-growing right
+  { x: 330, baseY: 125, h: 16, angle: -28, from: "floor" as const },
+  { x: 332, baseY: 108, h: 13, angle: -32, from: "floor" as const },
+  // Ceiling stalactites
+  { x: 105, baseY: 28,  h: 16, angle: 175, from: "ceil" as const },
+  { x: 120, baseY: 24,  h: 12, angle: 168, from: "ceil" as const },
+  { x: 280, baseY: 26,  h: 18, angle: -172,from: "ceil" as const },
+  { x: 295, baseY: 22,  h: 14, angle: -165,from: "ceil" as const },
+  { x: 190, baseY: 12,  h: 10, angle: 178, from: "ceil" as const },
 ];
 
 // Runes
