@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useSyncExternalStore, useCallback } from "react";
 
 interface Particle {
   x: number;
@@ -13,83 +13,13 @@ interface Particle {
 
 interface ParticleConfig {
   count: number;
-  /** Bounding box for particle spawn */
   bounds: { x: number; y: number; width: number; height: number };
-  /** Particle colors — one picked randomly per particle */
   colors: string[];
-  /** Size range [min, max] */
   sizeRange: [number, number];
-  /** Velocity range — pixels per second */
   speedRange: [number, number];
-  /** Direction bias: -1 = left, 0 = up, 1 = right */
   driftX?: number;
-  /** Upward drift speed (negative = up) */
   driftY?: number;
-  /** Lifetime range in seconds [min, max] */
   lifeRange: [number, number];
-  /** Overall opacity multiplier */
-  opacity?: number;
-}
-
-/**
- * Animated particle system using requestAnimationFrame.
- * Returns an array of particles with positions that update each frame.
- * Particles drift, fade out, and respawn automatically.
- */
-export function useParticles(config: ParticleConfig, active: boolean): Particle[] {
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const particlesRef = useRef<Particle[]>([]);
-  const frameRef = useRef<number>(0);
-  const lastTimeRef = useRef(0);
-
-  useEffect(() => {
-    if (!active) {
-      particlesRef.current = [];
-      setParticles([]);
-      return;
-    }
-
-    // Initialize particles
-    const initial: Particle[] = [];
-    for (let i = 0; i < config.count; i++) {
-      initial.push(spawnParticle(config, true));
-    }
-    particlesRef.current = initial;
-
-    const tick = (now: number) => {
-      if (lastTimeRef.current === 0) lastTimeRef.current = now;
-      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.1); // cap at 100ms
-      lastTimeRef.current = now;
-
-      const ps = particlesRef.current;
-      for (let i = 0; i < ps.length; i++) {
-        const p = ps[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.life -= dt;
-
-        // Respawn if dead
-        if (p.life <= 0) {
-          ps[i] = spawnParticle(config, false);
-        }
-      }
-
-      // Throttle React updates to ~12fps
-      if (now % 80 < 17) {
-        setParticles([...ps]);
-      }
-
-      frameRef.current = requestAnimationFrame(tick);
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frameRef.current);
-      lastTimeRef.current = 0;
-    };
-  }, [active, config.count]);
-
-  return particles;
 }
 
 function spawnParticle(config: ParticleConfig, randomAge: boolean): Particle {
@@ -107,25 +37,76 @@ function spawnParticle(config: ParticleConfig, randomAge: boolean): Particle {
   };
 }
 
-/** Render particles as SVG circles */
-export function ParticleField({ particles, opacity = 1 }: { particles: Particle[]; opacity?: number }) {
-  return (
-    <g>
-      {particles.map((p, i) => {
-        const lifeRatio = Math.max(0, p.life / p.maxLife);
-        // Fade in during first 20% of life, fade out during last 30%
-        const fade = lifeRatio > 0.7 ? (1 - lifeRatio) / 0.3 : lifeRatio < 0.3 ? lifeRatio / 0.3 : 1;
-        return (
-          <circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r={p.size * (0.5 + fade * 0.5)}
-            fill={p.color}
-            opacity={fade * opacity}
-          />
-        );
-      })}
-    </g>
-  );
+/**
+ * Animated particle system using requestAnimationFrame.
+ * Returns a snapshot array that updates ~12fps via useSyncExternalStore.
+ */
+export function useParticles(config: ParticleConfig, active: boolean): Particle[] {
+  const storeRef = useRef({
+    particles: [] as Particle[],
+    snapshot: [] as Particle[],
+    listeners: new Set<() => void>(),
+  });
+
+  const subscribe = useCallback((cb: () => void) => {
+    storeRef.current.listeners.add(cb);
+    return () => { storeRef.current.listeners.delete(cb); };
+  }, []);
+
+  const getSnapshot = useCallback(() => storeRef.current.snapshot, []);
+
+  useEffect(() => {
+    const store = storeRef.current;
+    if (!active) {
+      store.particles = [];
+      store.snapshot = [];
+      store.listeners.forEach((l) => l());
+      return;
+    }
+
+    // Initialize particles
+    store.particles = [];
+    for (let i = 0; i < config.count; i++) {
+      store.particles.push(spawnParticle(config, true));
+    }
+
+    let lastTime = 0;
+    let lastNotify = 0;
+    let frame: number;
+
+    const tick = (now: number) => {
+      if (lastTime === 0) lastTime = now;
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const ps = store.particles;
+      for (let i = 0; i < ps.length; i++) {
+        const p = ps[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) {
+          ps[i] = spawnParticle(config, false);
+        }
+      }
+
+      // Throttle React notifications to ~12fps
+      if (now - lastNotify > 80) {
+        lastNotify = now;
+        store.snapshot = [...ps];
+        store.listeners.forEach((l) => l());
+      }
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, config.count]);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
+

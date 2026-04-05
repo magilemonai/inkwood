@@ -2,7 +2,8 @@ import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
-import { useParticles, ParticleField } from "../hooks/useParticles";
+import { useParticles } from "../hooks/useParticles";
+import ParticleField from "../components/ParticleField";
 
 
 // ─── THE GREAT TREE ────────────────────────────────────────
