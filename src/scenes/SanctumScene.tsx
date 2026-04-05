@@ -46,18 +46,30 @@ function ForestTree({
             Z`}
         fill={color}
       />
-      {/* Canopy - single irregular bezier silhouette */}
+      {/* Canopy - bumpy irregular silhouette with 18+ control points */}
       <path
-        d={`M${x + lx - cw * 0.6} ${topY + cw * 0.6}
-            C${x + lx - cw * 0.7} ${topY + cw * 0.3},
-             ${x + lx - cw * 0.55} ${topY - cw * 0.1},
-             ${x + lx - cw * 0.25} ${topY - cw * 0.15}
-            C${x + lx - cw * 0.1} ${topY - cw * 0.25},
-             ${x + lx + cw * 0.1} ${topY - cw * 0.22},
-             ${x + lx + cw * 0.3} ${topY - cw * 0.1}
-            C${x + lx + cw * 0.55} ${topY + cw * 0.05},
-             ${x + lx + cw * 0.65} ${topY + cw * 0.35},
-             ${x + lx + cw * 0.55} ${topY + cw * 0.6}
+        d={`M${x + lx - cw * 0.55} ${topY + cw * 0.6}
+            C${x + lx - cw * 0.65} ${topY + cw * 0.45},
+             ${x + lx - cw * 0.7} ${topY + cw * 0.3},
+             ${x + lx - cw * 0.62} ${topY + cw * 0.15}
+            C${x + lx - cw * 0.55} ${topY + cw * 0.02},
+             ${x + lx - cw * 0.5} ${topY - cw * 0.08},
+             ${x + lx - cw * 0.38} ${topY - cw * 0.12}
+            C${x + lx - cw * 0.28} ${topY - cw * 0.18},
+             ${x + lx - cw * 0.2} ${topY - cw * 0.25},
+             ${x + lx - cw * 0.08} ${topY - cw * 0.22}
+            C${x + lx + cw * 0.02} ${topY - cw * 0.3},
+             ${x + lx + cw * 0.08} ${topY - cw * 0.28},
+             ${x + lx + cw * 0.15} ${topY - cw * 0.2}
+            C${x + lx + cw * 0.25} ${topY - cw * 0.15},
+             ${x + lx + cw * 0.32} ${topY - cw * 0.18},
+             ${x + lx + cw * 0.4} ${topY - cw * 0.08}
+            C${x + lx + cw * 0.48} ${topY + cw * 0.0},
+             ${x + lx + cw * 0.55} ${topY + cw * 0.05},
+             ${x + lx + cw * 0.6} ${topY + cw * 0.15}
+            C${x + lx + cw * 0.65} ${topY + cw * 0.28},
+             ${x + lx + cw * 0.62} ${topY + cw * 0.42},
+             ${x + lx + cw * 0.5} ${topY + cw * 0.6}
             Z`}
         fill={color}
       />
