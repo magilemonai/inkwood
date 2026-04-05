@@ -11,6 +11,8 @@
 .sceneWrap {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .titleOverlay {
@@ -63,5 +65,38 @@
   .beginBtn {
     padding: 0.6rem 2rem;
     font-size: 0.9rem;
+  }
+}
+
+/* Portrait — constrain scene SVG to landscape aspect ratio */
+@media (orientation: portrait) {
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sceneWrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 8 / 5;
+    max-height: 45vh;
+    max-height: 45dvh;
+  }
+
+  .titleOverlay {
+    position: relative;
+    inset: auto;
+    padding: 1.5rem 0;
+    gap: 1rem;
+  }
+
+  .skipHint {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin-top: 1rem;
   }
 }

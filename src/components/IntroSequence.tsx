@@ -181,7 +181,6 @@ export default function IntroSequence() {
       <svg
         viewBox="0 0 400 250"
         className={s.sceneWrap}
-        style={{ width: "100%", height: "100%" }}
         preserveAspectRatio="xMidYMid slice"
       >
         <rect width="400" height="250" fill="#050505" />
