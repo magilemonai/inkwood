@@ -34,7 +34,7 @@ export default function App() {
           {screen === "outro" && <OutroSequence />}
         </motion.div>
       </AnimatePresence>
-      <DevPanel />
+      {new URLSearchParams(window.location.search).has("dev") && <DevPanel />}
     </>
   );
 }
