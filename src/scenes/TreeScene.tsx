@@ -1,10 +1,8 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── THE GREAT TREE ────────────────────────────────────────
 // The nexus of all living things. Its roots are the ley lines.

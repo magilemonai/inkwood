@@ -1,10 +1,8 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── CROSS-SECTION VIEW ────────────────────────────────────
 // Top half: sky + well structure sitting on ground

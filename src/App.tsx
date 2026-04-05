@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useGameStore } from "./store";
+import { LEVELS } from "./levels";
 import IntroSequence from "./components/IntroSequence";
 import PlayingScreen from "./components/PlayingScreen";
 import LevelWinScreen from "./components/LevelWinScreen";
@@ -15,6 +16,8 @@ const screenVariants = {
 
 export default function App() {
   const screen = useGameStore((g) => g.screen);
+  const lvl = useGameStore((g) => g.lvl);
+  const bg = LEVELS[lvl]?.bg ?? "#060806";
 
   return (
     <>
@@ -25,7 +28,7 @@ export default function App() {
           initial="initial"
           animate="animate"
           exit="exit"
-          style={{ minHeight: "100vh" }}
+          style={{ minHeight: "100vh", background: bg }}
         >
           {screen === "intro" && <IntroSequence />}
           {screen === "playing" && <PlayingScreen />}

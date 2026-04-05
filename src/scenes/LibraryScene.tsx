@@ -1,10 +1,8 @@
+import { sub } from "./util";
 import { memo } from "react";
 import type { SceneProps } from "../types";
 import { GlowFilter } from "../svg/filters";
 
-function sub(p: number, start: number, duration: number): number {
-  return Math.min(1, Math.max(0, (p - start) / duration));
-}
 
 // ─── THE WHISPERING LIBRARY ──────────────────────────────
 // A sacred underground library. Words are precious and few here.
@@ -284,25 +282,29 @@ function LibraryScene({ progress: p }: SceneProps) {
       <ellipse cx="200" cy="152" rx="24" ry="5"
         fill={`hsl(${chamberH + 2}, ${chamberS - 2}%, ${chamberL + 7}%)`} />
 
-      {/* ── HERO TOME — taller, narrower, opens as pages spread ── */}
+      {/* ── HERO TOME — large focal element ── */}
       <g>
         {/* Spine */}
-        <rect x="198" y="130" width="4" height="24" rx="1"
+        <rect x="197" y="120" width="6" height="34" rx="1"
           fill={`hsl(280, ${15 + p * 12}%, ${12 + p * 8}%)`} />
+        {/* Spine gold detail */}
+        <line x1="200" y1="123" x2="200" y2="151"
+          stroke={`hsl(40, ${10 + p * 15}%, ${16 + p * 8}%)`}
+          strokeWidth="0.6" opacity={0.3 + p * 0.3} />
 
         {/* LEFT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 35;
-          const bookH = 24;
+          const pageW = spread * 45;
+          const bookH = 34;
           return (
             <g>
-              <rect x={198 - pageW - 2} y="130" width={pageW + 2} height={bookH} rx="1"
+              <rect x={197 - pageW - 2} y="120" width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
-              <rect x={198 - pageW} y="131" width={pageW} height={bookH - 2} rx="0.5"
+              <rect x={197 - pageW} y="121" width={pageW} height={bookH - 2} rx="0.5"
                 fill="#e8e0d0" opacity={spread * 0.7} />
-              {spread > 0.3 && [0, 4, 8, 12, 16].map((dy) => (
-                <line key={`tl${dy}`} x1={198 - pageW + 3} y1={134 + dy}
-                  x2={198 - pageW + pageW * 0.7} y2={134 + dy}
+              {spread > 0.3 && [0, 4, 8, 12, 16, 20, 24].map((dy) => (
+                <line key={`tl${dy}`} x1={197 - pageW + 3} y1={125 + dy}
+                  x2={197 - pageW + pageW * 0.7} y2={125 + dy}
                   stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
             </g>
@@ -311,17 +313,17 @@ function LibraryScene({ progress: p }: SceneProps) {
 
         {/* RIGHT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 35;
-          const bookH = 24;
+          const pageW = spread * 45;
+          const bookH = 34;
           return (
             <g>
-              <rect x="202" y="130" width={pageW + 2} height={bookH} rx="1"
+              <rect x="203" y="120" width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
-              <rect x="202" y="131" width={pageW} height={bookH - 2} rx="0.5"
+              <rect x="203" y="121" width={pageW} height={bookH - 2} rx="0.5"
                 fill="#ede5d8" opacity={spread * 0.7} />
-              {spread > 0.3 && [0, 4, 8, 12, 16].map((dy) => (
-                <line key={`tr${dy}`} x1="205" y1={134 + dy}
-                  x2={202 + pageW * 0.7} y2={134 + dy}
+              {spread > 0.3 && [0, 4, 8, 12, 16, 20, 24].map((dy) => (
+                <line key={`tr${dy}`} x1="206" y1={125 + dy}
+                  x2={203 + pageW * 0.7} y2={125 + dy}
                   stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
             </g>
@@ -330,8 +332,8 @@ function LibraryScene({ progress: p }: SceneProps) {
 
         {/* Book glow */}
         {spread > 0.2 && (
-          <ellipse cx="200" cy="142" rx={30 * spread} ry={14 * spread}
-            fill="#c088b0" opacity={spread * 0.07} filter="url(#pageGlow)" />
+          <ellipse cx="200" cy="137" rx={38 * spread} ry={18 * spread}
+            fill="#c088b0" opacity={spread * 0.08} filter="url(#pageGlow)" />
         )}
       </g>
 
