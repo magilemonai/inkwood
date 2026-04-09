@@ -114,9 +114,20 @@ Write an honest, direct critique from these six perspectives. **Do not be gentle
 
 For each tester: What was the highlight? Where did they get confused/bored? Would they show this to a friend?
 
-## Step 4: Priority Stack
+## Step 4: Present Summary to User
 
-End with a prioritized action stack of 10-15 items:
+**Always show the user** a brief summary before saving. Format:
+
+### Per-Persona Summary (one sentence each)
+- **Code Reviewer:** [one-line verdict]
+- **Narrative Director:** [average prompt rating, key observation]
+- **UX Researcher:** [top finding]
+- **Design Director:** [average grade, best/worst scene]
+- **Product Lead:** [launch readiness, top blocker]
+- **Alpha Testers:** [overall sentiment, standout quote]
+
+### Full Priority Stack
+Show the complete prioritized action stack (10-15 items):
 
 | # | Item | Impact | Effort | Category |
 |---|---|---|---|---|
