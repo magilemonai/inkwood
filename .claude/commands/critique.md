@@ -4,11 +4,11 @@ Run a full six-persona critique of Inkwood's current state. This is the game's q
 
 ## Step 1: Screenshot Current State
 
-Build the project and screenshot all 10 scenes at 0%, 20%, 40%, 50%, 60%, 80%, and 99% progress to capture the full animation arc:
+Build the project and screenshot all 10 scenes at 0%, 20%, 40%, 50%, 60%, 80%, and 99% progress, plus the intro and outro sequences:
 
 ```bash
 npx vite build
-# Start preview server, then screenshot
+# Start preview server, then screenshot all scenes
 npx vite preview --port 4173 &
 sleep 3
 for i in 0 1 2 3 4 5 6 7 8 9; do
@@ -22,9 +22,49 @@ for i in 0 1 2 3 4 5 6 7 8 9; do
 done
 ```
 
+Then capture the intro and outro sequences using timed Playwright screenshots. Use this inline script:
+
+```bash
+node -e "
+const { chromium } = require('playwright-core');
+const { mkdirSync } = require('fs');
+const CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const URL = 'http://localhost:4173/inkwood/';
+(async () => {
+  mkdirSync('./screenshots', { recursive: true });
+  // INTRO: load fresh page, take screenshots at 2s intervals
+  const b = await chromium.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] });
+  let p = await b.newPage(); await p.setViewportSize({ width: 1400, height: 800 });
+  await p.goto(URL, { waitUntil: 'networkidle' }); await p.waitForTimeout(1000);
+  for (let t = 0; t < 6; t++) {
+    await p.screenshot({ path: './screenshots/intro-' + (t * 3) + 's.png' });
+    await p.waitForTimeout(3000);
+  }
+  // Click Begin to start game
+  await p.keyboard.press('Space'); await p.waitForTimeout(500);
+  await p.keyboard.press('Space'); await p.waitForTimeout(1000);
+  await b.close();
+
+  // OUTRO: use dev panel to jump to outro
+  const b2 = await chromium.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] });
+  let p2 = await b2.newPage(); await p2.setViewportSize({ width: 1400, height: 800 });
+  await p2.goto(URL + '?dev', { waitUntil: 'networkidle' }); await p2.waitForTimeout(2000);
+  await p2.keyboard.press('F2'); await p2.waitForTimeout(500);
+  const btns = await p2.$$('button');
+  for (const btn of btns) { if ((await btn.textContent())?.includes('outro')) { await btn.click(); break; } }
+  await p2.keyboard.press('F2'); await p2.waitForTimeout(500);
+  for (let t = 0; t < 6; t++) {
+    await p2.screenshot({ path: './screenshots/outro-' + (t * 4) + 's.png' });
+    await p2.waitForTimeout(4000);
+  }
+  await b2.close();
+})();
+" 2>&1
+```
+
 ## Step 2: Visual Review
 
-Read each screenshot image to visually assess the current state. Review the full animation progression — not just start/end but how the scene transforms at each stage. Note specific issues you see — don't guess, look.
+Read each screenshot image to visually assess the current state. Review the full animation progression — not just start/end but how the scene transforms at each stage. Review intro pacing (do vignettes read?) and outro composition (does the panorama assemble correctly?). Note specific issues you see — don't guess, look.
 
 ## Step 3: Write the Critique
 
