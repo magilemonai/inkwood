@@ -4,7 +4,7 @@ Run a full six-persona critique of Inkwood's current state. This is the game's q
 
 ## Step 1: Screenshot Current State
 
-Build the project and screenshot all 10 scenes at 0% and 99% progress:
+Build the project and screenshot all 10 scenes at 0%, 20%, 40%, 50%, 60%, 80%, and 99% progress to capture the full animation arc:
 
 ```bash
 npx vite build
@@ -13,13 +13,18 @@ npx vite preview --port 4173 &
 sleep 3
 for i in 0 1 2 3 4 5 6 7 8 9; do
   node scripts/screenshot.mjs $i 0
+  node scripts/screenshot.mjs $i 20
+  node scripts/screenshot.mjs $i 40
+  node scripts/screenshot.mjs $i 50
+  node scripts/screenshot.mjs $i 60
+  node scripts/screenshot.mjs $i 80
   node scripts/screenshot.mjs $i 99
 done
 ```
 
 ## Step 2: Visual Review
 
-Read each screenshot image to visually assess the current state. Note specific issues you see — don't guess, look.
+Read each screenshot image to visually assess the current state. Review the full animation progression — not just start/end but how the scene transforms at each stage. Note specific issues you see — don't guess, look.
 
 ## Step 3: Write the Critique
 
