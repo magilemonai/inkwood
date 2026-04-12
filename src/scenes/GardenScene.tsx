@@ -190,6 +190,16 @@ function GardenScene({ progress: p }: SceneProps) {
           <stop offset="40%" stopColor="#f5d030" stopOpacity={p * 0.18} />
           <stop offset="100%" stopColor="#f5e060" stopOpacity={0} />
         </radialGradient>
+
+        {/* Gentle cloud drift — slow horizontal motion */}
+        <style>{`
+          @keyframes gardenCloudDrift {
+            0%   { transform: translateX(-6px); }
+            50%  { transform: translateX(6px); }
+            100% { transform: translateX(-6px); }
+          }
+          .gardenClouds { animation: gardenCloudDrift 22s ease-in-out infinite; }
+        `}</style>
       </defs>
 
       {/* ── SKY ── */}
@@ -200,9 +210,9 @@ function GardenScene({ progress: p }: SceneProps) {
       <circle cx="345" cy={sunY} r={16} fill="#f5d860" opacity={p * 0.85}
         filter={p > 0.3 ? "url(#sunGlow)" : undefined} />
 
-      {/* ── CLOUDS — positioned to NOT overlap the tree ── */}
+      {/* ── CLOUDS — positioned to NOT overlap the tree; drift slowly ── */}
       {p > 0.35 && (
-        <g opacity={sub(p, 0.35, 0.3) * 0.3}>
+        <g className="gardenClouds" opacity={sub(p, 0.35, 0.3) * 0.3}>
           <ellipse cx={295} cy={52} rx={28} ry={8} fill="white" />
           <ellipse cx={278} cy={48} rx={18} ry={6} fill="white" />
           <ellipse cx={312} cy={49} rx={20} ry={7} fill="white" />

@@ -38,15 +38,16 @@ const STARS: { x: number; y: number; r: number; glow: number; delay: number }[] 
 ];
 
 // ── Constellation lines — pairs of star indices ──
+// Lines that would cross the moon disc (cx=320, cy≈45, r=18) have been
+// removed or rerouted: [6, 15] and [12, 7] and [7, 20] all passed through
+// the moon. Replaced with [7, 14] which stays to the right of the moon.
 const CONSTELLATIONS: [number, number][] = [
   [0, 6],   // top-left cluster
-  [6, 15],
   [4, 8],   // mid-left triangle
   [8, 16],
   [4, 16],
   [1, 12],  // right arc
-  [12, 7],
-  [7, 20],
+  [7, 14],  // right, clear of moon
   [9, 5],   // top center link
   [5, 10],
   [10, 18],
@@ -192,23 +193,35 @@ function StarScene({ progress: p }: SceneProps) {
         </g>
       )}
 
-      {/* ── Moon — crescent via overlapping circles ── */}
+      {/* ── Moon — crescent via overlapping circles ──
+           Previously used GlowFilter on the bright disc, which rendered a
+           visible rectangular bound and exposed the dark crescent-forming
+           circle as a compositional seam. Now the halo is drawn exclusively
+           with soft radial gradients (layered wide + narrow) and the
+           crescent's dark circle matches the actual sky color at this y
+           so it reads as absence, not an overlay. */}
       {moonP > 0 && (
         <g opacity={moonP}>
-          {/* Moon glow aura */}
+          {/* Wide soft aura */}
           <circle cx="320" cy={moonY} r="55" fill="url(#moonRadial)" />
 
-          {/* Moon bright disc */}
+          {/* Inner halo — tighter, brighter, no filter bounds */}
+          <circle cx="320" cy={moonY} r="28"
+            fill="#e8e8ff" opacity={moonBright * 0.08} />
+          <circle cx="320" cy={moonY} r="22"
+            fill="#f0f0ff" opacity={moonBright * 0.12} />
+
+          {/* Moon bright disc — no SVG filter (was the source of the box) */}
           <circle
             cx="320" cy={moonY} r="18"
             fill={`rgb(${210 + Math.floor(moonBright * 35)}, ${210 + Math.floor(moonBright * 35)}, ${220 + Math.floor(moonBright * 30)})`}
-            filter="url(#moonGlow)"
           />
 
-          {/* Dark overlap circle to create crescent — matches sky gradient color at this height */}
+          {/* Dark overlap circle to create crescent — matched to sky gradient
+               at moonY (the sky uses hsl-ish #080e2a → #101838 in this band). */}
           <circle
             cx="310" cy={moonY - 4} r="15"
-            fill={`hsl(228, 50%, ${4 + (moonY / 250) * 8}%)`}
+            fill={`hsl(229, 65%, ${6 + (moonY / 250) * 8}%)`}
           />
 
           {/* Subtle surface detail on lit crescent */}

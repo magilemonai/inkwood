@@ -28,8 +28,10 @@ const CAVERN_RIGHT = `
 // ─── SCENE ─────────────────────────────────────────────────
 
 function WellScene({ progress: p }: SceneProps) {
-  // Water rises from bottom of cavern to well opening
-  const waterLevel = 208 - p * 88;
+  // Water rises with an eased curve so it doesn't snap up during
+  // the second prompt — feels held, not extruded.
+  const easedP = 1 - (1 - p) * (1 - p);
+  const waterLevel = 208 - easedP * 88;
 
   // Bucket lowers
   const bucketY = 48 + p * 52;
@@ -40,24 +42,23 @@ function WellScene({ progress: p }: SceneProps) {
   const waterS = 25 + p * 8;      // muted water — cave water, not a pool
   const waterL = 6 + p * 6;       // very dark — it's deep underground water
 
-  // Wall rune positions — on the stone near the water
+  // Wall rune positions — runes now activate IN PLACE on the well
+  // stones rather than flowing downstream. The prompt "carry the old
+  // songs home" reads as "remembered by the stones," not as literal
+  // rune-projectiles on the river current.
   const wallRunes = [
-    { x: 145, y: 162, delay: 0.42 },
-    { x: 255, y: 158, delay: 0.46 },
-    { x: 142, y: 180, delay: 0.50 },
-    { x: 258, y: 175, delay: 0.54 },
-    { x: 148, y: 196, delay: 0.58 },
-    { x: 252, y: 192, delay: 0.62 },
-  ];
-
-  // Flowing runes — carried downstream by the water
-  const flowRunes = [
-    { sx: 200, sy: 165, ex: 70,  ey: 180, delay: 0.65 },
-    { sx: 200, sy: 170, ex: 330, ey: 185, delay: 0.70 },
-    { sx: 200, sy: 160, ex: 40,  ey: 175, delay: 0.76 },
-    { sx: 200, sy: 175, ex: 360, ey: 190, delay: 0.82 },
-    { sx: 200, sy: 168, ex: 15,  ey: 195, delay: 0.88 },
-    { sx: 200, sy: 172, ex: 385, ey: 188, delay: 0.93 },
+    // Near the central shaft (where water rises first)
+    { x: 178, y: 162, delay: 0.30 },
+    { x: 222, y: 158, delay: 0.34 },
+    { x: 182, y: 178, delay: 0.40 },
+    { x: 218, y: 174, delay: 0.44 },
+    // Cavern-wall runes — light up when water reaches them
+    { x: 145, y: 168, delay: 0.52 },
+    { x: 255, y: 164, delay: 0.56 },
+    { x: 148, y: 184, delay: 0.62 },
+    { x: 252, y: 180, delay: 0.66 },
+    { x: 152, y: 196, delay: 0.72 },
+    { x: 248, y: 192, delay: 0.76 },
   ];
 
   return (
@@ -116,75 +117,80 @@ function WellScene({ progress: p }: SceneProps) {
         </g>
       ))}
 
-      {/* ── UNDERGROUND RIVER — water fills the ENTIRE cavern channel ──
-           The river flows from left to right through the cavern.
-           As water rises, it fills left channel, central shaft, and right channel. */}
+      {/* ── UNDERGROUND RIVER — contained column + dim side channels ──
+           The central water column is narrowed to x=175-225 (the width
+           of the actual well shaft above) so water reads as held in the
+           stone throat, not as a rectangle extruding upward. The side
+           channels still fill but sit in shadow at half intensity. */}
       {p > 0.04 && (() => {
         const waterOp = 0.35 + p * 0.2;
-        // River level rises across the full width
-        const riverLevel = waterLevel + 8; // slightly higher in the side channels
+        const riverLevel = waterLevel + 8;
+        const shaftL = 175;
+        const shaftR = 225;
         return (
           <>
-            {/* Left river channel — water flowing from left */}
+            {/* Left river channel — darker, holds the ambient flow */}
             <rect x="0" y={Math.max(riverLevel, 185)} width="140" height={210 - Math.max(riverLevel, 185)}
-              fill={`hsl(185, ${waterS - 5}%, ${waterL}%)`}
+              fill={`hsl(185, ${waterS - 8}%, ${waterL - 1}%)`}
+              opacity={waterOp * 0.55} />
+            {/* Left shoulder between cavern wall and shaft — mid-dim */}
+            <rect x="140" y={Math.max(waterLevel, riverLevel - 4)} width={shaftL - 140}
+              height={210 - Math.max(waterLevel, riverLevel - 4)}
+              fill={`hsl(185, ${waterS - 6}%, ${waterL}%)`}
               opacity={waterOp * 0.7} />
-            {/* Central shaft — deepest, water rises highest here */}
-            <rect x="140" y={waterLevel} width="120" height={210 - waterLevel}
+            {/* Central shaft — narrow, bright, the held column */}
+            <rect x={shaftL} y={waterLevel} width={shaftR - shaftL} height={210 - waterLevel}
               fill="url(#waterGrad)" opacity={waterOp} />
-            {/* Right river channel — water flowing to right */}
-            <rect x="260" y={Math.max(riverLevel, 185)} width="140" height={210 - Math.max(riverLevel, 185)}
-              fill={`hsl(185, ${waterS - 5}%, ${waterL}%)`}
+            {/* Inner shadow on shaft walls — subtle darker edges so the
+                 column reads as contained by stone, not free-floating. */}
+            <rect x={shaftL} y={waterLevel} width={3} height={210 - waterLevel}
+              fill={`hsl(185, ${waterS - 10}%, ${Math.max(2, waterL - 3)}%)`}
+              opacity={waterOp * 0.6} />
+            <rect x={shaftR - 3} y={waterLevel} width={3} height={210 - waterLevel}
+              fill={`hsl(185, ${waterS - 10}%, ${Math.max(2, waterL - 3)}%)`}
+              opacity={waterOp * 0.6} />
+            {/* Right shoulder */}
+            <rect x={shaftR} y={Math.max(waterLevel, riverLevel - 4)} width={260 - shaftR}
+              height={210 - Math.max(waterLevel, riverLevel - 4)}
+              fill={`hsl(185, ${waterS - 6}%, ${waterL}%)`}
               opacity={waterOp * 0.7} />
-            {/* Surface shimmer — spans full river width */}
-            <ellipse cx="200" cy={waterLevel + 1} rx={50 * Math.min(1, p * 2)} ry="1.5"
-              fill="white" opacity={p * 0.06} />
-            {/* Left channel surface */}
+            {/* Right river channel */}
+            <rect x="260" y={Math.max(riverLevel, 185)} width="140" height={210 - Math.max(riverLevel, 185)}
+              fill={`hsl(185, ${waterS - 8}%, ${waterL - 1}%)`}
+              opacity={waterOp * 0.55} />
+            {/* Meniscus on the shaft — narrow, aligned with shaft */}
+            <ellipse cx="200" cy={waterLevel + 0.5}
+              rx={(shaftR - shaftL) / 2 * Math.min(1, p * 2)} ry="1.2"
+              fill="white" opacity={p * 0.1} />
+            {/* Side channel surfaces — barely there */}
             <line x1="0" y1={Math.max(riverLevel, 185) + 1} x2="140" y2={Math.max(riverLevel, 185) + 1}
-              stroke="white" strokeWidth="0.5" opacity={p * 0.04} />
-            {/* Right channel surface */}
+              stroke="white" strokeWidth="0.4" opacity={p * 0.03} />
             <line x1="260" y1={Math.max(riverLevel, 185) + 1} x2="400" y2={Math.max(riverLevel, 185) + 1}
-              stroke="white" strokeWidth="0.5" opacity={p * 0.04} />
-            {/* Flow current lines — show water direction */}
-            {p > 0.3 && [0, 1, 2].map((j) => {
-              const flowY = Math.max(riverLevel, 185) + 4 + j * 5;
-              const flowOp = sub(p, 0.3 + j * 0.1, 0.2) * 0.08;
-              return (
-                <g key={`flow${j}`} opacity={flowOp}>
-                  <path d={`M200 ${flowY} C180 ${flowY - 1}, 140 ${flowY}, 100 ${flowY + 1} C70 ${flowY + 2}, 40 ${flowY}, 0 ${flowY + 1}`}
-                    fill="none" stroke="#80d8d8" strokeWidth="0.4" />
-                  <path d={`M200 ${flowY} C220 ${flowY - 1}, 260 ${flowY}, 300 ${flowY + 1} C330 ${flowY + 2}, 360 ${flowY}, 400 ${flowY + 1}`}
-                    fill="none" stroke="#80d8d8" strokeWidth="0.4" />
-                </g>
-              );
-            })}
+              stroke="white" strokeWidth="0.4" opacity={p * 0.03} />
           </>
         );
       })()}
 
-      {/* ── RUNES ON CAVERN WALLS — glow when water reaches them ── */}
+      {/* ── RUNES ON WELL & CAVERN STONES — glow IN PLACE when water
+           reaches them. No more downstream sweep; the old songs are
+           "carried home" by the stones remembering, not by projectile
+           runes on the current. Each rune uses a slightly different
+           glyph and pulses subtly once lit. */}
       {wallRunes.map((r, i) => {
-        const rp = sub(p, r.delay, 0.12);
-        const wet = waterLevel < r.y;
+        const rp = sub(p, r.delay, 0.18);
+        const wet = waterLevel < r.y + 2;
         if (!wet || rp <= 0) return null;
+        const pulse = 0.8 + 0.2 * Math.sin(p * Math.PI * 6 + i * 1.3);
+        // Alternate glyph shapes for visual variety
+        const glyph = i % 3 === 0
+          ? `M${r.x - 3} ${r.y - 3} L${r.x} ${r.y + 3} L${r.x + 3} ${r.y - 3}`
+          : i % 3 === 1
+            ? `M${r.x - 3} ${r.y} L${r.x + 3} ${r.y} M${r.x} ${r.y - 3} L${r.x} ${r.y + 3}`
+            : `M${r.x - 3} ${r.y - 2} Q${r.x} ${r.y - 4} ${r.x + 3} ${r.y - 2} Q${r.x} ${r.y + 3} ${r.x - 3} ${r.y - 2} Z`;
         return (
-          <g key={i} opacity={rp * 0.7} filter="url(#runeGlow)">
-            <path d={`M${r.x - 3} ${r.y - 4} L${r.x} ${r.y + 4} L${r.x + 3} ${r.y - 4}`}
+          <g key={i} opacity={rp * 0.75 * pulse} filter="url(#runeGlow)">
+            <path d={glyph}
               fill="none" stroke="#50b8b8" strokeWidth="1" strokeLinecap="round" />
-          </g>
-        );
-      })}
-
-      {/* ── RUNES FLOWING DOWNSTREAM — "carry the old songs home" ── */}
-      {flowRunes.map((r, i) => {
-        const fp = sub(p, r.delay, 0.12);
-        if (fp <= 0) return null;
-        const cx = r.sx + (r.ex - r.sx) * fp;
-        const cy = r.sy + (r.ey - r.sy) * fp;
-        return (
-          <g key={`f${i}`} opacity={(1 - fp * 0.8) * 0.5} filter="url(#runeGlow)">
-            <path d={`M${cx - 2} ${cy - 3} L${cx + 2} ${cy + 3} M${cx + 2} ${cy - 2} L${cx - 2} ${cy + 2}`}
-              fill="none" stroke="#50b8b8" strokeWidth="0.8" strokeLinecap="round" />
           </g>
         );
       })}

@@ -183,6 +183,10 @@ function TreeScene({ progress: p }: SceneProps) {
   const rootPhase = sub(p, 0, 0.33);      // roots glow
   const branchPhase = sub(p, 0.33, 0.33); // branches glow
   const heartPhase = sub(p, 0.66, 0.34);  // heart awakens
+  // Canopy starts arriving mid-branch phase so "branches wider than sky"
+  // never leaves the tree looking bare. By the time the heart awakens,
+  // the canopy is already partly present, then blooms fully.
+  const canopyEarly = sub(p, 0.45, 0.55);
 
   // Background — deep green-black, warming slightly
   const bgL = 4 + p * 4;
@@ -273,7 +277,15 @@ function TreeScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── CANOPY — phase 3: blooms OVER branches (covering layer) ── */}
+      {/* ── CANOPY — enters during branch phase, blooms during heart phase ──
+           A softer foreshadow layer appears on "branches wider than sky" so
+           the player never sees bare skeletal branches, then the full
+           saturated canopy overlays on the heart-awakening beat. */}
+      {canopyEarly > 0 && (
+        <path d={CANOPY}
+          fill={`hsl(${118 + p * 12}, ${15 + canopyEarly * 20}%, ${8 + canopyEarly * 10}%)`}
+          opacity={canopyEarly * 0.55} />
+      )}
       {heartPhase > 0 && (
         <>
           <path d={CANOPY}

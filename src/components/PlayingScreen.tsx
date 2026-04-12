@@ -42,6 +42,7 @@ export default function PlayingScreen() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
+  const [idleNudge, setIdleNudge] = useState(false);
 
   const { accent } = level;
   const charStates = getCharStates(typed, target);
@@ -83,11 +84,30 @@ export default function PlayingScreen() {
     return () => clearTimeout(timer);
   }, [lvl, promptIdx]);
 
+  // ── Idle nudge — if the player hasn't typed anything on a fresh
+  //    prompt within 2.5s, escalate the pulse so the call to action
+  //    is unmistakable. Set is done inside the timer; the cleanup
+  //    resets the flag whenever typing starts or the prompt advances,
+  //    so we never call setState synchronously in the effect body. ──
+  useEffect(() => {
+    if (typed.length !== 0 || completing) return;
+    const timer = setTimeout(() => setIdleNudge(true), 2500);
+    return () => {
+      clearTimeout(timer);
+      setIdleNudge(false);
+    };
+  }, [typed, completing, lvl, promptIdx]);
+
 
   const handleType = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
-    if (newVal.length > typed.length) playTypeClick();
+    const wasForward = newVal.length > typed.length;
     typeChar(newVal);
+    // Only click on accepted forward input (store rejects wrong keystrokes).
+    const acceptedTyped = useGameStore.getState().typed;
+    if (wasForward && acceptedTyped.length > typed.length) {
+      playTypeClick();
+    }
   };
 
   const focusInput = () => {
@@ -152,9 +172,9 @@ export default function PlayingScreen() {
 
         <p className={s.flavor}>{level.flavor}</p>
 
-        {/* Prompt display — pulses on every phrase start */}
+        {/* Prompt display — pulses on every phrase start; escalates after 2.5s idle */}
         <div
-          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""}`}
+          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge ? s.promptBoxIdleNudge : ""}`}
           style={{ border: `1px solid ${accent}25` }}
           onClick={focusInput}
         >

@@ -4,7 +4,13 @@
  * Reference via filter="url(#filterName)" on any SVG element.
  */
 
-/** Soft glow — use on light sources, runes, spirit elements */
+/** Soft glow — use on light sources, runes, spirit elements.
+ *
+ *  The filter region is deliberately oversized (5× the object bounding box,
+ *  centered) so large stdDeviation blurs don't clip at the filter edge —
+ *  clipped halos rendered as visible rectangular boxes behind flames, the
+ *  moon disc, and small runes in earlier builds. Safe default for blur
+ *  radii up to ~1.5× the element's short side. */
 export function GlowFilter({
   id = "glow",
   radius = 6,
@@ -17,7 +23,7 @@ export function GlowFilter({
   opacity?: number;
 }) {
   return (
-    <filter id={id} x="-50%" y="-50%" width="200%" height="200%">
+    <filter id={id} x="-200%" y="-200%" width="500%" height="500%">
       <feGaussianBlur in="SourceGraphic" stdDeviation={radius} result="blur" />
       {color && (
         <feFlood floodColor={color} floodOpacity={opacity} result="color" />

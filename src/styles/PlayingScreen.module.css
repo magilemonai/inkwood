@@ -134,6 +134,42 @@
   animation: goldenPulse 2.5s ease-in-out infinite;
 }
 
+/* Idle escalation — stronger pulse after ~2.5s of no input on a fresh prompt */
+@keyframes goldenPulseStrong {
+  0%, 100% {
+    box-shadow: 0 0 14px 4px rgba(232, 208, 128, 0.28),
+                inset 0 0 6px 2px rgba(232, 208, 128, 0.10);
+  }
+  50% {
+    box-shadow: 0 0 30px 10px rgba(232, 208, 128, 0.42),
+                inset 0 0 14px 4px rgba(232, 208, 128, 0.18);
+  }
+}
+
+.promptBoxIdleNudge {
+  animation: goldenPulseStrong 1.4s ease-in-out infinite;
+}
+
+.promptBoxIdleNudge::after {
+  content: "↓ type here";
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: #e8d080;
+  opacity: 0;
+  animation: idleCaptionFade 1.4s ease-in-out infinite;
+  pointer-events: none;
+  font-style: italic;
+}
+
+@keyframes idleCaptionFade {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.9; }
+}
+
 /* ── Mobile tap overlay ── */
 .tapOverlay {
   position: absolute;

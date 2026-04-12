@@ -14,7 +14,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Dark Cottage",
     flavor: "Call the warmth home.",
-    prompts: ["little candle burn bright", "fill every room with warmth"],
+    prompts: ["little candle, burn bright", "fill every room with warmth"],
     scene: "cottage",
     accent: "#e89a30",
     bg: "#0d0905",
@@ -33,7 +33,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Dry Well",
     flavor: "The stones still remember the sound of water.",
-    prompts: ["deep water remember your name", "rise and carry the old songs home"],
+    prompts: ["deep water, remember your name", "rise and carry the old songs home"],
     scene: "well",
     accent: "#50b8b8",
     bg: "#040a0a",
@@ -61,7 +61,7 @@ export const LEVELS: Level[] = [
   {
     title: "The Spirit Stones",
     flavor: "They once guided great powers along hidden paths.",
-    prompts: ["stand tall again guardians of old", "remember what was promised"],
+    prompts: ["stand tall again, guardians of old", "remember what was promised"],
     scene: "stones",
     accent: "#88a8c8",
     bg: "#050608",

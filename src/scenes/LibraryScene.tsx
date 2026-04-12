@@ -296,29 +296,34 @@ function LibraryScene({ progress: p }: SceneProps) {
       <ellipse cx="200" cy="152" rx="24" ry="5"
         fill={`hsl(${chamberH + 2}, ${chamberS - 2}%, ${chamberL + 7}%)`} />
 
-      {/* ── HERO TOME — large focal element ── */}
+      {/* ── HERO TOME — taller-than-wide portrait book at every stage ──
+           Real sacred books are portrait; the old squat spread-out
+           proportions read as a diagram, not a tome. Spine h=58 with
+           pages extending h=56; max spread width ~50 keeps the footprint
+           within the pedestal. */}
       <g>
         {/* Spine */}
-        <rect x="197" y="120" width="6" height="34" rx="1"
+        <rect x="197" y="95" width="6" height="58" rx="1"
           fill={`hsl(280, ${15 + p * 12}%, ${12 + p * 8}%)`} />
         {/* Spine gold detail */}
-        <line x1="200" y1="123" x2="200" y2="151"
+        <line x1="200" y1="99" x2="200" y2="149"
           stroke={`hsl(40, ${10 + p * 15}%, ${16 + p * 8}%)`}
           strokeWidth="0.6" opacity={0.3 + p * 0.3} />
 
         {/* LEFT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 45;
-          const bookH = 34;
+          const pageW = spread * 22;
+          const bookY = 96;
+          const bookH = 56;
           return (
             <g>
-              <rect x={197 - pageW - 2} y="120" width={pageW + 2} height={bookH} rx="1"
+              <rect x={197 - pageW - 2} y={bookY} width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
-              <rect x={197 - pageW} y="121" width={pageW} height={bookH - 2} rx="0.5"
+              <rect x={197 - pageW} y={bookY + 1} width={pageW} height={bookH - 2} rx="0.5"
                 fill="#e8e0d0" opacity={spread * 0.7} />
-              {spread > 0.3 && [0, 4, 8, 12, 16, 20, 24].map((dy) => (
-                <line key={`tl${dy}`} x1={197 - pageW + 3} y1={125 + dy}
-                  x2={197 - pageW + pageW * 0.7} y2={125 + dy}
+              {spread > 0.3 && [0, 5, 10, 15, 20, 25, 30, 35, 40, 45].map((dy) => (
+                <line key={`tl${dy}`} x1={197 - pageW + 2} y1={bookY + 5 + dy}
+                  x2={197 - pageW + pageW * 0.8} y2={bookY + 5 + dy}
                   stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
             </g>
@@ -327,26 +332,27 @@ function LibraryScene({ progress: p }: SceneProps) {
 
         {/* RIGHT PAGE SPREAD */}
         {spread > 0.05 && (() => {
-          const pageW = spread * 45;
-          const bookH = 34;
+          const pageW = spread * 22;
+          const bookY = 96;
+          const bookH = 56;
           return (
             <g>
-              <rect x="203" y="120" width={pageW + 2} height={bookH} rx="1"
+              <rect x="203" y={bookY} width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
-              <rect x="203" y="121" width={pageW} height={bookH - 2} rx="0.5"
+              <rect x="203" y={bookY + 1} width={pageW} height={bookH - 2} rx="0.5"
                 fill="#ede5d8" opacity={spread * 0.7} />
-              {spread > 0.3 && [0, 4, 8, 12, 16, 20, 24].map((dy) => (
-                <line key={`tr${dy}`} x1="206" y1={125 + dy}
-                  x2={203 + pageW * 0.7} y2={125 + dy}
+              {spread > 0.3 && [0, 5, 10, 15, 20, 25, 30, 35, 40, 45].map((dy) => (
+                <line key={`tr${dy}`} x1="206" y1={bookY + 5 + dy}
+                  x2={203 + pageW * 0.8} y2={bookY + 5 + dy}
                   stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
               ))}
             </g>
           );
         })()}
 
-        {/* Book glow */}
+        {/* Book glow — portrait halo matching the new aspect */}
         {spread > 0.2 && (
-          <ellipse cx="200" cy="137" rx={38 * spread} ry={18 * spread}
+          <ellipse cx="200" cy="124" rx={22 * spread} ry={32 * spread}
             fill="#c088b0" opacity={spread * 0.08} filter="url(#pageGlow)" />
         )}
       </g>

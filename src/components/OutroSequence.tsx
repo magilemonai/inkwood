@@ -433,11 +433,41 @@ export default function OutroSequence() {
               {/* Ground clearing glow */}
               <ellipse cx={v.x} cy="155" rx={10 * p} ry={3 * p}
                 fill={v.color} opacity={p * 0.15} />
+              {/* Spirit silhouettes — 3 gathered in the clearing, the
+                   Sanctum's signature element. Appear after moonbeams settle. */}
+              {p > 0.6 && [-5, 0, 5].map((dx, si) => {
+                const sp = sub(p, 0.6 + si * 0.08, 0.35);
+                if (sp <= 0) return null;
+                const cx = v.x + dx;
+                const bob = Math.sin(time * 1.8 + si * 1.5) * 0.4;
+                const cy = 152 + bob;
+                return (
+                  <g key={`ss${si}`} opacity={sp * 0.9}>
+                    {/* Halo */}
+                    <circle cx={cx} cy={cy - 2} r={2}
+                      fill={v.color} opacity={sp * 0.25} />
+                    {/* Head */}
+                    <circle cx={cx} cy={cy - 2} r={0.8}
+                      fill="#ffe8a8" opacity={sp * 0.75} />
+                    {/* Robe */}
+                    <path
+                      d={`M${cx - 1} ${cy - 1}
+                          C${cx - 1.3} ${cy + 0.5}, ${cx - 1.1} ${cy + 1.5}, ${cx - 0.8} ${cy + 2.5}
+                          L${cx + 0.8} ${cy + 2.5}
+                          C${cx + 1.1} ${cy + 1.5}, ${cx + 1.3} ${cy + 0.5}, ${cx + 1} ${cy - 1}
+                          Z`}
+                      fill={v.color} opacity={sp * 0.55}
+                    />
+                  </g>
+                );
+              })}
             </g>
           );
         })()}
 
-        {/* ═══ Phase 3: Great Tree grows from center ═══ */}
+        {/* ═══ Phase 3: Great Tree grows from center ═══
+             Tree shifted up 25 SVG units so the "The forest remembers"
+             text and Begin Again button read clean beneath the trunk. */}
         {treeGrow > 0 && (
           <g>
             {/* Roots spreading to connect locations */}
@@ -445,7 +475,7 @@ export default function OutroSequence() {
               const rp = easeInOut(sub(rootSpread, i * 0.08, 0.5));
               if (rp <= 0) return null;
               const cx = 210;
-              const cy = 200;
+              const cy = 175;
               // Bezier root from tree base toward each vignette
               const dx = v.x - cx;
               const midX = cx + dx * 0.5;
@@ -471,12 +501,12 @@ export default function OutroSequence() {
               );
             })}
 
-            {/* Trunk */}
+            {/* Trunk — base y=195 (shifted up 25 from previous 220) */}
             <path
-              d={`M${202} ${220}
-                  C${198} ${220 - 40 * treeGrow}, ${195} ${220 - 70 * treeGrow}, ${200} ${220 - 100 * treeGrow}
-                  L${220} ${220 - 100 * treeGrow}
-                  C${225} ${220 - 70 * treeGrow}, ${222} ${220 - 40 * treeGrow}, ${218} ${220}
+              d={`M${202} ${195}
+                  C${198} ${195 - 40 * treeGrow}, ${195} ${195 - 70 * treeGrow}, ${200} ${195 - 100 * treeGrow}
+                  L${220} ${195 - 100 * treeGrow}
+                  C${225} ${195 - 70 * treeGrow}, ${222} ${195 - 40 * treeGrow}, ${218} ${195}
                   Z`}
               fill={`hsl(30, ${15 + radiance * 5}%, ${12 + radiance * 3}%)`}
               opacity={treeGrow}
@@ -495,21 +525,21 @@ export default function OutroSequence() {
               if (bp <= 0) return null;
               return (
                 <path key={bi}
-                  d={`M210 ${220 - 80 * treeGrow} Q${210 + br.cx1 * bp} ${220 + br.cy1 * bp} ${210 + br.bx * bp} ${220 + br.by * bp}`}
+                  d={`M210 ${195 - 80 * treeGrow} Q${210 + br.cx1 * bp} ${195 + br.cy1 * bp} ${210 + br.bx * bp} ${195 + br.by * bp}`}
                   fill="none" stroke={`hsl(30, 15%, ${13 + radiance * 3}%)`}
                   strokeWidth={2 - bi * 0.15} opacity={bp * 0.7}
                 />
               );
             })}
 
-            {/* Canopy clusters */}
+            {/* Canopy clusters — shifted up 25 with the trunk */}
             {[
-              { cx: 170, cy: 115, rx: 28, ry: 18 },
-              { cx: 210, cy: 100, rx: 35, ry: 22 },
-              { cx: 250, cy: 115, rx: 28, ry: 18 },
-              { cx: 190, cy: 108, rx: 22, ry: 16 },
-              { cx: 230, cy: 108, rx: 22, ry: 16 },
-              { cx: 210, cy: 118, rx: 18, ry: 12 },
+              { cx: 170, cy: 90,  rx: 28, ry: 18 },
+              { cx: 210, cy: 75,  rx: 35, ry: 22 },
+              { cx: 250, cy: 90,  rx: 28, ry: 18 },
+              { cx: 190, cy: 83,  rx: 22, ry: 16 },
+              { cx: 230, cy: 83,  rx: 22, ry: 16 },
+              { cx: 210, cy: 93,  rx: 18, ry: 12 },
             ].map((c, i) => {
               const cp = easeOut(sub(treeGrow, 0.4 + i * 0.06, 0.4));
               if (cp <= 0) return null;
@@ -525,16 +555,16 @@ export default function OutroSequence() {
 
             {/* Canopy highlight glow */}
             {canopyLight > 0 && (
-              <ellipse cx="210" cy="110"
+              <ellipse cx="210" cy="85"
                 rx={60 * canopyLight} ry={35 * canopyLight}
                 fill="url(#canopyGrad)" opacity={canopyLight * 0.5}
               />
             )}
 
-            {/* Spirit lights in canopy */}
+            {/* Spirit lights in canopy — shifted up 25 */}
             {[
-              { x: 180, y: 108 }, { x: 210, y: 98 }, { x: 240, y: 106 },
-              { x: 195, y: 115 }, { x: 225, y: 112 }, { x: 210, y: 105 },
+              { x: 180, y: 83 }, { x: 210, y: 73 }, { x: 240, y: 81 },
+              { x: 195, y: 90 }, { x: 225, y: 87 }, { x: 210, y: 80 },
             ].map((sl, i) => {
               const sp = sub(treeGrow, 0.7, 0.3);
               if (sp <= 0) return null;
@@ -563,7 +593,7 @@ export default function OutroSequence() {
             {leyFlow > 0 && VIGNETTES.map((v, i) => {
               const pulseT = ((time - 18) * 0.5 + i * 0.35) % 1;
               const cx = 210;
-              const cy = 200;
+              const cy = 175;
               const dx = v.x - cx;
               const px = cx + dx * pulseT;
               const py = cy + (155 - cy) * pulseT + 8 * Math.sin(pulseT * Math.PI) * (1 + Math.abs(dx) * 0.003);

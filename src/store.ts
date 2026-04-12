@@ -99,11 +99,22 @@ export const useGameStore = create<GameState>((set, get) => ({
   setScreen: (screen) => set({ screen }),
 
   typeChar: (value) => {
-    const { completing } = get();
+    const { typed, completing } = get();
     const target = get().target();
     if (completing) return;
-    if (value.length <= target.length) {
+    // Backspace / shortening — always allowed so players can correct.
+    if (value.length < typed.length) {
       set({ typed: value });
+      return;
+    }
+    // Forward motion — only accept if the new character matches the target.
+    // Wrong keystrokes are dropped silently; the scene doesn't advance.
+    if (value.length > typed.length && value.length <= target.length) {
+      const nextChar = value[value.length - 1];
+      const expected = target[typed.length];
+      if (nextChar === expected) {
+        set({ typed: value });
+      }
     }
   },
 

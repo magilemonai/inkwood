@@ -18,12 +18,12 @@ const SCREENSHOT_DIR = './screenshots';
 
 const SCENES = [
   { name: 'The Sleeping Garden', prompts: ['wake now, sleeping roots', 'bloom, every waiting flower'] },
-  { name: 'The Dark Cottage', prompts: ['little candle burn bright', 'fill every room with warmth'] },
+  { name: 'The Dark Cottage', prompts: ['little candle, burn bright', 'fill every room with warmth'] },
   { name: 'The Night Sky', prompts: ['Orion Vega Sirius Lyra', 'burn again with ancient fire'] },
-  { name: 'The Dry Well', prompts: ['deep water remember your name', 'rise and carry the old songs home'] },
+  { name: 'The Dry Well', prompts: ['deep water, remember your name', 'rise and carry the old songs home'] },
   { name: 'The Forgotten Bridge', prompts: ['stone, recall the crossing', 'spirits, walk the old paths'] },
   { name: 'The Whispering Library', prompts: ['open, sleeping pages', 'speak again, forgotten words'] },
-  { name: 'The Spirit Stones', prompts: ['stand tall again guardians of old', 'remember what was promised'] },
+  { name: 'The Spirit Stones', prompts: ['stand tall again, guardians of old', 'remember what was promised'] },
   { name: 'The Moonlit Sanctum', prompts: ['moonlight, gather where spirits convene', 'return to your seats, ancient ones'] },
   { name: 'The Great Tree', prompts: ['roots deeper than memory', 'branches wider than sky', 'awaken, heart of all things'] },
   { name: 'The Waking World', prompts: ['garden bloom, hearth burn bright', 'stars remember, spirits sing', 'the ancient order is restored'] },

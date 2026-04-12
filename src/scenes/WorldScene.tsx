@@ -302,6 +302,50 @@ function WorldScene({ progress: p }: SceneProps) {
           strokeLinecap="round" />
       )}
 
+      {/* ── SPIRIT FIGURES on the far hill — "stars remember, spirits sing" ──
+           Three translucent upright silhouettes among the far-hill trees,
+           callback to the Moonlit Sanctum spirits. */}
+      {skyP > 0.25 && (() => {
+        const sp = sub(skyP, 0.25, 0.4);
+        const spirits = [
+          { x: 150, baseY: 92 },
+          { x: 200, baseY: 90 },
+          { x: 250, baseY: 92 },
+        ];
+        return (
+          <g opacity={sp * 0.85}>
+            {spirits.map((s, i) => {
+              const fp = sub(sp, i * 0.15, 0.5);
+              if (fp <= 0) return null;
+              const bob = Math.sin(p * Math.PI * 3 + i * 1.6) * 0.6;
+              const y = s.baseY + bob;
+              return (
+                <g key={`spirit${i}`} opacity={fp}>
+                  {/* Halo / aura */}
+                  <circle cx={s.x} cy={y - 5} r={4}
+                    fill="#d0b870" opacity={fp * 0.18} />
+                  {/* Head */}
+                  <circle cx={s.x} cy={y - 5} r={1.4}
+                    fill="#f0e0a8" opacity={fp * 0.7} />
+                  {/* Body — tapered robe shape */}
+                  <path
+                    d={`M${s.x - 1.8} ${y - 3}
+                        C${s.x - 2.4} ${y - 1}, ${s.x - 2.2} ${y + 2}, ${s.x - 1.6} ${y + 4}
+                        L${s.x + 1.6} ${y + 4}
+                        C${s.x + 2.2} ${y + 2}, ${s.x + 2.4} ${y - 1}, ${s.x + 1.8} ${y - 3}
+                        Z`}
+                    fill="#d0b870" opacity={fp * 0.55}
+                  />
+                  {/* Inner light */}
+                  <ellipse cx={s.x} cy={y} rx={0.8} ry={1.8}
+                    fill="#ffe8a8" opacity={fp * 0.4} />
+                </g>
+              );
+            })}
+          </g>
+        );
+      })()}
+
       {/* ── SPIRIT WISPS — sky phase, drifting through mid-ground ── */}
       {skyP > 0.3 && [
         { x: 90, y: 130, dx: 5 }, { x: 230, y: 120, dx: -3 },
@@ -321,17 +365,55 @@ function WorldScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
-      {/* ── STANDING STONES silhouette — right mid-ground, sky phase ── */}
-      {skyP > 0.4 && (() => {
-        const sp = sub(skyP, 0.4, 0.3);
+      {/* ── STANDING STONE GUARDIANS — "the ancient order is restored" ──
+           Stone silhouettes rise across the mid-ground forest during the
+           unity phase, alongside the ley lines spinning up. Taller and
+           more prominent than the prior tiny row. */}
+      {unityP > 0.05 && (() => {
+        const up = sub(unityP, 0.05, 0.5);
+        const stones = [
+          { x: 70,  baseY: 142, h: 18 },
+          { x: 120, baseY: 140, h: 22 },
+          { x: 175, baseY: 138, h: 20 },
+          { x: 240, baseY: 138, h: 22 },
+          { x: 295, baseY: 140, h: 18 },
+          { x: 340, baseY: 142, h: 20 },
+        ];
         return (
-          <g opacity={sp * 0.6}>
-            {[335, 345, 355, 365].map((x, i) => {
-              const h = 8 + (i % 2) * 4;
-              const riseP = sub(sp, i * 0.15, 0.4);
+          <g opacity={up * 0.8}>
+            {stones.map((st, i) => {
+              const riseP = sub(up, i * 0.08, 0.45);
+              if (riseP <= 0) return null;
+              const h = st.h * riseP;
+              const w = 3.2;
+              // Irregular monolith — slight lean, tapered top
+              const lean = (i % 2 === 0 ? -0.5 : 0.5);
+              const top = st.baseY - h;
               return (
-                <rect key={i} x={x} y={158 - h * riseP} width={4} height={h * riseP}
-                  fill={`hsl(210, 10%, ${10 + skyP * 5}%)`} rx="1" />
+                <g key={`sg${i}`}>
+                  {/* Stone body */}
+                  <path
+                    d={`M${st.x - w} ${st.baseY}
+                        L${st.x - w + lean * 0.6} ${top + 2}
+                        Q${st.x + lean} ${top} ${st.x + w + lean * 0.6} ${top + 2}
+                        L${st.x + w} ${st.baseY}
+                        Z`}
+                    fill={`hsl(210, ${8 + unityP * 4}%, ${12 + unityP * 5}%)`}
+                    opacity={riseP * 0.9}
+                  />
+                  {/* Ley glow on stone — pulse with the restoration */}
+                  {unityP > 0.3 && (
+                    <path
+                      d={`M${st.x - w * 0.5} ${top + h * 0.4}
+                          L${st.x + lean * 0.4} ${top + h * 0.1}
+                          L${st.x + w * 0.5} ${top + h * 0.4}`}
+                      fill="none"
+                      stroke="#d8c890"
+                      strokeWidth={0.6}
+                      opacity={sub(unityP, 0.3, 0.4) * 0.4}
+                    />
+                  )}
+                </g>
               );
             })}
           </g>
