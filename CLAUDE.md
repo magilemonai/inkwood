@@ -186,7 +186,28 @@ This project is a close collaboration. **Do not build art without discussing the
 ## Development Workflow
 
 ### Branch Strategy
-Work on feature branches like `claude/review-and-plan-wuN8F`. Merge to `main` when ready. Don't push directly to `main` unless it's a hotfix.
+Work on feature branches like `claude/review-and-plan-wuN8F`. When a unit of work is complete (build + lint clean), fast-forward merge the feature branch into `main` and push `main` so GitHub Pages auto-deploys.
+
+**Push-to-main workflow (authorized by the director for this project):**
+
+```bash
+# 1. Commit on the feature branch
+git commit -m "..."
+# 2. Push the feature branch
+git push -u origin <feature-branch>
+# 3. Fast-forward main and push
+git checkout main
+git merge --ff-only <feature-branch>
+git push origin main
+# 4. Return to the feature branch and continue
+git checkout <feature-branch>
+```
+
+Rules:
+- Only fast-forward merges — never create merge commits on `main`.
+- If `main` has diverged from the feature branch, stop and ask before anything force-ish.
+- Never force-push `main`.
+- Only do this after `npm run build` + `npm run lint` pass clean.
 
 ### Commands
 ```bash
