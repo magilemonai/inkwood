@@ -19,6 +19,18 @@ Core loop:
 3. The scene responds visually in real time, driven by the typing progress
 4. Phrase complete → 1.5s breathing pause → next phrase or next level
 
+### Game Flow
+
+```
+intro → playing → [levelWin | actTransition] → playing → ... → outro → (loops until restart)
+```
+
+- **Intro:** Three animated dormant-world vignettes (garden → cottage → sky) → spark → title → Begin
+- **Playing:** Scene fills viewport, typing overlay at bottom
+- **Level Win:** Brief narrative text, space/enter to continue (within an act)
+- **Act Transition:** 7-second animated interstitial (after levels 2, 5, 8) with next act's audio
+- **Outro:** Panoramic landscape assembling → "The forest remembers." → loops indefinitely
+
 ---
 
 ## Project Goals
@@ -226,12 +238,81 @@ Run this after significant changes to assess quality.
 
 ---
 
+## Scene Architecture
+
+Every scene is `({ progress: number }) => SVG` wrapped in `React.memo`. Progress is quantized to 0.01 increments before passing to scenes, so memo actually prevents re-renders on every keystroke.
+
+### Key Patterns
+- **`sub(p, start, duration)`** — clamp progress into a sub-range for staggered entry. Imported from `scenes/util.ts`.
+- **Covering layers** — the "alive" state renders ON TOP of the "structure" with opacity tied to progress (canopy over branches, warm light over cold room, water over dry stone)
+- **Assembly animations** — things BUILD themselves rather than fading in (Bridge stones, Well water rising)
+- **Absence → presence** — scenes start from meaningful emptiness, not dim versions
+
+### Art Standards (see `SCENE_ART_GUIDE.md` for full detail)
+- Main elements are hand-crafted bezier `<path>` with 15-30+ control points
+- Must pass the "black silhouette on white" test
+- All content above y=170 (visible above typing overlay)
+- `overflow="hidden" preserveAspectRatio="xMidYMid slice"` on all SVGs
+- `GlowFilter` sparingly (1-2 per scene max for performance)
+- No SVG primitives (`rect`, `ellipse`, `circle`) for organic things
+
+---
+
+## Narrative Philosophy
+
+### Prompts Are Incantations
+Every typed phrase should feel like casting a spell — a **command** the world obeys. Not a description, not a fortune cookie. Direct imperatives.
+
+- **Good:** "stand tall again guardians of old" (command → stones rise)
+- **Bad:** "every old word finds its voice again" (passive, vague)
+
+### Text Economy
+- Flavor text: ONE sentence max
+- Win text: 1-2 short sentences
+- The words are precious and few. They are magical.
+
+See `src/levels.ts` for the full prompt table. Current average rating: 4.8/5.
+
+---
+
+## Six-Persona Critique Protocol (reference)
+
+The `/critique` slash command runs this protocol. Each persona has a specific lens:
+
+### 1. Code Reviewer
+Correctness, performance, React patterns, SVG rendering efficiency. Cares about: bugs, memory leaks, unnecessary re-renders, timer cleanup, TypeScript strictness, SVG filter performance on low-end devices.
+
+### 2. Narrative Director
+Story arc, typed phrases, flavor text, mystical tone. Cares about: do prompts feel like incantations or fortune cookies? Rate each prompt 1-5 for "spell-casting power." Does the story escalate? Is text trimmed? Does each prompt map to a specific visual change?
+
+### 3. UX Researcher
+Discoverability, flow state, friction points, accessibility. Cares about: can a new player figure out what to do? Is the typing area visible and inviting? Do transitions feel smooth? Mobile keyboard support? Is the emotional experience consistent?
+
+### 4. Design Director
+Visual quality, animation polish, does this dazzle? Grade each scene A-F. Does it pass the silhouette test? Complex paths or primitive shapes? What specific technique would elevate each scene? References: Journey, Gris, Alto's Adventure. Identify the single most beautiful and ugliest moment per scene.
+
+### 5. Product Lead
+Prioritization, creative trade-offs, user delight as north star. Cares about: what 5 changes would make someone screenshot and share? What's blocking public release? Balance artistic ambition with deliverability.
+
+### 6. Alpha Tester Panel
+Four composite users:
+- **Cal** (patient explorer): savors every scene, notices details
+- **Alex** (fast typist): blazes through, notices pacing issues
+- **Dana** (impatient): will quit if something feels broken or boring
+- **Sam** (non-gamer on phone): tests mobile, confused by novel interactions
+
+Cares about: is this actually fun? Where did I get confused? Where did I get bored? Would I show this to a friend? Which level made me feel something?
+
+### Running a Critique
+Just run `/critique`. The skill handles screenshots, visual review, writing, and saving to `PERSONAS.md`. Present a per-persona summary + full priority stack to the user before saving.
+
+---
+
 ## Reference Documents
 
-- **`CLAUDE.md`** (this file) — Entry point for future sessions
+- **`CLAUDE.md`** (this file) — Entry point for future sessions. Contains everything needed to orient.
 - **`PERSONAS.md`** — Latest critique with scene grades, prompt ratings, priority stack. Regenerated by `/critique`.
 - **`SCENE_ART_GUIDE.md`** — Art principles distilled from scene rebuilds (covering layers, assembly animations, bezier complexity rules, element-specific lessons for trees/cats/water/stone/etc.)
-- **`inkwood-claude.md`** — Earlier CLAUDE.md with additional process history
 
 ---
 
