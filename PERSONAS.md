@@ -1,277 +1,200 @@
-# Inkwood — Persona Review Panel v12
+# Inkwood — Persona Review Panel v13
 
-Date: 2026-04-12
-Trigger: Cody's live alpha test on ThinkPad/Chrome, transcribed. Weighted heavily (director voice) and pressure-tested through the six personas + code read of the implicated files.
+Date: 2026-04-13
+Trigger: Full six-persona critique cycle run after v12 alpha-test fixes shipped. 82 screenshots generated (10 scenes × 7 progress points + intro + outro timelapses). Code Reviewer verified via `eslint` + `tsc --noEmit`. Cody's v12 fixes pressure-tested visually.
 
----
-
-## 0. Cody's Alpha Test — Raw Findings (tabulated)
-
-| # | Scene / Area | Observation | Cody's ask |
-|---|---|---|---|
-| C1 | Intro / idle | After click-to-begin, if player does nothing for ~1s, nothing nudges them | Something should glow or escalate ("Type the phrase above") after brief inactivity |
-| C2 | Garden | Clouds don't drift | Animate cloud motion |
-| C3 | Cottage | Cat silhouette still reads as "off" | Another pass, use reference |
-| C4 | Cottage | Candles show a rectangular glow box (filter bounds visible) | Kill the rectangle — soft falloff only |
-| C5 | **Global gameplay** | **Typing gibberish still advances the animation.** Player is "rewarded" without getting the phrase right | Wrong keys must NOT advance. Backspace still allowed. |
-| C6 | Stars | Rectangular box of diffusion around the moon reveals the dark crescent-forming circle | Fix moon glow compositing — no visible filter bounds |
-| C7 | Stars | Rightmost constellation line crosses in front of the moon at 99% | Reorder so lines never pass over the moon disc |
-| C8 | Stars | Meteors + interstitial | ✅ "Don't ever touch this" |
-| C9 | Well | Punctuation — "deep water, remember your name" feels right | Full comma audit across all 20 prompts |
-| C10 | Well | Second half: central water column "shoots up" like a rectangle, no containment | Kill the rectangular surge; water needs to feel held |
-| C11 | Well | Runes sweep downstream — reads cheesy | Replace flow animation with runes that glow **in place** on the well stones |
-| C12 | Bridge | Whole level | ✅ Solid |
-| C13 | Library | Open book is squatter than wide at every stage | Book must be taller than wide at all stages |
-| C14 | Library | Phase-2 books opening + runes flying | ✅ Awesome |
-| C15 | Stones | "stand tall again, guardians of old" wants a comma | Apply in prompt audit |
-| C16 | Stones | Animation | ✅ Really solid |
-| C17 | Sanctum | Whole level | ✅ Love it, perfect |
-| C18 | Tree | During "branches wider than sky" the branches appear bare before canopy — disliked | Canopy must fade in **with** branches, not after |
-| C19 | Tree | Restoration / heart phase | ✅ Solid |
-| C20 | Outro | During "stars remember, spirits sing" nothing references the sanctum spirits | Add 3 spirit figures on the far hill among trees |
-| C21 | Outro | During "the ancient order is restored" the standing-stone guardians should return to the forest as nexuses spin up | Stone guardians visible during unity phase |
-| C22 | Outro | The 8th / far-right vignette is just trees | Needs spirit icons (sanctum signature) |
-| C23 | Outro | "The forest remembers" text sits inside the tree trunk; "Begin Again" collides too | Tree (and all tree content) shifts up; text reads in the clear |
-
-"These are all tweaks, but it's awesome. Pretty proud of this." — Cody
+Headline: The game is visibly better than v12. The three ship blockers from v12 (typing integrity, outro composition, moon glow box) all land. Six scenes at A- or higher. Remaining work is opportunity, not debt.
 
 ---
 
-## 1. Code Reviewer — Pressure Test
+## 1. Code Reviewer
 
-**C5 (wrong typing advances animation) is not polish — it's a correctness bug against the game's central contract.**
+**Build:** Zero lint errors, zero TypeScript errors (verified). Bundle 452KB / 139KB gzip — unchanged territory.
 
-The root cause is in `src/store.ts` at `typeChar`:
-
-```ts
-typeChar: (value) => {
-  const { completing } = get();
-  const target = get().target();
-  if (completing) return;
-  if (value.length <= target.length) {
-    set({ typed: value });           // accepts ANY characters
-  }
-},
-```
-
-And `src/store.ts` `levelProgress` drives scene progress off `typed.length`, not correctness:
-
-```ts
-const promptProgress = typed.length / target.length;
-```
-
-So every keystroke — right or wrong — advances the scene. The fix is a small, surgical change: gate forward motion on correctness, but still allow backspace/shortening so players can correct mistakes.
-
-Recommended diff (conceptual):
-
-```ts
-typeChar: (value) => {
-  const { typed, completing } = get();
-  const target = get().target();
-  if (completing) return;
-  // Backspace / shortening always allowed
-  if (value.length < typed.length) { set({ typed: value }); return; }
-  // Forward motion only on a correct next character
-  if (value.length > typed.length) {
-    const nextChar = value[value.length - 1];
-    const expected = target[typed.length];
-    if (nextChar === expected) set({ typed: value });
-    // else: drop the keystroke — scene stays put
-  }
-},
-```
-
-Side effects to handle:
-- `playTypeClick()` in PlayingScreen fires for *any* new char. Move it so it plays only on accepted input — or add a distinct muted "wrong key" tick.
-- `charStates` / the red "backspace to correct" hint becomes rarely triggered (because rejected keystrokes never reach state). Keep the hint but it will read less often — that's fine.
-- Progress quantization + memo stays correct because `typed` won't advance.
-
-Other Cody items are mostly art/animation work in scene files. No architectural concerns.
-
-**Dead-code cleanup** from v11 (TitleScreen, GameWinScreen, palettes.ts, scenes/index.ts, unused primitives.tsx exports) is still outstanding but not the priority this round.
-
----
-
-## 2. Narrative Director — Pressure Test
-
-Cody's C5 isn't just a bug — it's a thematic restoration. The game's pitch is "typed words are incantations the world obeys." If gibberish summons the same magic, the metaphor is dead. Fixing C5 lifts every prompt's rating because the words finally *cost* something.
-
-**Comma audit (C9/C15).** Half the prompts use vocative commas, half don't. Recommended normalized set:
-
-| Lvl | Prompt | Current | Proposed |
-|---|---|---|---|
-| Garden | p1 | "wake now, sleeping roots" | unchanged ✓ |
-| Garden | p2 | "bloom, every waiting flower" | unchanged ✓ |
-| Cottage | p1 | "little candle burn bright" | **"little candle, burn bright"** |
-| Cottage | p2 | "fill every room with warmth" | unchanged (no vocative) |
-| Stars | p1 | "Orion Vega Sirius Lyra" | unchanged (names) |
-| Stars | p2 | "burn again with ancient fire" | unchanged |
-| Well | p1 | "deep water remember your name" | **"deep water, remember your name"** |
-| Well | p2 | "rise and carry the old songs home" | unchanged |
-| Bridge | p1 | "stone, recall the crossing" | unchanged ✓ |
-| Bridge | p2 | "spirits, walk the old paths" | unchanged ✓ |
-| Library | p1 | "open, sleeping pages" | unchanged ✓ |
-| Library | p2 | "speak again, forgotten words" | unchanged ✓ |
-| Stones | p1 | "stand tall again guardians of old" | **"stand tall again, guardians of old"** |
-| Stones | p2 | "remember what was promised" | unchanged |
-| Sanctum | p1 | "moonlight, gather where spirits convene" | unchanged ✓ |
-| Sanctum | p2 | "return to your seats, ancient ones" | unchanged ✓ |
-| Tree | p1 | "roots deeper than memory" | unchanged (descriptive) |
-| Tree | p2 | "branches wider than sky" | unchanged |
-| Tree | p3 | "awaken, heart of all things" | unchanged ✓ |
-| World | p1-3 | existing | unchanged ✓ |
-
-Rule the comma follows: **vocative address** (speaking TO something — "stand tall again, *guardians*") gets a comma; descriptive predicates don't. Applying this uncovers exactly the three Cody called out.
-
-**Outro callbacks (C20/C21/C22):** Today the outro's skyP wisps are colored `#d0b870` (sanctum yellow) and the standing-stones silhouette only appears in skyP on the right edge. Cody is right that the three unity-phase beats don't land as "spirits sing" or "ancient order restored" — nothing visually sings, nothing visually stands. Promoting spirit figures + stone guardians into the WorldScene is a legitimate narrative requirement, not a nice-to-have.
-
----
-
-## 3. UX Researcher — Pressure Test
-
-**C1 (idle nudge).** The prompt box already pulses via `promptBoxPulsing` while `typed.length === 0`, and the sub-info says "type the phrase above." Cody still didn't feel nudged — which means the existing pulse is too subtle at first impression. Two cheap escalations:
-- After ~2.5s of no input on the first prompt of a level, raise the pulse amplitude and/or add a second "↓ type here" glyph near the cursor.
-- On subsequent prompts, the existing pulse is fine (player is in flow).
-
-**C5 ripple effects for UX:** Once wrong keys are rejected, new players may momentarily think the keyboard "isn't working." Mitigations: keep the on-screen target visible with cursor at the current expected character (already present); optionally flash the expected character subtly on a rejected keystroke. Low priority — most players will self-correct immediately when they see the cursor isn't moving.
-
-**C23 (outro text/tree overlap).** Confirmed from code: `textOverlay` sits at `bottom: 3rem` absolute; trunk path extends to y=220 of a 260 viewBox; on a typical landscape viewport the trunk's lower half and the "The forest remembers." body text occupy the same band. Fix = shift the tree group up ~20-30 units (viewBox coords) **and** raise the text overlay's bottom offset so it lives cleanly below the tree silhouette.
-
----
-
-## 4. Design Director — Pressure Test
-
-Grading the items Cody flagged as faults:
-
-| Item | Current grade | Why |
-|---|---|---|
-| C4 Cottage candle glow box | **C** | Visible filter-bounds rectangle in the dark room — gold-standard scenes don't leak their filters |
-| C6 Stars moon glow box | **C+** | Same failure on the A-scene's signature element. Single most visible blemish in the game |
-| C7 Stars constellation over moon | **B-** | Physics violation that breaks the "map in the sky" read |
-| C10 Well central column | **C** | "Rectangle filling" is exactly the v11 note. Needs containment — narrower shaft visibility + subtle meniscus |
-| C11 Well flowing runes | **C** | Cheesy motion; the prompt says "carry the old songs home" but visual is literal rune-pinballs. In-place glow reads as "remembered" and supports the prompt better |
-| C13 Library tome squat | **B-** | Currently ~50w × 34h post-spread. Books in real iconography are portrait. Flip to ~34w × 50h |
-| C18 Tree bare-branches window | **B** | Narrative mismatch — branch-only reads as winter. Canopy should enter at 50-60% of branch phase, not wait for heart phase |
-| C23 Outro composition | **C+** | The finale's hero shot has a type collision. Fixable with vertical shift |
-| C2 Garden stationary clouds | **B+** | Minor; clouds are small but static animation stands out |
-| C3 Cottage cat | **B** | Director has rejected it 5x already; trust the director |
-
-**Biggest wins, ranked visually:** C6 (moon glow) and C23 (outro composition) are the two highest-leverage fixes — both affect "signature" moments players screenshot.
-
----
-
-## 5. Product Lead — Pressure Test
-
-Treat this as the **pre-public-release hardening pass**, not polish. Only C5 is an actual gameplay integrity bug; everything else is visual truth-telling.
-
-- **Ship blockers (must fix):** C5, C23, C6.
-- **Brand-defining (should fix this pass):** C10/C11 (Well second half), C18 (Tree canopy timing), C20/C21/C22 (outro callbacks).
-- **Polish (nice-to-haves this pass):** C4, C7, C9/C15, C13, C2, C1.
-- **Keep as-is (deferred):** C3 cat (6th pass needs dedicated session with reference image), dead-code cleanup (still on the queue, still not a blocker).
-
-Nothing on this list is architectural. Total surface area = `store.ts` (~10 lines), `levels.ts` (3 prompts), 6 scene files, 1 outro component.
-
----
-
-## 6. Alpha Tester Panel — Pressure Test
-
-- **Cal** (patient explorer): "Cody found the moon glow box and the well column — I'd have found those on run two. The bare-branches moment did feel strange; I was waiting for leaves."
-- **Alex** (fast typist): "Wait — I can just mash? That's the one that actually bugs me. Once I *know* I can mash, I lose all respect for the typing. Fix that first."
-- **Dana** (impatient): "I want the outro to feel like a payoff. Right now the last screen has text sitting inside a tree trunk. That's a design bug, not a vibe."
-- **Sam** (non-gamer on phone): "The idle nudge thing Cody mentioned would've helped me on mobile too — I sat there for 3 seconds not sure what happened after 'Begin.'"
-
-Panel converges on the same three: C5 > C23 > C6/C10/C11 cluster.
-
----
-
-## Priority Stack — v12 (Alpha-Test Driven)
-
-Weighting: Cody's voice dominates ordering; persona pressure-test shapes grouping and rationale. "Cody-✓" means Cody called it out directly. All items are Cody's except where noted.
-
-### P0 — Gameplay integrity (ship blocker)
-
-| # | Item | Impact | Effort | Files |
-|---|---|---|---|---|
-| 1 | **Reject wrong keystrokes** — typing incorrect chars must not advance `typed` / scene progress. Backspace always allowed. (Cody-✓ C5) | Critical | S | `src/store.ts` (`typeChar`), `src/components/PlayingScreen.tsx` (`playTypeClick` gating) |
-
-### P1 — Outro finale (signature moment)
-
-| # | Item | Impact | Effort | Files |
-|---|---|---|---|---|
-| 2 | **Shift outro tree + content up** so "The forest remembers." and "Begin Again" never overlap the trunk or canopy. (Cody-✓ C23) | High | S | `src/components/OutroSequence.tsx`, `src/styles/Outro.module.css` |
-| 3 | **Add 3 spirit figures on the far hill during "stars remember, spirits sing"** — the sanctum's signature visible in the panorama. (Cody-✓ C20) | High | S | `src/scenes/WorldScene.tsx` (skyP phase) |
-| 4 | **Bring stone guardians back into the forest during "the ancient order is restored"** — standing-stone silhouettes rise as nexuses spin up. (Cody-✓ C21) | High | S | `src/scenes/WorldScene.tsx` (unityP phase — currently stones live in skyP and are tiny) |
-| 5 | **Outro far-right Sanctum vignette needs spirit icons** — currently reads as just trees. (Cody-✓ C22) | High | S | `src/components/OutroSequence.tsx` (Sanctum vignette block) |
-
-### P2 — Scene truth-telling (visible blemishes on gold-standard scenes)
-
-| # | Item | Impact | Effort | Files |
-|---|---|---|---|---|
-| 6 | **Kill the moon's rectangular glow box** — `GlowFilter` bounds are showing behind the bright disc, exposing the dark crescent-forming circle. Use a soft radial gradient underlay instead of an SVG filter on the lit disc. (Cody-✓ C6) | High | S | `src/scenes/StarScene.tsx` |
-| 7 | **Constellation lines must not cross the moon disc.** Reroute or drop any line whose segment intersects the moon circle at (320, moonY, r=18). (Cody-✓ C7) | Medium | S | `src/scenes/StarScene.tsx` (CONSTELLATIONS array — prune [7,20] or reroute) |
-| 8 | **Well second half: contain the rising water** — the central shaft currently reads as a rectangle shooting up. Add a visible shaft edge / meniscus / column darker at the bounds so water feels held, not extruded. (Cody-✓ C10) | High | M | `src/scenes/WellScene.tsx` |
-| 9 | **Well runes: replace "sweep downstream" with "glow in place"** — runes should activate/pulse on the cavern stones near the water rather than flying along the river. (Cody-✓ C11) | High | S | `src/scenes/WellScene.tsx` (remove `flowRunes`, expand `wallRunes` count + choreography) |
-| 10 | **Tree canopy fades in WITH branches.** During branchPhase the canopy should begin to appear (start ~0.3 of branchPhase), not wait for heartPhase. Bare-branch window = 0. (Cody-✓ C18) | High | S | `src/scenes/TreeScene.tsx` |
-| 11 | **Cottage candles: kill the rectangular glow box.** Swap the GlowFilter on flames for a radial gradient pool or widen filter region so bounds aren't visible in the dark room. (Cody-✓ C4) | Medium | S | `src/scenes/CottageScene.tsx` (`flameGlow` / `flameCore`) |
-| 12 | **Library hero tome: taller than wide at every stage.** Flip current ~52×34 to ~34×52 (portrait). Adjust spread geometry + pedestal accordingly. (Cody-✓ C13) | Medium | M | `src/scenes/LibraryScene.tsx` (HERO TOME block ~L299-352) |
-
-### P3 — Narrative + animation polish
-
-| # | Item | Impact | Effort | Files |
-|---|---|---|---|---|
-| 13 | **Comma audit** — apply 3 targeted edits: `"little candle, burn bright"`, `"deep water, remember your name"`, `"stand tall again, guardians of old"`. (Cody-✓ C9/C15) | Medium | XS | `src/levels.ts` |
-| 14 | **Animate garden clouds** — horizontal drift on the three cloud ellipses. (Cody-✓ C2) | Low | XS | `src/scenes/GardenScene.tsx` |
-| 15 | **Idle nudge escalation** — after ~2.5s of no input on a fresh prompt, amplify the pulse and/or add a "↓" glyph near the cursor. (Cody-✓ C1) | Low | S | `src/components/PlayingScreen.tsx`, `styles/PlayingScreen.module.css` |
-
-### Deferred (explicitly, with justification)
-
-| Item | Why deferred |
+| Strength | Notes |
 |---|---|
-| Cottage cat (Cody-✓ C3) | 6th iteration requires a dedicated session with a reference silhouette; batching with one-off tweaks dilutes it |
-| Dead-code cleanup (Code Reviewer) | Not a player-visible issue; safe to bundle with a later cleanup pass |
-| Audio preload, act-transition skip affordance (UX Researcher v11) | Unchanged from v11 — nothing in this alpha run flagged them |
+| `typeChar` correctness | Now a true input gate — wrong forward keystrokes silently dropped, backspace preserved. Restores the game's core contract. |
+| `playTypeClick` gating | Only fires on accepted input (compares `typed` before/after). No stray click on rejected keys. |
+| `GlowFilter` default bounds | Widened from 200% to 500%, fixing clipped halos across cottage candles, runes, moon — a one-line change with broad visual effect. |
+| Idle nudge cleanup pattern | State reset lives in the effect's cleanup function, not the body. ESLint's `react-hooks/set-state-in-effect` clean. |
+| Outro tree shift | Trunk/canopy/spirit-lights each translated in their own local coords (no hacky group wrapper that would break the root connections to vignettes). |
+| Comma audit | Three targeted edits; scene timing keys off length ratio so commas didn't disturb pacing. |
+
+| Remaining concern | Severity |
+|---|---|
+| `src/components/TitleScreen.tsx`, `GameWinScreen.tsx`, `svg/palettes.ts`, `scenes/index.ts` — still present, still unused | Low |
+| `svg/primitives.tsx` exports besides `Star` — still dead | Low |
+| `screenshot.mjs` prompts array duplicates `levels.ts` — a drift hazard (already burned us once this cycle when commas were added) | Low |
+| No audio preload — still created on first gesture | Low |
+| `hasError` path in `PlayingScreen` is now unreachable under normal use (store rejects wrong forward input); the "backspace to correct" hint rarely fires | Cosmetic |
+
+### Verdict
+Ship-ready, cleaner than v12. The dead-code and screenshot-script-drift items should be addressed in a dedicated cleanup pass but don't block release.
 
 ---
 
-## Implementation Notes (for whoever picks this up)
+## 2. Narrative Director
 
-**#1 — Wrong-key rejection.** See the `typeChar` patch in §1. Also in `PlayingScreen.handleType`, only call `playTypeClick()` when the store actually accepted the keystroke (compare `typed.length` before/after, or have the store return a boolean). Consider a very quiet tick on rejection so the input doesn't feel dead — optional.
+| Level | Prompts (v13) | Rating | Prompt ↔ Visual Alignment |
+|---|---|---|---|
+| Garden | "wake now, sleeping roots" / "bloom, every waiting flower" | **5/5** | Roots glow diagonally; canopy covers bare branches; bezier petal flowers open; pollen drifts |
+| Cottage | "little candle, burn bright" / "fill every room with warmth" | **5/5** | Candles light sequentially; amber floods; cat silhouette appears; comma sharpens the incantation |
+| Stars | "Orion Vega Sirius Lyra" / "burn again with ancient fire" | **5/5** | Named stars appear by delay order; constellations draw; comets streak at climax |
+| Well | "deep water, remember your name" / "rise and carry the old songs home" | **5/5** | Water rises through narrow shaft (contained, not extruded); runes ignite on the stones in place — the "remembered" verb now reads |
+| Bridge | "stone, recall the crossing" / "spirits, walk the old paths" | **5/5** | Stones assemble at cliff-tops, lanterns ignite, footprints walk — unchanged gold |
+| Library | "open, sleeping pages" / "speak again, forgotten words" | **5/5** | Tome now portrait — reads as a *sacred book*, not a diagram. Runes rise on prompt 2. |
+| Stones | "stand tall again, guardians of old" / "remember what was promised" | **5/5** | Stones rise, ley lines connect, ritual circle manifests. Comma rescues the vocative. |
+| Sanctum | "moonlight, gather where spirits convene" / "return to your seats, ancient ones" | **5/5** | Moon + beams + spirits on the forest floor — fireflies active |
+| Tree | "roots deeper than memory" / "branches wider than sky" / "awaken, heart of all things" | **5/5** | Canopy now present during branch phase — the bare-branches window is closed. Heart blooms full at phrase 3. |
+| World | "garden bloom, hearth burn bright" / "stars remember, spirits sing" / "the ancient order is restored" | **5/5** | Garden + cottage on prompt 1; **spirits now visible on the far hill on prompt 2**; **stone guardians rise on prompt 3** alongside the ley lines. Every phrase now has a specific visible callback. |
 
-**#2 — Outro shift.** Two moves: (a) in `OutroSequence.tsx` translate the whole tree group up ~25 viewBox units (change trunk `M202 220 → M202 195`, branches + canopy + roots shift accordingly), and (b) in `Outro.module.css` raise `.textOverlay { bottom: 3rem → 5rem }`. Verify with screenshot at 20s, 22s, 24s.
+**Average: 5.0/5.** Up from 4.8 in v11. Every prompt now ties to a specific, verifiable visual change. The "incantation → world obeys" promise is finally airtight — partly because the comma audit fixed three vocatives that had been reading as descriptions, partly because the outro finale now *shows* the thing it speaks.
 
-**#3 — Spirits on far hill (WorldScene).** In the skyP block (~L306-322) adjacent to the wisps, add 3 small spirit figures (translucent upright silhouettes with a tiny head halo, referencing Sanctum's composition) anchored on the HILLS_FAR ridge near y≈95, spread across x=140-260. Reuse sanctum accent `#d0b870`.
+**Text economy:** unchanged. Flavor text one sentence. Win text 1-2 sentences. No bloat introduced in this pass.
 
-**#4 — Stone guardians in unity phase.** Currently at `skyP > 0.4` a small 4-stone row is drawn on the right edge (`x=335-365`). Move/duplicate into the unity phase: 4-5 standing stones rising on the ground foreground across x=60-340 during `unityP > 0.1`, so they appear as the ley lines are drawn. Taller than the current 8-12px — aim 15-22px.
-
-**#5 — Sanctum vignette (outro).** In `OutroSequence.tsx` the Sanctum vignette block (~L404-438) renders moonbeams only. Add 3 tiny spirit silhouettes at the clearing's base (v.x ± 6, y≈150), same halo motif as #3. Small — ~3-4px tall.
-
-**#6 — Moon glow box.** Root cause: `<circle ... filter="url(#moonGlow)" />` applies a filter region that renders a visible bounding rectangle against the near-black sky. Replace with: a soft radial gradient disc (already have `moonRadial` — increase its contribution) **and** remove `filter="url(#moonGlow)"` from the bright disc. The crescent-forming dark circle should color-match the sky at that y exactly so it disappears; currently `fill="hsl(228, 50%, ...)"` with lightness drifting — lock it to the actual rendered sky color at moonY.
-
-**#7 — Constellations and moon.** In `CONSTELLATIONS`, pairs that involve star index 7 (x=355, y=50) pass near the moon at (320, moonY≈45). Simplest fix: drop `[12, 7]` and `[7, 20]`, add a replacement pair that doesn't cross the moon (e.g., `[7, 14]` — star 14 is at x=390, y=60, a clean arc away from the moon).
-
-**#8 — Well containment.** The central shaft rect at x=140 w=120 renders the whole channel as a solid color block. Options: (a) narrow the "visible column" to x=175-225 (matches the well shaft above) with darker side channels, (b) add a subtle inner shadow on the shaft walls, (c) clamp the visual water rise to a slower curve (easeOut) so it doesn't snap up. Combine all three.
-
-**#9 — Wall runes in place.** Remove the `flowRunes` array entirely. Expand `wallRunes` to ~10 positions distributed along the cavern walls at the actual waterline range (y=135-205). Each rune fades in as water reaches its y (current `wet` check is right), then pulses gently instead of translating.
-
-**#10 — Tree canopy with branches.** Currently `heartPhase = sub(p, 0.66, 0.34)` gates the canopy. Introduce a separate `canopyEarly = sub(p, 0.45, 0.55)` (starts mid-branch phase, ends at 1.0) and drive the canopy opacity off that at reduced strength (~0.5), then layer the existing heartPhase canopy on top for the climactic bloom.
-
-**#11 — Cottage candle glow.** `GlowFilter` in `svg/filters.tsx` likely uses a default `filterUnits` that clips. Either widen x/y/width/height on the filter to `-50% -50% 200% 200%`, or replace the filter with a soft `<radialGradient>` pool centered on each flame.
-
-**#12 — Library tome flip.** Swap the hero tome dimensions: spine currently `x=197 y=120 w=6 h=34`. Change to `x=197 y=108 w=6 h=52`. Pages spread width `pageW = spread * 45` → `pageW = spread * 32`. Book glow ellipse rx/ry flip. Pedestal widens slightly to support the taller book.
-
-**#13 — Prompt commas.** Three one-character edits in `src/levels.ts`. Run the full test after — scene timing keys off length-ratio, so a single comma doesn't break alignment, but worth eyeballing.
-
-**#14 — Cloud drift.** Inline `<style>` already exists in StarScene for parallax keyframes; mirror that pattern in GardenScene with a slow `translateX(-8px)` 20s cloud drift.
-
-**#15 — Idle nudge.** Add an `idleMs` state tracked with a timer reset on each keystroke. When `idleMs > 2500 && typed.length === 0`, apply an `.idleNudge` class to the prompt box that raises pulse amplitude and fades in a small `↓` above the cursor.
+**Arc:** Still lands across the four acts. The Sanctum → Tree → World sequence is the strongest three-beat finish in the game.
 
 ---
 
-## Session Summary
+## 3. UX Researcher
 
-v12 is Cody-driven: a live alpha-test transcript re-sorted into a 15-item stack with one P0 gameplay-integrity fix, four outro-finale items, six scene truth-tellings, and four narrative/animation polish items. The C3 cat and v11's dead-code cleanup remain deferred — not because they don't matter, but because batching them dilutes the work that actually moves the needle for a public ship.
+| Finding | Status |
+|---|---|
+| Wrong keys don't advance scene | **Fixed** — verified in code, the central trust contract now holds |
+| Idle nudge escalation | **Added** — after 2.5s with `typed.length === 0`, prompt box switches to stronger pulse and an italic "↓ type here" caption fades in above. Addresses Cody's C1. |
+| Mobile portrait layout | **Working** — unchanged |
+| 1.5s breathing pause | **Correct** |
+| Outro text / tree collision | **Fixed** — tree group shifted up 25 SVG units; text overlay tightened to `bottom: 1.5rem`. "The forest remembers." and "Begin Again" both read in the clear at 20s. |
+| Save/resume | **Working** |
+| Scene content above y=170 | **Confirmed** |
 
-Biggest single lift: fixing `typeChar` so the central metaphor holds. Biggest single visible win: the outro finale, which is where people will screenshot and which currently has a type-on-trunk collision.
+**New concerns:**
 
+- **Intro dormant-trees still geometric** — Y-shaped stick trees at the 3s Garden vignette and 15s Title screen read as explicit line-art rather than organic silhouettes. This has been on the priority stack since v11 and remains. It's the first thing a new player sees.
+- **No feedback on rejected keystroke** — now that wrong keys are dropped silently, a user who mistypes and doesn't watch the cursor may think the input is broken. Consider a subtle haptic-equivalent: a tiny red-tinted flash on the expected character, or a muted "miss" click. Low priority but worth testing.
+- **Act transition 7s duration** — still no visible progress affordance on the interstitial. Unchanged since v11.
+
+### Verdict
+Every UX finding Cody raised in the alpha test is either fixed or explicitly addressed. The one legitimate open UX issue from v11 (dormant-tree character) persists.
+
+---
+
+## 4. Design Director
+
+### Scene grades
+
+| Scene | v11 | v13 | Animation arc |
+|---|---|---|---|
+| **Garden** | B+ | **A-** | 0%: bare silhouette, moody. 20%: trunk darkens, canopy begins covering. 50%: full canopy, sun warming, grass tufts. 99%: full bloom, bezier flowers, drifting clouds, sun glow. Covering layer + new cloud drift lifts the grade. |
+| **Cottage** | A- | **A-** | Cold blue → warm amber shift still the signature. Candle glow halos now have smooth falloff (no rectangular clipping). Cat silhouette still reads as "slightly odd" per Cody — deferred, requires dedicated session with reference. |
+| **Stars** | A | **A** | Moon glow box is gone — the dark crescent-forming circle blends cleanly. Constellation lines no longer cross the moon disc. Comets + Milky Way + treeline parallax intact. **Still the gold standard.** |
+| **Well** | B+ | **A-** | Second-half water no longer reads as an extruded rectangle. Narrow shaft column (x=175-225) with inner-shadow edges makes water feel *held*. Flowing runes deleted — runes now glow in place on stones, which actually makes the prompt "carry the old songs home" read as the stones remembering. Genuine grade lift. |
+| **Bridge** | A- | **A-** | Unchanged — lanterns on the arch, spirit footprints, dramatic sky. Still the "most satisfying moment" from v11 feedback. |
+| **Library** | A- | **A** | Portrait tome is a legitimate step up. Opens like a sacred book, not a diagram. Floating books + crystals + rune floaters + vault ribs all intact. |
+| **Stones** | B+ | **A-** | Unchanged from v11 but the comma in "stand tall again, guardians of old" ties the incantation to the rising stones more crisply. |
+| **Sanctum** | A- | **A-** | Unchanged — moonbeams through varied tree canopies, spirit figures in the clearing. Composition holds. |
+| **Tree** | A- | **A** | Canopy now appears during branch phase — no more bare skeleton. Makes phrase 2 ("branches wider than sky") resolve visually rather than deferring to phrase 3. Heart pulse still lands. |
+| **World** | B+ | **A-** | Far-hill spirits (phrase 2) and rising stone guardians (phrase 3) give the outro panorama the callbacks Cody flagged. Ley lines connect at 99%. Finale composition is noticeably stronger. |
+
+**Average: A-.** Seven scenes at A-, two at A. No B+ left.
+
+**Most beautiful moment:** Stars at 99% — constellation lines drawn clean of the moon, comets streaking, horizon treeline parallax softly drifting. Unambiguous.
+
+**Second-most beautiful:** Outro at 20s — tree fully grown with "The forest remembers." sitting clean below the trunk, all 8 vignette lights alive, ley lines connecting them, a crescent moon to the right. The finale finally *composes*.
+
+**Ugliest remaining moment:** Intro at 3s — the geometric Y-stick trees against flat-dark sky. Everything else has been lifted; this is the last holdout.
+
+**Silhouette test:** All 10 main scenes pass. The intro dormant-world vignettes do not — they read as explicit line-art, not organic silhouettes.
+
+---
+
+## 5. Product Lead
+
+**Public-ship-ready.** v12 fixed the gameplay integrity bug and the finale composition; v13 is the quality bar that matches the vision.
+
+### Top 5 screenshot-and-share moments
+
+1. **Stars at 99%** — constellations drawing over a clean crescent, comets streaking.
+2. **Outro at 20s** — tree silhouette against the panorama with "The forest remembers" legible beneath.
+3. **Library at 99%** — portrait tome open on its pedestal with runes rising and floating books orbiting.
+4. **Bridge at 99%** — lanterns on assembled stones, footprints continuing beyond.
+5. **Well at 60%** — water held in the narrow shaft with runes glowing on the stones. (This was a C-grade moment in v12; it's now a shareable.)
+
+### What's still blocking wider release
+
+| Item | Gate? |
+|---|---|
+| Intro dormant-tree character | **Not a blocker** — cosmetic. Flag for next art pass. |
+| Dead code in repo | **Not a blocker for play** — a blocker for anyone auditing the repo publicly. Schedule a cleanup commit. |
+| Trailer / landing page | **Not in-repo work** — 30s screen recording + copy. Scheduled; needs a day. |
+| Cottage cat silhouette | **Not a blocker** — it reads as a cat, just an awkward cat. Deferred per v12 call. |
+
+### What NOT to do
+
+- Don't rebuild any of the 10 scenes from scratch. They're done.
+- Don't add new scenes, prompts, or acts.
+- Don't optimize without a measured problem; current bundle and render behavior are fine.
+- Don't touch the audio mix without director ear review.
+- Don't modify the 1.5s breathing pause — confirmed working across all testing.
+
+---
+
+## 6. Alpha Tester Panel
+
+**Cal** (patient explorer): "The canopy arriving during branch phase fixed something I couldn't articulate before — the Tree used to feel half-finished at phrase 2. It doesn't now. The runes glowing in place on the well stones is the detail I didn't know I wanted. And I noticed the clouds drift in the garden."
+
+**Alex** (fast typist): "I *can't* mash through anymore — that's the biggest change. When I fat-finger, nothing happens. It feels correct. I respect the typing now. Completion sweep is still subtle, pacing is clean. Favorite run-through yet."
+
+**Dana** (impatient): "Outro used to have text sitting inside the tree trunk and I was rolling my eyes. Now it reads clean. The stone guardians rising on 'ancient order restored' made me sit up. First time the finale felt *earned*."
+
+**Sam** (non-gamer on phone): "Pulsing prompt + the '↓ type here' caption after a couple seconds was exactly the confirmation I needed. The portrait Library tome is easier to see on a phone screen too — it was squat before and I couldn't tell what it was. Would show a friend."
+
+**Panel consensus:** Universally happier than v11/v12. The three "broken-feeling" items (mashable typing, text-on-tree, moon-box) are fixed. The remaining gaps are polish.
+
+---
+
+## Priority Stack — v13
+
+Four items remain. All are polish / deferred; none are blockers.
+
+| # | Item | Impact | Effort | Category |
+|---|---|---|---|---|
+| 1 | **Intro dormant-trees — organic character.** Replace the Y-shaped stick trees in Garden/Cottage/Sky vignettes + title screen with gnarled bezier silhouettes that match the Scene Art Guide's "organic complexity over geometric simplicity" standard. First impression of the game. | High | Medium | Art |
+| 2 | **Dead-code cleanup.** Delete `TitleScreen.tsx`, `GameWinScreen.tsx`, `TitleScreen.module.css`, `svg/palettes.ts`, `scenes/index.ts`, and unused exports in `svg/primitives.tsx` (keep `Star`). ~500 lines of dead code. Important before making the repo public. | Medium | Small | Code |
+| 3 | **De-duplicate `screenshot.mjs` prompt data.** Have the script import or read `levels.ts` at runtime rather than duplicating the prompt array. The v12 comma audit briefly broke the script because of the duplication. | Medium | Small | Code |
+| 4 | **Cottage cat — reference pass.** Sixth iteration; needs its own dedicated session with a real cat silhouette reference. Do not batch with other polish. | Medium | Medium | Art |
+| 5 | **Trailer / landing page.** 30s screen recording featuring Bridge + Stars + Tree + Outro, embedded on the GitHub Pages root. Shareable artifact. | High | Medium | Marketing |
+| 6 | **Cottage window shadow.** Soft light pool on floor when candles are lit — currently the floor stays uniformly dark. Subtle but adds depth. | Low | Small | Art |
+| 7 | **Rejected-keystroke feedback.** Optional: subtle red flash on the expected character when a key is dropped, so users who aren't watching the cursor get a signal. Test before shipping. | Low | Small | UX |
+| 8 | **Audio preload.** Create the `AudioContext` earlier to avoid the first-gesture stutter. | Low | Small | Code |
+| 9 | **Act-transition skip affordance.** Visible progress bar or more prominent "space to skip" on the 7s interstitial. | Low | Small | UX |
+| 10 | **Sanctum vignette spirit size (outro).** The spirits in the far-right outro vignette are present but small (~3px tall). Consider doubling the scale so they read unambiguously at thumbnail size. | Low | Small | Art |
+
+**Launch-readiness verdict:** Inkwood is ready to share publicly. Items 1-3 are recommended before a formal "1.0 post" on social/HN; items 4-10 are ongoing polish that can ship incrementally.
+
+---
+
+## What Changed Since v12
+
+Ten v12 alpha-test items landed and verified visually this cycle:
+
+- ✅ Wrong keystrokes no longer advance the scene (C5)
+- ✅ Outro text reads clean of the tree trunk (C23)
+- ✅ Moon rectangular glow box eliminated (C6)
+- ✅ Constellation lines no longer cross the moon (C7)
+- ✅ Well central column narrowed and eased; no longer reads as extruded rectangle (C10)
+- ✅ Well runes glow in place instead of sweeping downstream (C11)
+- ✅ Tree canopy appears during branch phase; bare-branch window closed (C18)
+- ✅ Cottage candle glow halos render without clipped filter bounds (C4)
+- ✅ Library hero tome is portrait at all stages (C13)
+- ✅ World outro gets spirits on far hill (C20) and stone guardians in unity phase (C21)
+- ✅ Sanctum outro vignette shows spirit silhouettes (C22)
+- ✅ Prompt commas normalized (C9/C15)
+- ✅ Garden clouds drift (C2)
+- ✅ Idle nudge escalation after 2.5s (C1)
+
+The only v12-audio-test item explicitly deferred is C3 (Cottage cat) — appears on the v13 stack as item #4.
+
+**Average grade v11 → v12 → v13:** B+/A- → A- → **A-/A.**
 
 
