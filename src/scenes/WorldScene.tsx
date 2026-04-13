@@ -109,10 +109,16 @@ const LEY_POINTS = [
   { x: 200, y: 40,  label: "tree" },     // center top
 ];
 
+// Complete graph across all 7 ley-point nodes — every location
+// connects to every other, so "the ancient order is restored" reads as
+// a fully-woven web rather than a sparse network. 21 connections total.
 const LEY_CONNECTIONS: [number, number][] = [
-  [0, 3], [3, 4], [4, 1], [1, 5],
-  [4, 6], [6, 2], [0, 4], [5, 6],
-  [2, 6], [1, 2],
+  [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
+  [1, 2], [1, 3], [1, 4], [1, 5], [1, 6],
+  [2, 3], [2, 4], [2, 5], [2, 6],
+  [3, 4], [3, 5], [3, 6],
+  [4, 5], [4, 6],
+  [5, 6],
 ];
 
 function WorldScene({ progress: p }: SceneProps) {
@@ -181,10 +187,13 @@ function WorldScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
-      {/* ── MOON — crescent, upper right, sky phase ── */}
-      {skyP > 0.2 && (() => {
-        const mp = sub(skyP, 0.2, 0.3);
-        const moonBright = 0.3 + mp * 0.7;
+      {/* ── MOON — crescent, upper right ──
+           Fade-in intentionally slow: moon begins emerging early in the
+           sky phase and keeps brightening well past it, so it reads as a
+           rising body rather than a sudden appearance. */}
+      {skyP > 0.05 && (() => {
+        const mp = sub(skyP, 0.05, 0.9);
+        const moonBright = 0.2 + mp * 0.8;
         return (
           <g opacity={mp}>
             {/* Moon bright disc */}

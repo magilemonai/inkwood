@@ -183,10 +183,12 @@ function TreeScene({ progress: p }: SceneProps) {
   const rootPhase = sub(p, 0, 0.33);      // roots glow
   const branchPhase = sub(p, 0.33, 0.33); // branches glow
   const heartPhase = sub(p, 0.66, 0.34);  // heart awakens
-  // Canopy starts arriving mid-branch phase so "branches wider than sky"
-  // never leaves the tree looking bare. By the time the heart awakens,
-  // the canopy is already partly present, then blooms fully.
-  const canopyEarly = sub(p, 0.45, 0.55);
+  // Canopy enters WITH the branches ("branches wider than sky"). Bare
+  // skeletal branches read as dead, which the director rejected — tying
+  // canopyEarly directly to branchPhase (instead of starting at p=0.45)
+  // means the canopy grows alongside the branches from the very start of
+  // prompt 2. Heart phase still blooms full canopy on top.
+  const canopyEarly = branchPhase;
 
   // Background — deep green-black, warming slightly
   const bgL = 4 + p * 4;
@@ -284,7 +286,7 @@ function TreeScene({ progress: p }: SceneProps) {
       {canopyEarly > 0 && (
         <path d={CANOPY}
           fill={`hsl(${118 + p * 12}, ${15 + canopyEarly * 20}%, ${8 + canopyEarly * 10}%)`}
-          opacity={canopyEarly * 0.55} />
+          opacity={canopyEarly * 0.72} />
       )}
       {heartPhase > 0 && (
         <>

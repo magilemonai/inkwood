@@ -73,9 +73,13 @@ export default function OutroSequence() {
       const elapsed = (now - start) / 1000;
       if (now - lastUpdate > 66) {
         lastUpdate = now;
-        // Clamp scene time at 25s so the landscape holds its final state,
-        // but pass raw elapsed so mote/pulse animations keep looping
-        setTime(elapsed <= 25 ? elapsed : 25 + (elapsed - 25) * 0.001);
+        // Let time advance freely — scene buildup phases (horizonDraw,
+        // treeGrow, radiance, etc.) all use sub() which saturates at 1,
+        // so the landscape still "holds" its final state. But pulse
+        // oscillations (wisps, ley-energy dots, canopy spirit lights)
+        // keep advancing, so the finale breathes rather than freezing
+        // once "Begin Again" fades in.
+        setTime(elapsed);
         if (elapsed >= 19 && !showTextRef.current) {
           showTextRef.current = true;
           setShowText(true);

@@ -107,15 +107,20 @@ export default function PlayingScreen() {
     const newVal = e.target.value;
     const wasForward = newVal.length > typed.length;
     typeChar(newVal);
-    // Only click on accepted forward input (store rejects wrong keystrokes).
     const acceptedTyped = useGameStore.getState().typed;
-    const accepted = acceptedTyped.length > typed.length;
-    if (wasForward && accepted) {
+    const acceptedForward = wasForward && acceptedTyped.length > typed.length;
+    const acceptedBackward = !wasForward && acceptedTyped.length !== typed.length;
+    if (acceptedForward) {
       playTypeClick();
-    } else if (wasForward && !accepted) {
+      // Clear any stale rejection so correct keystrokes after a miss
+      // don't inherit the red flash animation on every subsequent char.
+      if (rejectTick > 0) setRejectTick(0);
+    } else if (wasForward && !acceptedForward) {
       // Rejected forward keystroke — flash the expected character so the
       // player who isn't watching the cursor gets a cheap "try again" cue.
       setRejectTick((t) => t + 1);
+    } else if (acceptedBackward && rejectTick > 0) {
+      setRejectTick(0);
     }
   };
 
@@ -181,9 +186,11 @@ export default function PlayingScreen() {
 
         <p className={s.flavor}>{level.flavor}</p>
 
-        {/* Prompt display — pulses on every phrase start; escalates after 2.5s idle */}
+        {/* Prompt display — pulses on every phrase start; escalates after 2.5s idle.
+             The idle caption is suppressed when the tap overlay is showing
+             (the "click anywhere to type" text there already serves that purpose). */}
         <div
-          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge ? s.promptBoxIdleNudge : ""}`}
+          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge && !showTapOverlay ? s.promptBoxIdleNudge : ""}`}
           style={{ border: `1px solid ${accent}25` }}
           onClick={focusInput}
         >
