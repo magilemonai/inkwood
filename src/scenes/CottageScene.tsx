@@ -203,49 +203,83 @@ function CottageScene({ progress: p }: SceneProps) {
       <rect x="0" y="190" width="400" height="60"
         fill={`rgb(${r + 3},${g + 2},${b})`} />
 
-      {/* ── CAT — classic sitting silhouette based on reference.
-           Large round head (1/3 body), proud chest, round haunches,
-           tail curves up behind. Facing right. ── */}
-      {catP > 0 && (
-        <g opacity={catP}>
-          <path d={`
-            M72 190
-            C72 186, 70 180, 66 176
-            C62 170, 58 164, 56 158
-            C54 152, 54 148, 56 144
-            C58 140, 60 138, 62 136
-            C63 134, 62 130, 60 128
-            C58 126, 56 122, 56 118
-            C56 114, 58 110, 62 108
-            L64 104
-            C65 102, 67 103, 66 106
-            C66 109, 68 110, 70 110
-            C72 110, 74 108, 76 106
-            L78 102
-            C80 100, 82 102, 80 104
-            C78 106, 78 110, 80 112
-            C84 114, 86 118, 86 122
-            C86 126, 84 128, 82 130
-            C80 132, 80 134, 80 136
-            C80 138, 82 140, 84 142
-            C86 146, 88 150, 88 156
-            C88 162, 86 168, 84 174
-            C82 180, 82 186, 82 190
-            Z
-          `} fill={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`} />
-          {/* Tail — curves up behind the body and loops over */}
-          <path d="M72 184 C66 176, 58 166, 54 154 C50 142, 48 132, 52 124 C55 118, 60 120, 58 126 C56 132, 58 138, 62 144"
-            fill="none" stroke={`rgb(${Math.max(4, r - 6)},${Math.max(4, g - 5)},${Math.max(4, b - 4)})`}
-            strokeWidth="3.5" strokeLinecap="round" />
-          {/* Eye — amber glint */}
-          <circle cx="76" cy="118" r="1.3" fill="#e89a30" opacity={Math.min(1, catP * 1.2)} />
-          {/* Whiskers */}
-          <g opacity={Math.min(0.35, catP * 0.35)}>
-            <line x1="84" y1="122" x2="92" y2="120" stroke="#c8a870" strokeWidth="0.4" />
-            <line x1="84" y1="124" x2="92" y2="125" stroke="#c8a870" strokeWidth="0.4" />
+      {/* ── CAT — loaf pose, 3/4 angle, sitting on the rug beneath the
+           window. Solid black silhouette with one amber eye peeking
+           open. Built from three overlapping black paths (body, head,
+           two ears) that visually fuse because they share a color, so
+           the result reads as a single continuous loaf shape — matching
+           sticker-cat / "cat in loaf" reference proportions: rounded
+           muffin body, short wide-base ears tilted outward, no visible
+           tail (tucked under in loaf), face features clustered low on
+           the head. ── */}
+      {catP > 0 && (() => {
+        // Slightly darker than the warming room, always legible.
+        const catColor = `rgb(${Math.max(3, r - 7)},${Math.max(3, g - 6)},${Math.max(3, b - 5)})`;
+        return (
+          <g opacity={catP}>
+            {/* ── BODY — rounded muffin, fuller at the rump, flowing
+                 continuously forward so the head doesn't create a step. ── */}
+            <path d={`
+              M 72 193
+              C 62 187, 62 174, 72 167
+              C 82 161, 96 160, 110 164
+              C 120 167, 127 173, 130 181
+              C 132 188, 130 193, 126 193
+              Z
+            `} fill={catColor} />
+
+            {/* ── HEAD — overlaps body and extends the silhouette
+                 forward with no valley. The head's bottom reaches the
+                 floor so no sliver shows between head and ground. ── */}
+            <path d={`
+              M 103 190
+              C 99 182, 100 170, 108 164
+              C 116 160, 126 160, 131 165
+              C 135 170, 135 179, 132 185
+              C 130 190, 124 192, 118 193
+              L 105 193
+              Z
+            `} fill={catColor} />
+
+            {/* ── EARS — short, rounded-base triangles. Both nearly the
+                 same height so the cat reads symmetric. Slight outward
+                 tilt = relaxed posture. ── */}
+            {/* Far ear (left) */}
+            <path d="M 105 165 Q 107 158 111 157 Q 115 161 117 166 Z" fill={catColor} />
+            {/* Near ear (right) — barely taller */}
+            <path d="M 122 166 Q 125 156 129 156 Q 132 161 133 167 Z" fill={catColor} />
+
+            {/* ── FACE ── */}
+            {/* Open amber eye (right/near) — ellipse with vertical pupil slit.
+                Positioned on the lower-mid of the head per reference cats. */}
+            <ellipse cx="124" cy="175" rx="1.9" ry="2.3" fill="#f0b040" opacity={Math.min(1, catP * 1.15)} />
+            <ellipse cx="124" cy="175" rx="0.55" ry="1.9" fill="#1a0a04" opacity={Math.min(1, catP * 1.15)} />
+            {/* Tiny highlight so the eye feels alive */}
+            <circle cx="124.5" cy="174" r="0.35" fill="#fff2c0" opacity={Math.min(0.9, catP)} />
+
+            {/* Closed eye (left/far) — shallow, muted amber crescent */}
+            <path d="M 110 174 Q 112.5 175.5 115 174"
+              fill="none" stroke="#8a5020" strokeWidth="0.55"
+              strokeLinecap="round" opacity={Math.min(0.55, catP * 0.6)} />
+
+            {/* Tiny nose — small pink triangle */}
+            <path d="M 116.5 180 L 119 180 L 117.7 181.5 Z"
+              fill="#9a5a48" opacity={Math.min(0.85, catP)} />
+            {/* Content mouth — small "ω" below nose */}
+            <path d="M 117.7 181.5 Q 116.2 183 114.8 182 M 117.7 181.5 Q 119.2 183 120.6 182"
+              fill="none" stroke="#2a1a14" strokeWidth="0.45" strokeLinecap="round"
+              opacity={Math.min(0.6, catP * 0.7)} />
+
+            {/* Barely-there whiskers */}
+            <g opacity={Math.min(0.22, catP * 0.25)}>
+              <line x1="113" y1="181" x2="103" y2="180" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="113" y1="183" x2="104" y2="184" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="122" y1="181" x2="132" y2="180" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="122" y1="183" x2="131" y2="184" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+            </g>
           </g>
-        </g>
-      )}
+        );
+      })()}
 
       {/* ── HANGING HERBS — dried bunches near the window ── */}
       <g opacity={0.3 + p * 0.5}>
