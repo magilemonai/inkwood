@@ -51,6 +51,35 @@ function getCtx(): AudioContext {
   return ctx;
 }
 
+/**
+ * Preload the AudioContext on the first user gesture (any click,
+ * keydown, or touch). Browsers require a gesture to unlock audio; by
+ * pre-creating + resuming the context early we eliminate the
+ * first-phrase-completion stutter that otherwise happens when the
+ * context is constructed mid-gameplay.
+ *
+ * Idempotent — running more than once is a no-op. The listeners
+ * unregister themselves after the first gesture.
+ */
+let audioPreloadArmed = false;
+export function armAudioPreload() {
+  if (audioPreloadArmed || typeof window === "undefined") return;
+  audioPreloadArmed = true;
+
+  const prime = () => {
+    // Create + resume the AudioContext; any subsequent audio calls
+    // reuse the same instance.
+    try { getCtx(); } catch { /* AudioContext may not be available */ }
+    window.removeEventListener("pointerdown", prime);
+    window.removeEventListener("keydown", prime);
+    window.removeEventListener("touchstart", prime);
+  };
+
+  window.addEventListener("pointerdown", prime, { once: true });
+  window.addEventListener("keydown", prime, { once: true });
+  window.addEventListener("touchstart", prime, { once: true });
+}
+
 // ── Act + scene ambient definitions ──────────────────────
 
 interface ActAmbient {

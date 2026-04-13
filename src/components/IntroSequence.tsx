@@ -11,7 +11,9 @@ import s from "../styles/Intro.module.css";
  * Zero text until the title. Pure visual storytelling.
  */
 
-/** Dormant Garden — grey, washed out, clearly lifeless but VERY visible */
+/** Dormant Garden — grey, washed out, clearly lifeless but VERY visible.
+ *  Trees use gnarled bezier trunks with tapered, twisting bare branches
+ *  (no leaves — it's winter / dormant) rather than straight Y-sticks. */
 function DormantGarden({ opacity }: { opacity: number }) {
   return (
     <g opacity={opacity}>
@@ -21,12 +23,74 @@ function DormantGarden({ opacity }: { opacity: number }) {
       {/* Dead hills — grey-brown */}
       <path d="M0 185 Q100 155 200 178 Q300 195 400 170 L400 250 L0 250Z" fill="hsl(40, 4%, 20%)" />
       <path d="M0 205 Q80 188 180 200 Q280 215 400 195 L400 250 L0 250Z" fill="hsl(40, 3%, 22%)" />
-      {/* Dead bare trees — prominent */}
-      <path d="M80 200 L80 130 M80 160 Q60 140 50 125 M80 155 Q100 138 110 128 M80 145 Q68 132 62 122" fill="none" stroke="hsl(30,5%,30%)" strokeWidth="3" strokeLinecap="round" />
-      <path d="M310 190 L310 120 M310 155 Q288 132 278 118 M310 148 Q332 130 340 120 M310 140 Q300 125 295 115" fill="none" stroke="hsl(30,5%,28%)" strokeWidth="3" strokeLinecap="round" />
-      {/* Dead flower stems — bare, prominent */}
+
+      {/* ── Left dormant tree — gnarled bare oak silhouette ── */}
+      <g>
+        {/* Trunk — bezier with slight curve */}
+        <path d="M74 208
+                 C73 198, 76 190, 74 180
+                 C72 170, 77 160, 75 150
+                 C73 140, 78 132, 76 122
+                 C76 118, 78 115, 80 113
+                 C82 115, 84 118, 84 122
+                 C84 132, 87 140, 85 150
+                 C83 160, 86 170, 84 180
+                 C82 190, 85 198, 84 208 Z"
+          fill="hsl(30, 5%, 28%)" />
+        {/* Major branches — bare, tapered, forking */}
+        <path d="M76 145 C70 140, 60 134, 50 128 C44 125, 38 122, 32 118"
+          fill="none" stroke="hsl(30, 5%, 28%)" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M82 138 C88 132, 96 126, 104 120 C110 115, 115 111, 120 107"
+          fill="none" stroke="hsl(30, 5%, 28%)" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M78 128 C74 120, 70 112, 66 104"
+          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M82 118 C83 108, 82 98, 80 90"
+          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M82 122 C88 114, 94 106, 98 98"
+          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="1.8" strokeLinecap="round" />
+        {/* Smaller twigs */}
+        <path d="M50 128 C48 122, 46 118, 44 114" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M104 120 C106 114, 108 110, 110 106" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M80 90 C76 84, 74 80, 72 76" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M80 90 C82 84, 84 80, 86 76" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
+
+      {/* ── Right dormant tree — leaning slightly the other way ── */}
+      <g>
+        {/* Trunk */}
+        <path d="M304 198
+                 C303 188, 306 180, 304 170
+                 C302 160, 307 150, 305 140
+                 C303 130, 308 120, 306 110
+                 C306 105, 308 102, 310 100
+                 C312 102, 314 105, 314 110
+                 C314 120, 317 130, 315 140
+                 C313 150, 316 160, 314 170
+                 C312 180, 315 188, 314 198 Z"
+          fill="hsl(30, 5%, 26%)" />
+        {/* Major branches */}
+        <path d="M306 130 C300 124, 290 118, 280 112 C274 108, 268 105, 262 102"
+          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M312 124 C318 118, 326 112, 334 106 C340 102, 346 98, 352 95"
+          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M308 115 C304 106, 302 98, 300 90"
+          fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M312 105 C314 96, 313 86, 311 78"
+          fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M312 108 C318 100, 322 92, 326 84"
+          fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.8" strokeLinecap="round" />
+        {/* Twigs */}
+        <path d="M280 112 C278 106, 276 102, 274 98" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M334 106 C336 100, 338 96, 340 92" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M311 78 C308 72, 306 68, 304 64" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M311 78 C314 72, 316 68, 318 64" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
+
+      {/* Dead flower stems — bare, slightly curved */}
       {[130, 175, 220, 265].map((x, i) => (
-        <line key={i} x1={x} y1="205" x2={x + (i % 2 === 0 ? 3 : -3)} y2="180" stroke="hsl(30,5%,28%)" strokeWidth="1.8" />
+        <path key={i}
+          d={`M${x} 205 Q${x + (i % 2 === 0 ? 4 : -4)} ${193} ${x + (i % 2 === 0 ? 2 : -2)} 180`}
+          fill="none" stroke="hsl(30, 5%, 28%)" strokeWidth="1.8" strokeLinecap="round" />
       ))}
       {/* Cracked dry ground — visible */}
       <path d="M40 225 L80 215 L100 230" fill="none" stroke="hsl(30,5%,25%)" strokeWidth="1" />

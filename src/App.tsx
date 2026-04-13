@@ -7,6 +7,13 @@ import LevelWinScreen from "./components/LevelWinScreen";
 import ActTransition from "./components/ActTransition";
 import OutroSequence from "./components/OutroSequence";
 import DevPanel from "./components/DevPanel";
+import { armAudioPreload } from "./audio";
+
+// Arm the audio preload as early as possible — the AudioContext is
+// created and resumed on the first user gesture anywhere in the app,
+// so the first phrase completion doesn't stutter while the context
+// warms up.
+armAudioPreload();
 
 const screenVariants = {
   initial: { opacity: 0 },

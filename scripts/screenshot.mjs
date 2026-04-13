@@ -10,24 +10,39 @@
  */
 
 import { chromium } from 'playwright-core';
-import { mkdirSync } from 'fs';
+import { mkdirSync, readFileSync } from 'fs';
 
 const CHROME_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const BASE_URL = 'http://localhost:4173/inkwood/';
 const SCREENSHOT_DIR = './screenshots';
 
-const SCENES = [
-  { name: 'The Sleeping Garden', prompts: ['wake now, sleeping roots', 'bloom, every waiting flower'] },
-  { name: 'The Dark Cottage', prompts: ['little candle, burn bright', 'fill every room with warmth'] },
-  { name: 'The Night Sky', prompts: ['Orion Vega Sirius Lyra', 'burn again with ancient fire'] },
-  { name: 'The Dry Well', prompts: ['deep water, remember your name', 'rise and carry the old songs home'] },
-  { name: 'The Forgotten Bridge', prompts: ['stone, recall the crossing', 'spirits, walk the old paths'] },
-  { name: 'The Whispering Library', prompts: ['open, sleeping pages', 'speak again, forgotten words'] },
-  { name: 'The Spirit Stones', prompts: ['stand tall again, guardians of old', 'remember what was promised'] },
-  { name: 'The Moonlit Sanctum', prompts: ['moonlight, gather where spirits convene', 'return to your seats, ancient ones'] },
-  { name: 'The Great Tree', prompts: ['roots deeper than memory', 'branches wider than sky', 'awaken, heart of all things'] },
-  { name: 'The Waking World', prompts: ['garden bloom, hearth burn bright', 'stars remember, spirits sing', 'the ancient order is restored'] },
-];
+/**
+ * Parse scenes + prompts out of src/levels.ts so the screenshot script
+ * can't drift from the source of truth. Previously this array was
+ * duplicated here and had to be hand-synced whenever prompts changed
+ * (which already broke the strict-typing flow once during the v12
+ * comma audit). Regex is sufficient — levels.ts is plain data, not
+ * TypeScript that Node would need to evaluate.
+ */
+function loadScenesFromLevels() {
+  const src = readFileSync('./src/levels.ts', 'utf8');
+  const scenes = [];
+  // Match each level block: { title: "...", ... prompts: [ ... ], ... }
+  const levelRegex = /title:\s*"([^"]+)"[\s\S]*?prompts:\s*\[([^\]]+)\]/g;
+  let m;
+  while ((m = levelRegex.exec(src)) !== null) {
+    const name = m[1];
+    const promptsRaw = m[2];
+    const prompts = Array.from(promptsRaw.matchAll(/"([^"]+)"/g)).map((x) => x[1]);
+    scenes.push({ name, prompts });
+  }
+  if (scenes.length === 0) {
+    throw new Error('Failed to parse any levels from src/levels.ts');
+  }
+  return scenes;
+}
+
+const SCENES = loadScenesFromLevels();
 
 async function screenshot(sceneIdx, progressPct = 0) {
   const browser = await chromium.launch({

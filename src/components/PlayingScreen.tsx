@@ -43,6 +43,10 @@ export default function PlayingScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const [idleNudge, setIdleNudge] = useState(false);
+  // Bump a counter when a keystroke is rejected so the expected
+  // character flashes briefly. Using a counter (not a boolean) lets
+  // repeated rejections retrigger the animation on every miss.
+  const [rejectTick, setRejectTick] = useState(0);
 
   const { accent } = level;
   const charStates = getCharStates(typed, target);
@@ -105,8 +109,13 @@ export default function PlayingScreen() {
     typeChar(newVal);
     // Only click on accepted forward input (store rejects wrong keystrokes).
     const acceptedTyped = useGameStore.getState().typed;
-    if (wasForward && acceptedTyped.length > typed.length) {
+    const accepted = acceptedTyped.length > typed.length;
+    if (wasForward && accepted) {
       playTypeClick();
+    } else if (wasForward && !accepted) {
+      // Rejected forward keystroke — flash the expected character so the
+      // player who isn't watching the cursor gets a cheap "try again" cue.
+      setRejectTick((t) => t + 1);
     }
   };
 
@@ -187,10 +196,16 @@ export default function PlayingScreen() {
           {!showTapOverlay && target.split("").map((ch, i) => {
             const state = charStates[i];
             const isCursor = i === typed.length && !completing;
+            // Apply the reject-flash class only to the expected (cursor)
+            // character, and re-key it on rejectTick so CSS replays the
+            // animation on every new miss.
+            const flashReject = isCursor && rejectTick > 0;
             return (
               <span
                 key={i}
                 className={`${s.char} ${isCursor ? s.cursor : ""}`}
+                // Re-mount the inner span on each rejection so the CSS
+                // animation restarts. Outer span key stays stable (by i).
                 style={{
                   color:
                     state === "correct"
@@ -202,7 +217,12 @@ export default function PlayingScreen() {
                 }}
               >
                 {state === "pending" ? (
-                  <span className={s.charPending}>{ch}</span>
+                  <span
+                    key={flashReject ? `p-${rejectTick}` : "p"}
+                    className={`${s.charPending} ${flashReject ? s.charRejectFlashInner : ""}`}
+                  >
+                    {ch}
+                  </span>
                 ) : (
                   ch
                 )}

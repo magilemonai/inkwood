@@ -287,6 +287,32 @@ function CottageScene({ progress: p }: SceneProps) {
         <ellipse cx="318" cy="198" rx="32" ry="7" fill="#e89a30" opacity={c3 * 0.04} />
       )}
 
+      {/* ── WINDOW LIGHT on floor — soft amber pool beneath the window
+           once warmth builds. Adds depth and ties the window glow to
+           the floor; previously the floor stayed uniformly dark below
+           the warm window. Shape matches the window's horizontal span,
+           muntins cast faint cross-shadows so the pool reads as "light
+           through panes" rather than a generic glow. */}
+      {windowWarm > 0.2 && (() => {
+        const wlp = sub(p, 0.2, 0.55);
+        return (
+          <g opacity={wlp * 0.75}>
+            {/* Broad outer pool */}
+            <ellipse cx="95" cy="202" rx={54} ry={10}
+              fill="#e89a30" opacity={0.05} />
+            {/* Tighter inner pool */}
+            <ellipse cx="95" cy="200" rx={36} ry={6.5}
+              fill="#f0b050" opacity={0.09} />
+            {/* Muntin shadow — vertical and horizontal bars from the
+                 window cross, so the floor pool reads as pane-cast light. */}
+            <rect x="93.5" y="193" width="3" height="14"
+              fill="#060304" opacity={0.22} />
+            <rect x="72" y="199" width="46" height="2.2"
+              fill="#060304" opacity={0.16} />
+          </g>
+        );
+      })()}
+
       {/* ── WARM LIGHT OVERLAY — covering layer, fades in ── */}
       <rect width="400" height="250" fill="url(#warmOverlay)" />
 
