@@ -203,79 +203,70 @@ function CottageScene({ progress: p }: SceneProps) {
       <rect x="0" y="190" width="400" height="60"
         fill={`rgb(${r + 3},${g + 2},${b})`} />
 
-      {/* ── CAT — loaf pose, 3/4 angle, sitting on the rug beneath the
-           window. Solid black silhouette with one amber eye peeking
-           open. Built from three overlapping black paths (body, head,
-           two ears) that visually fuse because they share a color, so
-           the result reads as a single continuous loaf shape — matching
-           sticker-cat / "cat in loaf" reference proportions: rounded
-           muffin body, short wide-base ears tilted outward, no visible
-           tail (tucked under in loaf), face features clustered low on
-           the head. ── */}
+      {/* ── CAT — loaf pose, 3/4 angle, sitting ON THE WINDOWSILL so the
+           silhouette reads clean against the warm amber panes rather
+           than crowding the typing overlay. Same three-path construction
+           as before (body, head, two ears) with the closed-eye arc
+           nudged down so it sits even with the open eye's vertical
+           center. ── */}
       {catP > 0 && (() => {
         // Slightly darker than the warming room, always legible.
         const catColor = `rgb(${Math.max(3, r - 7)},${Math.max(3, g - 6)},${Math.max(3, b - 5)})`;
         return (
           <g opacity={catP}>
-            {/* ── BODY — rounded muffin, fuller at the rump, flowing
-                 continuously forward so the head doesn't create a step. ── */}
+            {/* ── BODY — baseline y=128 (top of the windowsill) ── */}
             <path d={`
-              M 72 193
-              C 62 187, 62 174, 72 167
-              C 82 161, 96 160, 110 164
-              C 120 167, 127 173, 130 181
-              C 132 188, 130 193, 126 193
+              M 72 128
+              C 62 122, 62 109, 72 102
+              C 82 96, 96 95, 110 99
+              C 120 102, 127 108, 130 116
+              C 132 123, 130 128, 126 128
               Z
             `} fill={catColor} />
 
-            {/* ── HEAD — overlaps body and extends the silhouette
-                 forward with no valley. The head's bottom reaches the
-                 floor so no sliver shows between head and ground. ── */}
+            {/* ── HEAD — overlaps front of body, bottom sits on the sill. ── */}
             <path d={`
-              M 103 190
-              C 99 182, 100 170, 108 164
-              C 116 160, 126 160, 131 165
-              C 135 170, 135 179, 132 185
-              C 130 190, 124 192, 118 193
-              L 105 193
+              M 103 125
+              C 99 117, 100 105, 108 99
+              C 116 95, 126 95, 131 100
+              C 135 105, 135 114, 132 120
+              C 130 125, 124 127, 118 128
+              L 105 128
               Z
             `} fill={catColor} />
 
-            {/* ── EARS — short, rounded-base triangles. Both nearly the
-                 same height so the cat reads symmetric. Slight outward
-                 tilt = relaxed posture. ── */}
+            {/* ── EARS — short, rounded-base triangles. ── */}
             {/* Far ear (left) */}
-            <path d="M 105 165 Q 107 158 111 157 Q 115 161 117 166 Z" fill={catColor} />
+            <path d="M 105 100 Q 107 93 111 92 Q 115 96 117 101 Z" fill={catColor} />
             {/* Near ear (right) — barely taller */}
-            <path d="M 122 166 Q 125 156 129 156 Q 132 161 133 167 Z" fill={catColor} />
+            <path d="M 122 101 Q 125 91 129 91 Q 132 96 133 102 Z" fill={catColor} />
 
             {/* ── FACE ── */}
-            {/* Open amber eye (right/near) — ellipse with vertical pupil slit.
-                Positioned on the lower-mid of the head per reference cats. */}
-            <ellipse cx="124" cy="175" rx="1.9" ry="2.3" fill="#f0b040" opacity={Math.min(1, catP * 1.15)} />
-            <ellipse cx="124" cy="175" rx="0.55" ry="1.9" fill="#1a0a04" opacity={Math.min(1, catP * 1.15)} />
-            {/* Tiny highlight so the eye feels alive */}
-            <circle cx="124.5" cy="174" r="0.35" fill="#fff2c0" opacity={Math.min(0.9, catP)} />
+            {/* Open amber eye (right/near) */}
+            <ellipse cx="124" cy="110" rx="1.9" ry="2.3" fill="#f0b040" opacity={Math.min(1, catP * 1.15)} />
+            <ellipse cx="124" cy="110" rx="0.55" ry="1.9" fill="#1a0a04" opacity={Math.min(1, catP * 1.15)} />
+            <circle cx="124.5" cy="109" r="0.35" fill="#fff2c0" opacity={Math.min(0.9, catP)} />
 
-            {/* Closed eye (left/far) — shallow, muted amber crescent */}
-            <path d="M 110 174 Q 112.5 175.5 115 174"
+            {/* Closed eye (left/far) — endpoints at y=110 so the closed
+                 crescent sits visually even with the open eye's center. */}
+            <path d="M 110 110 Q 112.5 111 115 110"
               fill="none" stroke="#8a5020" strokeWidth="0.55"
               strokeLinecap="round" opacity={Math.min(0.55, catP * 0.6)} />
 
-            {/* Tiny nose — small pink triangle */}
-            <path d="M 116.5 180 L 119 180 L 117.7 181.5 Z"
+            {/* Tiny nose */}
+            <path d="M 116.5 115 L 119 115 L 117.7 116.5 Z"
               fill="#9a5a48" opacity={Math.min(0.85, catP)} />
-            {/* Content mouth — small "ω" below nose */}
-            <path d="M 117.7 181.5 Q 116.2 183 114.8 182 M 117.7 181.5 Q 119.2 183 120.6 182"
+            {/* Content mouth */}
+            <path d="M 117.7 116.5 Q 116.2 118 114.8 117 M 117.7 116.5 Q 119.2 118 120.6 117"
               fill="none" stroke="#2a1a14" strokeWidth="0.45" strokeLinecap="round"
               opacity={Math.min(0.6, catP * 0.7)} />
 
             {/* Barely-there whiskers */}
             <g opacity={Math.min(0.22, catP * 0.25)}>
-              <line x1="113" y1="181" x2="103" y2="180" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
-              <line x1="113" y1="183" x2="104" y2="184" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
-              <line x1="122" y1="181" x2="132" y2="180" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
-              <line x1="122" y1="183" x2="131" y2="184" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="113" y1="116" x2="103" y2="115" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="113" y1="118" x2="104" y2="119" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="122" y1="116" x2="132" y2="115" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
+              <line x1="122" y1="118" x2="131" y2="119" stroke="#a88870" strokeWidth="0.3" strokeLinecap="round" />
             </g>
           </g>
         );
