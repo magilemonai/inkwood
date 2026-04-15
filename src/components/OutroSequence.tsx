@@ -438,30 +438,35 @@ export default function OutroSequence() {
               <ellipse cx={v.x} cy="155" rx={10 * p} ry={3 * p}
                 fill={v.color} opacity={p * 0.15} />
               {/* Spirit silhouettes — 3 gathered in the clearing, the
-                   Sanctum's signature element. Appear after moonbeams settle. */}
-              {p > 0.6 && [-5, 0, 5].map((dx, si) => {
+                   Sanctum's signature element. Scaled up 2× from prior
+                   (halo r=4, head r=1.6, robe width ±2) so they read
+                   as robed figures at thumbnail size rather than dots. */}
+              {p > 0.6 && [-8, 0, 8].map((dx, si) => {
                 const sp = sub(p, 0.6 + si * 0.08, 0.35);
                 if (sp <= 0) return null;
                 const cx = v.x + dx;
-                const bob = Math.sin(time * 1.8 + si * 1.5) * 0.4;
-                const cy = 152 + bob;
+                const bob = Math.sin(time * 1.8 + si * 1.5) * 0.6;
+                const cy = 150 + bob;
                 return (
                   <g key={`ss${si}`} opacity={sp * 0.9}>
                     {/* Halo */}
-                    <circle cx={cx} cy={cy - 2} r={2}
+                    <circle cx={cx} cy={cy - 4} r={4}
                       fill={v.color} opacity={sp * 0.25} />
                     {/* Head */}
-                    <circle cx={cx} cy={cy - 2} r={0.8}
-                      fill="#ffe8a8" opacity={sp * 0.75} />
+                    <circle cx={cx} cy={cy - 4} r={1.6}
+                      fill="#ffe8a8" opacity={sp * 0.8} />
                     {/* Robe */}
                     <path
-                      d={`M${cx - 1} ${cy - 1}
-                          C${cx - 1.3} ${cy + 0.5}, ${cx - 1.1} ${cy + 1.5}, ${cx - 0.8} ${cy + 2.5}
-                          L${cx + 0.8} ${cy + 2.5}
-                          C${cx + 1.1} ${cy + 1.5}, ${cx + 1.3} ${cy + 0.5}, ${cx + 1} ${cy - 1}
+                      d={`M${cx - 2} ${cy - 2}
+                          C${cx - 2.6} ${cy + 1}, ${cx - 2.2} ${cy + 3}, ${cx - 1.6} ${cy + 5}
+                          L${cx + 1.6} ${cy + 5}
+                          C${cx + 2.2} ${cy + 3}, ${cx + 2.6} ${cy + 1}, ${cx + 2} ${cy - 2}
                           Z`}
-                      fill={v.color} opacity={sp * 0.55}
+                      fill={v.color} opacity={sp * 0.6}
                     />
+                    {/* Inner light column */}
+                    <ellipse cx={cx} cy={cy} rx={0.8} ry={2.2}
+                      fill="#ffe8a8" opacity={sp * 0.35} />
                   </g>
                 );
               })}
