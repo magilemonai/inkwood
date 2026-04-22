@@ -469,11 +469,68 @@ export function toggleMute(): boolean {
   if (masterGain) {
     masterGain.gain.value = muted ? 0 : MASTER_VOLUME;
   }
+  // Kill any in-flight whisper so muting stops speech immediately
+  // rather than leaving it to finish a phrase after the user silenced it.
+  if (muted && typeof window !== "undefined" && window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch { /* */ }
+  }
   return muted;
 }
 
 export function isMuted(): boolean {
   return muted;
+}
+
+// ── Whisper (SpeechSynthesis) ────────────────────────────
+// Speak the completed phrase back once, very softly, using the
+// browser's built-in speech engine. The goal is an intimate, barely-
+// there echo — not narration. Volume and rate are tuned low.
+//
+// Voice selection is best-effort: we look for an English voice with
+// a "soft" name hint, falling back to any English voice, then to the
+// first available. Voices load asynchronously in some browsers, so
+// if the list is empty on first call we wait for `voiceschanged`.
+
+let cachedVoice: SpeechSynthesisVoice | null = null;
+let cachedVoiceResolved = false;
+
+function pickWhisperVoice(): SpeechSynthesisVoice | null {
+  if (cachedVoiceResolved) return cachedVoice;
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+  const english = voices.filter((v) => v.lang?.toLowerCase().startsWith("en"));
+  const soft = english.find((v) => /soft|whisper|samantha|karen|moira|fiona|serena/i.test(v.name));
+  cachedVoice = soft ?? english[0] ?? voices[0] ?? null;
+  cachedVoiceResolved = true;
+  return cachedVoice;
+}
+
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  // Prime voice list on load; browsers populate it async.
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener("voiceschanged", () => {
+    cachedVoiceResolved = false;
+    pickWhisperVoice();
+  });
+}
+
+export function playWhisper(phrase: string) {
+  if (muted) return;
+  if (!phrase) return;
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  try {
+    const synth = window.speechSynthesis;
+    // Cancel anything queued so rapid completions don't stack.
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(phrase);
+    utter.volume = 0.25;
+    utter.rate = 0.78;
+    utter.pitch = 0.85;
+    const voice = pickWhisperVoice();
+    if (voice) utter.voice = voice;
+    synth.speak(utter);
+  } catch { /* ignore — speech is a bonus, not required */ }
 }
 
 // ── Cleanup ──────────────────────────────────────────────

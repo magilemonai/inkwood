@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import { startAmbient, stopAmbient } from "../audio";
+import Souvenir from "./Souvenir";
+import { downloadSouvenir } from "../lib/downloadSouvenir";
 import s from "../styles/Outro.module.css";
 
 /**
@@ -39,11 +41,36 @@ function easeInOut(t: number): number {
   return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
 }
 
+type SouvenirStatus = "idle" | "saving" | "saved" | "error";
+
 export default function OutroSequence() {
   const restart = useGameStore((g) => g.restart);
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
   const showTextRef = useRef(false);
+  const souvenirSvgRef = useRef<SVGSVGElement>(null);
+  const [souvenirStatus, setSouvenirStatus] = useState<SouvenirStatus>("idle");
+  // Frozen at mount so if the player lingers on the outro across midnight
+  // the stamp on the postcard doesn't drift.
+  const [completionDate] = useState(() => new Date());
+
+  const handleKeepMoment = useCallback(async () => {
+    const svg = souvenirSvgRef.current;
+    if (!svg) return;
+    setSouvenirStatus("saving");
+    try {
+      const stamp = completionDate.toISOString().split("T")[0];
+      await downloadSouvenir(svg, `inkwood-${stamp}.png`);
+      setSouvenirStatus("saved");
+      // Revert the button label after a few seconds so the player can
+      // download another copy if they want to.
+      setTimeout(() => setSouvenirStatus("idle"), 2500);
+    } catch (err) {
+      console.error("Souvenir export failed", err);
+      setSouvenirStatus("error");
+      setTimeout(() => setSouvenirStatus("idle"), 3000);
+    }
+  }, [completionDate]);
 
   // Keyboard: space/enter to restart when text is showing
   useEffect(() => {
@@ -661,18 +688,52 @@ export default function OutroSequence() {
               ))}
             </motion.div>
 
-            <motion.button
-              className={s.restartBtn}
+            <motion.div
+              className={s.buttonRow}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 4 }}
-              onClick={restart}
             >
-              Begin Again
-            </motion.button>
+              <button
+                className={s.keepBtn}
+                onClick={handleKeepMoment}
+                disabled={souvenirStatus === "saving"}
+                aria-label="Download a keepsake postcard of your journey"
+              >
+                {souvenirStatus === "saving"
+                  ? "Preparing…"
+                  : souvenirStatus === "saved"
+                    ? "Saved ✓"
+                    : souvenirStatus === "error"
+                      ? "Try again"
+                      : "Keep this moment"}
+              </button>
+              <button
+                className={s.restartBtn}
+                onClick={restart}
+              >
+                Begin Again
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hidden souvenir SVG — kept in the DOM so the download handler
+           has a live SVGElement to serialise. Visually offscreen. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "-99999px",
+          top: 0,
+          width: 1200,
+          height: 800,
+          pointerEvents: "none",
+        }}
+      >
+        <Souvenir date={completionDate} svgRef={souvenirSvgRef} />
+      </div>
     </div>
   );
 }

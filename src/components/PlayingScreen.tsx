@@ -4,7 +4,7 @@ import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
-import { startAmbient, stopAmbient, playCompletionSweep, playTypeClick, toggleMute, isMuted } from "../audio";
+import { startAmbient, stopAmbient, playCompletionSweep, playTypeClick, playWhisper, toggleMute, isMuted } from "../audio";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -68,8 +68,12 @@ export default function PlayingScreen() {
     if (isComplete && !completing) {
       startCompletion();
       playCompletionSweep();
+      // Soft speech-synth echo of the phrase — the world whispering
+      // the incantation back. Plays once; the 1.5s breathing pause
+      // gives it room to land before the next prompt appears.
+      playWhisper(target);
     }
-  }, [isComplete, completing, startCompletion]);
+  }, [isComplete, completing, startCompletion, target]);
 
   // ── Ambient audio — start/switch on level change ──
   const [audioMuted, setAudioMuted] = useState(isMuted);
