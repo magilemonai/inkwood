@@ -1,6 +1,12 @@
 import { useRef, useEffect, useSyncExternalStore, useCallback } from "react";
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 interface Particle {
+  id: number;
   x: number;
   y: number;
   vx: number;
@@ -10,6 +16,8 @@ interface Particle {
   size: number;
   color: string;
 }
+
+let nextParticleId = 1;
 
 interface ParticleConfig {
   count: number;
@@ -26,6 +34,7 @@ function spawnParticle(config: ParticleConfig, randomAge: boolean): Particle {
   const { bounds, colors, sizeRange, speedRange, lifeRange, driftX = 0, driftY = -8 } = config;
   const life = lifeRange[0] + Math.random() * (lifeRange[1] - lifeRange[0]);
   return {
+    id: nextParticleId++,
     x: bounds.x + Math.random() * bounds.width,
     y: bounds.y + Math.random() * bounds.height,
     vx: (Math.random() - 0.5) * speedRange[1] + driftX,
@@ -57,7 +66,9 @@ export function useParticles(config: ParticleConfig, active: boolean): Particle[
 
   useEffect(() => {
     const store = storeRef.current;
-    if (!active) {
+    // Honor prefers-reduced-motion: skip the rAF loop and render no
+    // particles. The rest of the scene still renders statically.
+    if (!active || prefersReducedMotion()) {
       store.particles = [];
       store.snapshot = [];
       store.listeners.forEach((l) => l());

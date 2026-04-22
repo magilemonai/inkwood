@@ -111,6 +111,7 @@ export default function OutroSequence() {
         className={s.sceneWrap}
         style={{ width: "100%", height: "100%" }}
         preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
       >
         <defs>
           {/* Glow filters for each vignette */}

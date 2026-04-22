@@ -38,6 +38,14 @@ try {
 // any combination of sounds from hurting the listener.
 const MASTER_VOLUME = 0.15;
 
+// ── Cleanup timing ──
+// Fades ramp to 0 over FADE_MS, then deferred stop/disconnect fires
+// CLEANUP_MS later so any overlapping schedule finishes cleanly.
+const INTRO_FADE_MS = 1500;
+const AMBIENT_FADE_MS = 2000;
+const TEXTURE_FADE_MS = 2000;
+const CLEANUP_TAIL_MS = 500;
+
 function getCtx(): AudioContext {
   if (!ctx) {
     ctx = new AudioContext();
@@ -184,8 +192,10 @@ export function stopIntroDrone() {
   const ac = ctx;
 
   if (introGain) {
+    // Cancel any in-flight ramp so the new ramp-to-zero wins cleanly.
+    introGain.gain.cancelScheduledValues(ac.currentTime);
     introGain.gain.setValueAtTime(introGain.gain.value, ac.currentTime);
-    introGain.gain.linearRampToValueAtTime(0, ac.currentTime + 1.5);
+    introGain.gain.linearRampToValueAtTime(0, ac.currentTime + INTRO_FADE_MS / 1000);
   }
 
   const nodes = [...introNodes];
@@ -193,7 +203,7 @@ export function stopIntroDrone() {
   setTimeout(() => {
     nodes.forEach((n) => { try { n.stop(); n.disconnect(); } catch { /* */ } });
     try { oldGain?.disconnect(); } catch { /* */ }
-  }, 2000);
+  }, INTRO_FADE_MS + CLEANUP_TAIL_MS);
 
   introNodes = [];
   introGain = null;
@@ -286,8 +296,9 @@ export function stopAmbient() {
   const ac = ctx;
 
   if (ambientGain) {
+    ambientGain.gain.cancelScheduledValues(ac.currentTime);
     ambientGain.gain.setValueAtTime(ambientGain.gain.value, ac.currentTime);
-    ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + 2);
+    ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + AMBIENT_FADE_MS / 1000);
   }
 
   const nodes = [...ambientNodes];
@@ -302,7 +313,7 @@ export function stopAmbient() {
     try { oldLfoGain?.disconnect(); } catch { /* */ }
     try { oldFilter?.disconnect(); } catch { /* */ }
     try { oldGain?.disconnect(); } catch { /* */ }
-  }, 2500);
+  }, AMBIENT_FADE_MS + CLEANUP_TAIL_MS);
 
   ambientNodes = [];
   lfo = null;
@@ -378,8 +389,9 @@ function stopTexture() {
   const ac = ctx;
 
   if (textureGain) {
+    textureGain.gain.cancelScheduledValues(ac.currentTime);
     textureGain.gain.setValueAtTime(textureGain.gain.value, ac.currentTime);
-    textureGain.gain.linearRampToValueAtTime(0, ac.currentTime + 2);
+    textureGain.gain.linearRampToValueAtTime(0, ac.currentTime + TEXTURE_FADE_MS / 1000);
   }
 
   const oldSource = textureSource;
@@ -387,7 +399,7 @@ function stopTexture() {
   setTimeout(() => {
     try { oldSource?.stop(); oldSource?.disconnect(); } catch { /* */ }
     try { oldGain?.disconnect(); } catch { /* */ }
-  }, 2500);
+  }, TEXTURE_FADE_MS + CLEANUP_TAIL_MS);
 
   textureSource = null;
   textureGain = null;

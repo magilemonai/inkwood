@@ -22,11 +22,9 @@ export type SceneKey =
 
 export type Screen =
   | "intro"
-  | "title"
   | "playing"
   | "levelWin"
   | "actTransition"
-  | "gameWin"
   | "outro";
 
 export type CharState = "correct" | "error" | "pending";

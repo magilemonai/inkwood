@@ -387,7 +387,7 @@ export default function ActTransition() {
   }, [advance]);
 
   return (
-    <div className={s.container} onClick={advance} role="button" tabIndex={0} onKeyDown={advance}>
+    <div className={s.container} onClick={advance} role="button" tabIndex={0} aria-label="Continue to next act">
       <AnimatePresence>
         <motion.div
           key="scene"

@@ -19,5 +19,10 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Allow console.warn / console.error for legitimate error reporting
+      // (e.g. ErrorBoundary) but catch stray console.log left during dev.
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
   },
 ])

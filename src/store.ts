@@ -10,14 +10,19 @@ interface SaveData {
   promptIdx: number;
 }
 
-function loadSave(): SaveData | null {
+export function loadSave(): SaveData | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    const data = JSON.parse(raw) as SaveData;
-    if (typeof data.lvl === "number" && data.lvl >= 0 && data.lvl < LEVELS.length) {
-      return data;
-    }
+    const data = JSON.parse(raw) as unknown;
+    if (!data || typeof data !== "object") return null;
+    const { lvl, promptIdx } = data as { lvl?: unknown; promptIdx?: unknown };
+    if (!Number.isInteger(lvl) || !Number.isInteger(promptIdx)) return null;
+    const l = lvl as number;
+    const p = promptIdx as number;
+    if (l < 0 || l >= LEVELS.length) return null;
+    if (p < 0 || p >= LEVELS[l].prompts.length) return null;
+    return { lvl: l, promptIdx: p };
   } catch { /* ignore corrupt saves */ }
   return null;
 }
@@ -107,14 +112,19 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ typed: value });
       return;
     }
-    // Forward motion — only accept if the new character matches the target.
-    // Wrong keystrokes are dropped silently; the scene doesn't advance.
-    if (value.length > typed.length && value.length <= target.length) {
-      const nextChar = value[value.length - 1];
-      const expected = target[typed.length];
-      if (nextChar === expected) {
-        set({ typed: value });
-      }
+    if (value.length === typed.length) return;
+    // Forward motion — may be one keystroke or a paste of many chars.
+    // Walk the new chars against the target and accept the longest
+    // prefix that matches. Anything beyond a mismatch (or past the
+    // target length) is dropped silently.
+    const maxCheck = Math.min(value.length, target.length);
+    let accepted = typed.length;
+    for (let i = typed.length; i < maxCheck; i++) {
+      if (value[i] !== target[i]) break;
+      accepted = i + 1;
+    }
+    if (accepted > typed.length) {
+      set({ typed: target.slice(0, accepted) });
     }
   },
 

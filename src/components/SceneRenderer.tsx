@@ -15,6 +15,12 @@ interface Props {
   progress: number;
 }
 
+/** Compile-time exhaustiveness helper — any new SceneKey will be flagged
+ *  by TypeScript here until a corresponding case is added below. */
+function assertNever(x: never): never {
+  throw new Error(`Unhandled scene key: ${String(x)}`);
+}
+
 export default function SceneRenderer({ sceneKey, progress }: Props) {
   switch (sceneKey) {
     case "garden": return <GardenScene progress={progress} />;
@@ -27,5 +33,6 @@ export default function SceneRenderer({ sceneKey, progress }: Props) {
     case "sanctum": return <SanctumScene progress={progress} />;
     case "tree": return <TreeScene progress={progress} />;
     case "world": return <WorldScene progress={progress} />;
+    default: return assertNever(sceneKey);
   }
 }

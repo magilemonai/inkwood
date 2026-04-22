@@ -56,3 +56,19 @@ button:active {
 ::selection {
   background: rgba(107, 191, 107, 0.3);
 }
+
+/* ── Reduced motion ──
+   Disable CSS keyframe / transition motion for users who've asked the
+   system to minimise animation. Framer Motion already respects this
+   preference by default for most transitions; this covers our CSS and
+   any SVG-level keyframe animations in scene files. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

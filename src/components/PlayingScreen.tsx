@@ -103,13 +103,24 @@ export default function PlayingScreen() {
   }, [typed, completing, lvl, promptIdx]);
 
 
+  // Track IME composition (Chinese/Japanese/Korean/etc.) — browsers fire
+  // onChange during composition with intermediate values that would fail
+  // our strict char-by-char validation. We wait for compositionend.
+  const isComposingRef = useRef(false);
+
   const handleType = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isComposingRef.current) return;
     const newVal = e.target.value;
     const wasForward = newVal.length > typed.length;
     typeChar(newVal);
     const acceptedTyped = useGameStore.getState().typed;
     const acceptedForward = wasForward && acceptedTyped.length > typed.length;
     const acceptedBackward = !wasForward && acceptedTyped.length !== typed.length;
+    // If the DOM input drifted from accepted state (partial paste, rejected
+    // forward keystroke), force-sync so the field reflects truth.
+    if (e.target.value !== acceptedTyped) {
+      e.target.value = acceptedTyped;
+    }
     if (acceptedForward) {
       playTypeClick();
       // Clear any stale rejection so correct keystrokes after a miss
@@ -124,6 +135,12 @@ export default function PlayingScreen() {
     }
   };
 
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    isComposingRef.current = false;
+    // Re-run validation on the final composed value.
+    handleType({ target: e.target } as unknown as React.ChangeEvent<HTMLInputElement>);
+  };
+
   const focusInput = () => {
     inputRef.current?.focus();
     setInputFocused(true);
@@ -136,8 +153,10 @@ export default function PlayingScreen() {
 
   return (
     <div className={s.container} onClick={focusInput}>
-      {/* Scene fills entire viewport — wrapped in error boundary */}
-      <div className={s.sceneContainer}>
+      {/* Scene fills entire viewport — wrapped in error boundary.
+           The scene is decorative; screen readers should skip it and
+           focus on the typing prompt below. */}
+      <div className={s.sceneContainer} aria-hidden="true">
         <ErrorBoundary>
           <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
         </ErrorBoundary>
@@ -155,6 +174,8 @@ export default function PlayingScreen() {
               fontFamily: "monospace", padding: 0,
             }}
             title={audioMuted ? "Unmute" : "Mute"}
+            aria-label={audioMuted ? "Unmute audio" : "Mute audio"}
+            aria-pressed={audioMuted}
           >
             {audioMuted ? "\u2709" : "\u266B"}
           </button>
@@ -193,6 +214,8 @@ export default function PlayingScreen() {
           className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge && !showTapOverlay ? s.promptBoxIdleNudge : ""}`}
           style={{ border: `1px solid ${accent}25` }}
           onClick={focusInput}
+          role="group"
+          aria-label={`Incantation: ${target}`}
         >
           {showTapOverlay && (
             <div className={s.tapOverlay} onClick={focusInput}>
@@ -272,6 +295,8 @@ export default function PlayingScreen() {
           type="text"
           value={typed}
           onChange={handleType}
+          onCompositionStart={() => { isComposingRef.current = true; }}
+          onCompositionEnd={handleCompositionEnd}
           onFocus={() => setInputFocused(true)}
           onBlur={() => setInputFocused(false)}
           autoComplete="off"
