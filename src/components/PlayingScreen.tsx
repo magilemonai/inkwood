@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { useGameStore } from "../store";
 import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
-import { startAmbient, stopAmbient, playCompletionSweep, playTypeClick, toggleMute, isMuted } from "../audio";
+import { startAmbient, playCompletionSweep, playTypeClick, toggleMute, isMuted } from "../audio";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -15,45 +15,95 @@ function getCharStates(typed: string, target: string): CharState[] {
   });
 }
 
-/** Quantize to 0.01 so React.memo on scenes actually prevents re-renders */
 function quantize(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** Detect touch device for context-aware hints */
 const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
-export default function PlayingScreen() {
-  const {
-    lvl,
-    promptIdx,
-    typed,
-    completing,
-    typeChar,
-    startCompletion,
-    advancePrompt,
-  } = useGameStore();
+// ── HeaderBar — subscribes only to lvl + accent so it doesn't re-render per keystroke ──
+const HeaderBar = memo(function HeaderBar() {
+  const lvl = useGameStore((g) => g.lvl);
+  const level = LEVELS[lvl];
+  const accent = level.accent;
+  const [audioMuted, setAudioMuted] = useState(isMuted);
 
-  const level = useGameStore((g) => g.level());
+  return (
+    <div className={s.header}>
+      <span className={s.headerLogo} style={{ color: accent, opacity: 0.7 }}>
+        INKWOOD
+        <button
+          onClick={(e) => { e.stopPropagation(); setAudioMuted(toggleMute()); }}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: accent, opacity: 0.4, fontSize: "0.6em", marginLeft: "0.5em",
+            fontFamily: "monospace", padding: 0,
+          }}
+          aria-label={audioMuted ? "Unmute" : "Mute"}
+          title={audioMuted ? "Unmute" : "Mute"}
+        >
+          {audioMuted ? "✉" : "♫"}
+        </button>
+      </span>
+      <span className={s.headerTitle}>{level.title}</span>
+      <span className={s.headerDots} aria-hidden="true">
+        {LEVELS.map((l, i) => (
+          <span
+            key={i}
+            style={{
+              color: i < lvl ? l.accent : i === lvl ? accent : "#333",
+            }}
+          >
+            {i <= lvl ? "◆" : "◇"}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+});
+
+// ── ProgressBar — subscribes to quantized progress, not raw typed ──
+const ProgressBar = memo(function ProgressBar({ accent }: { accent: string }) {
+  const progress = useGameStore((g) => quantize(g.levelProgress()));
+  return (
+    <div className={s.progressTrack} style={{ marginBottom: "0.6rem" }} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+      <div
+        className={s.progressFill}
+        style={{ width: `${progress * 100}%`, background: accent }}
+      />
+    </div>
+  );
+});
+
+export default function PlayingScreen() {
+  // Narrow selectors — only re-renders when these specific slices change.
+  const lvl = useGameStore((g) => g.lvl);
+  const promptIdx = useGameStore((g) => g.promptIdx);
+  const typed = useGameStore((g) => g.typed);
+  const completing = useGameStore((g) => g.completing);
   const target = useGameStore((g) => g.target());
   const totalPrompts = useGameStore((g) => g.totalPrompts());
-  const rawProgress = useGameStore((g) => g.levelProgress());
   const isComplete = useGameStore((g) => g.isComplete());
+
+  // Level info — derives from lvl only.
+  const level = LEVELS[lvl];
+  const { accent, flavor } = level;
+
+  // Scene progress — separately quantized for memo'd scene.
+  const levelProgress = useGameStore((g) => quantize(g.levelProgress()));
+
+  // Actions come from the store getter and are stable references.
+  const typeChar = useGameStore((g) => g.typeChar);
+  const startCompletion = useGameStore((g) => g.startCompletion);
+  const advancePrompt = useGameStore((g) => g.advancePrompt);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const [idleNudge, setIdleNudge] = useState(false);
-  // Bump a counter when a keystroke is rejected so the expected
-  // character flashes briefly. Using a counter (not a boolean) lets
-  // repeated rejections retrigger the animation on every miss.
   const [rejectTick, setRejectTick] = useState(0);
 
-  const { accent } = level;
   const charStates = getCharStates(typed, target);
   const hasError = charStates.some((st) => st === "error");
-
-  // Quantize progress for effective React.memo on scenes
-  const levelProgress = quantize(rawProgress);
 
   // ── Completion timer (extracted to hook) ──
   const handleComplete = useCallback(() => {
@@ -71,12 +121,13 @@ export default function PlayingScreen() {
     }
   }, [isComplete, completing, startCompletion]);
 
-  // ── Ambient audio — start/switch on level change ──
-  const [audioMuted, setAudioMuted] = useState(isMuted);
+  // ── Ambient audio — start/crossfade on level change ──
+  // No teardown on unmount: the engine crossfades between voices on
+  // subsequent startAmbient calls, so level→level (and level→levelWin
+  // →level) transitions don't stop-and-restart the bed.
   useEffect(() => {
     const actIdx = getActIndex(lvl);
     startAmbient(actIdx, lvl);
-    return () => { stopAmbient(); };
   }, [lvl]);
 
   // ── Focus management ──
@@ -88,11 +139,7 @@ export default function PlayingScreen() {
     return () => clearTimeout(timer);
   }, [lvl, promptIdx]);
 
-  // ── Idle nudge — if the player hasn't typed anything on a fresh
-  //    prompt within 2.5s, escalate the pulse so the call to action
-  //    is unmistakable. Set is done inside the timer; the cleanup
-  //    resets the flag whenever typing starts or the prompt advances,
-  //    so we never call setState synchronously in the effect body. ──
+  // ── Idle nudge ──
   useEffect(() => {
     if (typed.length !== 0 || completing) return;
     const timer = setTimeout(() => setIdleNudge(true), 2500);
@@ -112,12 +159,8 @@ export default function PlayingScreen() {
     const acceptedBackward = !wasForward && acceptedTyped.length !== typed.length;
     if (acceptedForward) {
       playTypeClick();
-      // Clear any stale rejection so correct keystrokes after a miss
-      // don't inherit the red flash animation on every subsequent char.
       if (rejectTick > 0) setRejectTick(0);
     } else if (wasForward && !acceptedForward) {
-      // Rejected forward keystroke — flash the expected character so the
-      // player who isn't watching the cursor gets a cheap "try again" cue.
       setRejectTick((t) => t + 1);
     } else if (acceptedBackward && rejectTick > 0) {
       setRejectTick(0);
@@ -130,68 +173,31 @@ export default function PlayingScreen() {
   };
 
   const showTapOverlay = !inputFocused && typed.length === 0;
-
-  // Golden pulse: active at the start of EVERY phrase until first character typed
   const showPulse = typed.length === 0 && !completing;
+  const showBreathRing = completing;
 
   return (
     <div className={s.container} onClick={focusInput}>
-      {/* Scene fills entire viewport — wrapped in error boundary */}
-      <div className={s.sceneContainer}>
+      <div
+        className={s.sceneContainer}
+        role="img"
+        aria-label={`${level.title} — ${levelProgress === 0 ? "dormant, waiting" : levelProgress < 1 ? "awakening" : "fully alive"}`}
+      >
         <ErrorBoundary>
           <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
         </ErrorBoundary>
       </div>
 
-      {/* Header floats on top */}
-      <div className={s.header}>
-        <span className={s.headerLogo} style={{ color: accent, opacity: 0.7 }}>
-          INKWOOD
-          <button
-            onClick={(e) => { e.stopPropagation(); setAudioMuted(toggleMute()); }}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: accent, opacity: 0.4, fontSize: "0.6em", marginLeft: "0.5em",
-              fontFamily: "monospace", padding: 0,
-            }}
-            title={audioMuted ? "Unmute" : "Mute"}
-          >
-            {audioMuted ? "\u2709" : "\u266B"}
-          </button>
-        </span>
-        <span className={s.headerTitle}>{level.title}</span>
-        <span className={s.headerDots}>
-          {LEVELS.map((l, i) => (
-            <span
-              key={i}
-              style={{
-                color: i < lvl ? l.accent : i === lvl ? accent : "#333",
-              }}
-            >
-              {i <= lvl ? "\u25C6" : "\u25C7"}
-            </span>
-          ))}
-        </span>
-      </div>
+      <HeaderBar />
 
-      {/* Typing area — overlaid at bottom */}
       <div className={s.typingArea}>
-        {/* Progress bar */}
-        <div className={s.progressTrack} style={{ marginBottom: "0.6rem" }}>
-          <div
-            className={s.progressFill}
-            style={{ width: `${levelProgress * 100}%`, background: accent }}
-          />
-        </div>
+        <ProgressBar accent={accent} />
 
-        <p className={s.flavor}>{level.flavor}</p>
+        <p className={s.flavor}>{flavor}</p>
 
-        {/* Prompt display — pulses on every phrase start; escalates after 2.5s idle.
-             The idle caption is suppressed when the tap overlay is showing
-             (the "click anywhere to type" text there already serves that purpose). */}
         <div
-          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge && !showTapOverlay ? s.promptBoxIdleNudge : ""}`}
-          style={{ border: `1px solid ${accent}25` }}
+          className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge && !showTapOverlay ? s.promptBoxIdleNudge : ""} ${showBreathRing ? s.promptBoxBreathing : ""}`}
+          style={{ border: `1px solid ${accent}25`, "--breath-color": accent } as React.CSSProperties}
           onClick={focusInput}
         >
           {showTapOverlay && (
@@ -203,16 +209,11 @@ export default function PlayingScreen() {
           {!showTapOverlay && target.split("").map((ch, i) => {
             const state = charStates[i];
             const isCursor = i === typed.length && !completing;
-            // Apply the reject-flash class only to the expected (cursor)
-            // character, and re-key it on rejectTick so CSS replays the
-            // animation on every new miss.
             const flashReject = isCursor && rejectTick > 0;
             return (
               <span
                 key={i}
                 className={`${s.char} ${isCursor ? s.cursor : ""}`}
-                // Re-mount the inner span on each rejection so the CSS
-                // animation restarts. Outer span key stays stable (by i).
                 style={{
                   color:
                     state === "correct"
@@ -246,7 +247,6 @@ export default function PlayingScreen() {
           )}
         </div>
 
-        {/* Sub-info */}
         <div className={s.subInfo}>
           <span
             style={{

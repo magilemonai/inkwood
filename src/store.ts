@@ -1,13 +1,16 @@
 import { create } from "zustand";
-import { LEVELS, ACT_RANGES } from "./levels";
+import { LEVELS, ACT_RANGES, samplePrompts, shouldShufflePrompts } from "./levels";
 import type { Screen } from "./types";
 
 // ── localStorage persistence ──
 const SAVE_KEY = "inkwood-save";
+const BREATHS_KEY = "inkwood-breaths";
+const COMPLETED_KEY = "inkwood-completed";
 
 interface SaveData {
   lvl: number;
   promptIdx: number;
+  activePrompts?: string[]; // v2+ — phrases chosen from pool for this run
 }
 
 function loadSave(): SaveData | null {
@@ -22,9 +25,9 @@ function loadSave(): SaveData | null {
   return null;
 }
 
-function writeSave(lvl: number, promptIdx: number) {
+function writeSave(lvl: number, promptIdx: number, activePrompts: string[]) {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ lvl, promptIdx }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ lvl, promptIdx, activePrompts }));
   } catch { /* storage full or blocked */ }
 }
 
@@ -44,6 +47,14 @@ const saved = loadSave();
 const initialScreen: Screen = saved && saved.lvl > 0 ? "playing" : "intro";
 const initialLvl = saved?.lvl ?? 0;
 const initialPromptIdx = saved?.promptIdx ?? 0;
+// If the save has active prompts from a previous session, honor them so
+// mid-level reload doesn't swap the phrase out from under the player.
+// Otherwise sample fresh.
+const initialActivePrompts: string[] = saved?.activePrompts
+  && Array.isArray(saved.activePrompts)
+  && saved.activePrompts.length === LEVELS[initialLvl].prompts.length
+  ? saved.activePrompts
+  : samplePrompts(initialLvl, shouldShufflePrompts());
 
 interface GameState {
   screen: Screen;
@@ -51,6 +62,20 @@ interface GameState {
   promptIdx: number;
   typed: string;
   completing: boolean;
+  /** Phrases chosen from each slot's pool at level entry. */
+  activePrompts: string[];
+  /** Total phrases completed across the current playthrough. Persisted
+   *  in localStorage and shown on the outro as "You took N slow breaths
+   *  in the forest." Reset on restart(). */
+  breaths: number;
+  /** Set once the player has completed the game at least once. Unlocks
+   *  Wander mode and surfaces the chapter-select affordance. Persists
+   *  across sessions. */
+  hasCompleted: boolean;
+  /** True while the player is in free-play Wander mode. Completing a
+   *  level in this mode returns to the wander screen rather than
+   *  advancing through the sequential flow. */
+  isWandering: boolean;
 
   // Derived helpers
   level: () => typeof LEVELS[number];
@@ -68,6 +93,32 @@ interface GameState {
   startGame: () => void;
   restart: () => void;
   jumpToLevel: (lvl: number) => void;
+  enterWander: () => void;
+  wanderToLevel: (lvl: number) => void;
+}
+
+function loadBreaths(): number {
+  try {
+    const raw = localStorage.getItem(BREATHS_KEY);
+    const n = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  } catch { return 0; }
+}
+
+function writeBreaths(n: number) {
+  try { localStorage.setItem(BREATHS_KEY, String(n)); } catch { /* ignore */ }
+}
+
+function clearBreaths() {
+  try { localStorage.removeItem(BREATHS_KEY); } catch { /* ignore */ }
+}
+
+function loadCompleted(): boolean {
+  try { return localStorage.getItem(COMPLETED_KEY) === "1"; } catch { return false; }
+}
+
+function writeCompleted() {
+  try { localStorage.setItem(COMPLETED_KEY, "1"); } catch { /* ignore */ }
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -76,13 +127,17 @@ export const useGameStore = create<GameState>((set, get) => ({
   promptIdx: initialPromptIdx,
   typed: "",
   completing: false,
+  activePrompts: initialActivePrompts,
+  breaths: loadBreaths(),
+  hasCompleted: loadCompleted(),
+  isWandering: false,
 
   level: () => LEVELS[get().lvl],
   target: () => {
-    const { lvl, promptIdx } = get();
-    return LEVELS[lvl].prompts[promptIdx] ?? "";
+    const { activePrompts, promptIdx } = get();
+    return activePrompts[promptIdx] ?? "";
   },
-  totalPrompts: () => LEVELS[get().lvl].prompts.length,
+  totalPrompts: () => get().activePrompts.length,
   levelProgress: () => {
     const { promptIdx, typed } = get();
     const target = get().target();
@@ -121,12 +176,20 @@ export const useGameStore = create<GameState>((set, get) => ({
   startCompletion: () => set({ completing: true }),
 
   advancePrompt: () => {
-    const { promptIdx, lvl } = get();
-    const total = get().totalPrompts();
+    const { promptIdx, lvl, activePrompts, breaths, isWandering } = get();
+    const total = activePrompts.length;
+    const nextBreaths = breaths + 1;
+    writeBreaths(nextBreaths);
+    set({ breaths: nextBreaths });
+
     if (promptIdx + 1 < total) {
       const nextIdx = promptIdx + 1;
       set({ promptIdx: nextIdx, typed: "", completing: false });
-      writeSave(lvl, nextIdx);
+      if (!isWandering) writeSave(lvl, nextIdx, activePrompts);
+    } else if (isWandering) {
+      // Wander mode: a completed level returns to the chapter select
+      // without touching the sequential save or advancing the story.
+      set({ screen: "wander", typed: "", completing: false });
     } else if (lvl + 1 < LEVELS.length) {
       if (isActBoundary(lvl)) {
         set({ screen: "actTransition" });
@@ -135,55 +198,95 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     } else {
       clearSave();
-      set({ screen: "outro" });
+      writeCompleted();
+      set({ screen: "outro", hasCompleted: true });
     }
   },
 
   advanceLevel: () => {
     const { lvl } = get();
     const nextLvl = lvl + 1;
+    const fresh = samplePrompts(nextLvl, shouldShufflePrompts());
     set({
       lvl: nextLvl,
       promptIdx: 0,
       typed: "",
       completing: false,
       screen: "playing",
+      activePrompts: fresh,
     });
-    writeSave(nextLvl, 0);
+    writeSave(nextLvl, 0, fresh);
   },
 
   startGame: () => {
+    const fresh = samplePrompts(0, shouldShufflePrompts());
+    clearBreaths();
     set({
       lvl: 0,
       promptIdx: 0,
       typed: "",
       completing: false,
       screen: "playing",
+      activePrompts: fresh,
+      breaths: 0,
+      isWandering: false,
     });
-    writeSave(0, 0);
+    writeSave(0, 0, fresh);
   },
 
   restart: () => {
+    const fresh = samplePrompts(0, shouldShufflePrompts());
     clearSave();
+    clearBreaths();
     set({
       lvl: 0,
       promptIdx: 0,
       typed: "",
       completing: false,
       screen: "intro",
+      activePrompts: fresh,
+      breaths: 0,
+      isWandering: false,
     });
   },
 
   jumpToLevel: (lvl: number) => {
     if (lvl >= 0 && lvl < LEVELS.length) {
+      const fresh = samplePrompts(lvl, shouldShufflePrompts());
       set({
         lvl,
         promptIdx: 0,
         typed: "",
         completing: false,
         screen: "playing",
+        activePrompts: fresh,
+        isWandering: false,
       });
-      writeSave(lvl, 0);
+      writeSave(lvl, 0, fresh);
+    }
+  },
+
+  /** Enter the free-play chapter-select screen. Does not touch the
+   *  sequential save — a mid-game player can wander and return later. */
+  enterWander: () => {
+    set({ screen: "wander", isWandering: true, typed: "", completing: false });
+  },
+
+  /** Jump into a specific chapter from the wander screen. Unlike
+   *  jumpToLevel, this preserves isWandering so level-end returns to
+   *  the chapter select. */
+  wanderToLevel: (lvl: number) => {
+    if (lvl >= 0 && lvl < LEVELS.length) {
+      const fresh = samplePrompts(lvl, shouldShufflePrompts());
+      set({
+        lvl,
+        promptIdx: 0,
+        typed: "",
+        completing: false,
+        screen: "playing",
+        activePrompts: fresh,
+        isWandering: true,
+      });
     }
   },
 }));

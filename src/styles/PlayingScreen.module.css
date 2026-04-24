@@ -150,6 +150,20 @@
   animation: goldenPulseStrong 1.4s ease-in-out infinite;
 }
 
+/* Breathing pause — between phrases. A slow expanding/contracting ring
+ * around the prompt box during the 1.5s breath. Visually teaches the
+ * meditative pacing. The ring color is pulled from --breath-color (set
+ * inline to match the level accent). */
+@keyframes breathRing {
+  0%   { box-shadow: 0 0 0 0   rgba(255,255,255,0), inset 0 0 0 0 rgba(255,255,255,0); }
+  40%  { box-shadow: 0 0 22px 6px var(--breath-color, #d0b870), inset 0 0 8px 2px rgba(255,255,255,0.04); }
+  100% { box-shadow: 0 0 0 0   rgba(255,255,255,0), inset 0 0 0 0 rgba(255,255,255,0); }
+}
+
+.promptBoxBreathing {
+  animation: breathRing 1.5s ease-in-out forwards;
+}
+
 .promptBoxIdleNudge::after {
   content: "↓ type here";
   position: absolute;

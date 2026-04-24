@@ -47,6 +47,23 @@
   background: rgba(74, 122, 58, 0.12);
 }
 
+.wanderLink {
+  padding: 0.4rem 1.2rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #6a8a58;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  border-radius: 4px;
+  opacity: 0;
+  animation: introBtnFade 0.8s ease-out 2s forwards;
+}
+
+.wanderLink:hover {
+  color: #8ab878;
+  border-color: #3a5a2a;
+}
+
 .skipHint {
   position: absolute;
   bottom: 1.5rem;
@@ -56,6 +73,51 @@
   color: #504838;
   letter-spacing: 0.08em;
   z-index: 10;
+}
+
+/* Title sequence: overall overlay fades in, then logo scales + fades,
+ * then title slides up, then Begin button fades last. Staggered via
+ * animation-delay on each element. */
+.titleOverlay {
+  opacity: 0;
+  animation: introOverlayFade 1.5s ease-out forwards;
+}
+
+@keyframes introOverlayFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.titleLogo {
+  opacity: 0;
+  transform: scale(0.8);
+  animation: introLogoIn 1.2s ease-out 0.3s forwards;
+}
+
+@keyframes introLogoIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.title {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: introTitleIn 1s ease-out 0.5s forwards;
+}
+
+.beginBtn {
+  opacity: 0;
+  animation: introBtnFade 0.8s ease-out 1.5s forwards;
+}
+
+@keyframes introTitleIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes introBtnFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @media (max-width: 640px) {

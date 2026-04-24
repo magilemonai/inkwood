@@ -1,0 +1,50 @@
+/* Screen-level crossfade: the parent keys the element by screen, so
+ * React unmounts + remounts on change. The fade-in lets the new screen
+ * breathe in over 0.5s while the background color (level bg) holds
+ * the viewer's eye. There is no exit animation — the old screen
+ * unmounts instantly. Tradeoff: keeps us off a ~60KB dependency. */
+.screenFade {
+  animation: screenFadeIn 0.5s ease-out both;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Utility: a generic `fadeIn` that other components can use with a
+ * delay. Uses the --fade-delay and --fade-duration custom properties
+ * so callers can tune without forking a keyframe per variant. */
+.fadeIn {
+  opacity: 0;
+  animation: simpleFade var(--fade-duration, 1s) ease-out var(--fade-delay, 0s) forwards;
+}
+
+@keyframes simpleFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.slideFadeIn {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: slideFade var(--fade-duration, 1s) ease-out var(--fade-delay, 0s) forwards;
+}
+
+@keyframes slideFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.scaleFadeIn {
+  opacity: 0;
+  transform: scale(0.8);
+  animation: scaleFade var(--fade-duration, 1s) ease-out var(--fade-delay, 0s) forwards;
+}
+
+@keyframes scaleFade {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}

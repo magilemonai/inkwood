@@ -4,7 +4,8 @@ import { LEVELS, getActLabel } from "../levels";
 import s from "../styles/WinScreens.module.css";
 
 export default function LevelWinScreen() {
-  const { lvl, advanceLevel } = useGameStore();
+  const lvl = useGameStore((g) => g.lvl);
+  const advanceLevel = useGameStore((g) => g.advanceLevel);
 
   // Capture level data at mount — prevents flash of next level during exit animation
   const [snapshot] = useState(() => ({ lvl, level: LEVELS[lvl] }));

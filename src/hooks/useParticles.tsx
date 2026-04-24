@@ -37,9 +37,18 @@ function spawnParticle(config: ParticleConfig, randomAge: boolean): Particle {
   };
 }
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 /**
  * Animated particle system using requestAnimationFrame.
  * Returns a snapshot array that updates ~12fps via useSyncExternalStore.
+ *
+ * Accessibility: when prefers-reduced-motion is set, a static spawn-pass
+ * is emitted once and the animation loop is skipped entirely. The scene
+ * still renders the atmospheric particles — they just don't drift.
  */
 export function useParticles(config: ParticleConfig, active: boolean): Particle[] {
   const storeRef = useRef({
@@ -64,10 +73,16 @@ export function useParticles(config: ParticleConfig, active: boolean): Particle[
       return;
     }
 
-    // Initialize particles
     store.particles = [];
     for (let i = 0; i < config.count; i++) {
       store.particles.push(spawnParticle(config, true));
+    }
+
+    // Reduced-motion: seed a static snapshot and skip the rAF loop.
+    if (prefersReducedMotion()) {
+      store.snapshot = [...store.particles];
+      store.listeners.forEach((l) => l());
+      return;
     }
 
     let lastTime = 0;
@@ -90,7 +105,6 @@ export function useParticles(config: ParticleConfig, active: boolean): Particle[
         }
       }
 
-      // Throttle React notifications to ~12fps
       if (now - lastNotify > 80) {
         lastNotify = now;
         store.snapshot = [...ps];
@@ -109,4 +123,3 @@ export function useParticles(config: ParticleConfig, active: boolean): Particle[
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
-

@@ -11,6 +11,16 @@
   z-index: 10;
 }
 
+.sceneWrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeIn 1s ease-out forwards;
+}
+
 .actTitle {
   position: absolute;
   top: 8vh;
@@ -22,6 +32,15 @@
   font-weight: normal;
   text-align: center;
   pointer-events: none;
+  /* Fade in at ~4.2s (60% of 7s), fade out at ~5.95s (85%), total 7s. */
+  opacity: 0;
+  animation: actTitleFade 7s ease-in-out forwards;
+}
+
+@keyframes actTitleFade {
+  0%, 59%   { opacity: 0; }
+  72%, 84%  { opacity: 1; }
+  100%      { opacity: 0; }
 }
 
 .skipHint {
@@ -33,4 +52,230 @@
   color: #4a4840;
   letter-spacing: 0.12em;
   pointer-events: none;
+  opacity: 0;
+  animation: fadeToHalf 1s ease-out 1.5s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes fadeToHalf {
+  to { opacity: 0.5; }
+}
+
+/* ── Discovery scene ── */
+
+.discoveryGrid {
+  opacity: 0;
+  animation: discoveryGridFade 1.5s ease-out 1.8s forwards;
+}
+
+@keyframes discoveryGridFade {
+  to { opacity: 0.08; }
+}
+
+.mainRuneRing {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mainRuneRing 2.5s ease-out 0.3s forwards;
+}
+
+@keyframes mainRuneRing {
+  0%   { opacity: 0; transform: scale(2.5); }
+  40%  { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0.5; transform: scale(1); }
+}
+
+.mainRuneDot {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mainRuneDot 2.2s ease-out 0.5s forwards;
+}
+
+@keyframes mainRuneDot {
+  0%   { opacity: 0; transform: scale(2.5); }
+  40%  { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0.6; transform: scale(1); }
+}
+
+.smallRuneRing {
+  opacity: 0;
+  animation: smallRuneRing 1.2s ease-out var(--delay, 2.5s) forwards;
+}
+
+@keyframes smallRuneRing {
+  0%   { opacity: 0; }
+  100% { opacity: 0.4; }
+}
+
+.smallRuneDot {
+  opacity: 0;
+  animation: smallRuneDot 1s ease-out var(--delay, 2.7s) forwards;
+}
+
+@keyframes smallRuneDot {
+  to { opacity: 0.5; }
+}
+
+/* SVG path-draw: we set pathLength="1" on the <path>/<line> element so
+ * dasharray/dashoffset can use a unit length regardless of actual
+ * coordinate geometry. The element goes from fully hidden (offset=1)
+ * to fully drawn (offset=0). */
+.leyLine {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: leyDraw 2s ease-in-out var(--delay, 3.5s) forwards;
+}
+
+@keyframes leyDraw {
+  0%   { stroke-dashoffset: 1; opacity: 0; }
+  30%  { opacity: 0.3; }
+  100% { stroke-dashoffset: 0; opacity: 0.3; }
+}
+
+/* ── Nexus scene ── */
+
+.nexusLine {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: nexusLineDraw 2.5s ease-in-out var(--delay, 0.2s) forwards;
+}
+
+@keyframes nexusLineDraw {
+  0%   { stroke-dashoffset: 1; opacity: 0; }
+  40%  { opacity: 0.5; }
+  100% { stroke-dashoffset: 0; opacity: 0.3; }
+}
+
+.nexusExtra {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: nexusExtra 3s ease-in-out var(--delay, 0.5s) forwards;
+}
+
+@keyframes nexusExtra {
+  0%   { stroke-dashoffset: 1; opacity: 0; }
+  40%  { opacity: 0.15; }
+  100% { stroke-dashoffset: 0; opacity: 0.08; }
+}
+
+.nexusNode {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nexusNode 1s ease-out var(--delay, 0.8s) forwards;
+}
+
+@keyframes nexusNode {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.6; transform: scale(1); }
+}
+
+.nexusCoreRing {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nexusCoreRing 1.5s ease-out 3s forwards;
+}
+
+@keyframes nexusCoreRing {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.8; transform: scale(1); }
+}
+
+.nexusCoreFill {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nexusCoreFill 1.2s ease-out 3.5s forwards;
+}
+
+@keyframes nexusCoreFill {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.9; transform: scale(1); }
+}
+
+.nexusCoreBright {
+  opacity: 0;
+  animation: nexusCoreBright 2s ease-in-out 4s forwards;
+}
+
+@keyframes nexusCoreBright {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  75%  { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* ── Restoration scene ── */
+
+.warmLight {
+  opacity: 0;
+  animation: warmLightFade 3s ease-in 2.5s forwards;
+}
+
+@keyframes warmLightFade {
+  to { opacity: 1; }
+}
+
+.spirit {
+  opacity: 0;
+  animation: spiritFade 2s ease-out var(--delay, 0.3s) forwards;
+}
+
+@keyframes spiritFade {
+  0%   { opacity: 0; }
+  70%  { opacity: 0.35; }
+  100% { opacity: 0.5; }
+}
+
+.warmSpirit {
+  opacity: 0;
+  animation: warmSpiritFade 2s ease-in var(--delay, 3.5s) forwards;
+}
+
+@keyframes warmSpiritFade {
+  to { opacity: 0.3; }
+}
+
+.restLight {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: restLight 1.5s ease-out 2s forwards;
+}
+
+@keyframes restLight {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.restLightRing1 {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: restLightRing1 2.5s ease-out 3s forwards;
+}
+
+@keyframes restLightRing1 {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+.restLightRing2 {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: restLightRing2 2s ease-out 4s forwards;
+}
+
+@keyframes restLightRing2 {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.06; transform: scale(1); }
 }

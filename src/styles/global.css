@@ -56,3 +56,31 @@ button:active {
 ::selection {
   background: rgba(107, 191, 107, 0.3);
 }
+
+/* ── Focus: keyboard-visible outline on interactive elements ── */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid #d8c8a0;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Accessibility: prefers-reduced-motion ──
+ *
+ * Users who have motion sensitivity get a pared-down experience:
+ * pulses, breath rings, scene-breath brightness loop, tap pulse,
+ * golden glow, cursor blink, and reject-flash animations all go flat.
+ * Scenes still render, but continuous oscillations stop. Particle
+ * systems check the same media query in useParticles.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -8,7 +8,10 @@ import { LEVELS } from "../levels";
  */
 export default function DevPanel() {
   const [open, setOpen] = useState(false);
-  const { lvl, screen, jumpToLevel, setScreen } = useGameStore();
+  const lvl = useGameStore((g) => g.lvl);
+  const screen = useGameStore((g) => g.screen);
+  const jumpToLevel = useGameStore((g) => g.jumpToLevel);
+  const setScreen = useGameStore((g) => g.setScreen);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

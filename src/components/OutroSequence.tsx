@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
-import { startAmbient, stopAmbient } from "../audio";
+import { startAmbient } from "../audio";
 import s from "../styles/Outro.module.css";
 
 /**
@@ -41,6 +40,8 @@ function easeInOut(t: number): number {
 
 export default function OutroSequence() {
   const restart = useGameStore((g) => g.restart);
+  const enterWander = useGameStore((g) => g.enterWander);
+  const breaths = useGameStore((g) => g.breaths);
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
   const showTextRef = useRef(false);
@@ -57,10 +58,11 @@ export default function OutroSequence() {
     return () => window.removeEventListener("keydown", handler);
   }, [restart]);
 
-  // Start outro ambient audio (Act IV drone)
+  // Start outro ambient audio (Act IV drone). No cleanup — the engine
+  // handles transitions to wander/intro on next startAmbient or
+  // startIntroDrone call.
   useEffect(() => {
     startAmbient(3, 9);
-    return () => { stopAmbient(); };
   }, []);
 
   // Animation loop — runs indefinitely until user restarts
@@ -631,47 +633,39 @@ export default function OutroSequence() {
         )}
       </svg>
 
-      {/* Text overlay */}
-      <AnimatePresence>
-        {showText && (
-          <motion.div
-            className={s.textOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2.5 }}
+      {/* Text overlay — CSS-staggered fade-ins, no Framer Motion. */}
+      {showText && (
+        <div className={`${s.textOverlay} ${s.textOverlayFade}`}>
+          <p className={`${s.body} ${s.bodyFade}`}>The forest remembers.</p>
+
+          {breaths > 0 && (
+            <p className={`${s.breathCount} ${s.breathCountFade}`}>
+              You took {breaths} slow breath{breaths === 1 ? "" : "s"} in the woods.
+            </p>
+          )}
+
+          <div className={`${s.dotRow} ${s.dotRowFade}`}>
+            {LEVELS.map((l, i) => (
+              <div key={i} className={s.dot} style={{ background: l.accent }} />
+            ))}
+          </div>
+
+          <button
+            className={`${s.restartBtn} ${s.restartBtnFade}`}
+            onClick={restart}
           >
-            <motion.p
-              className={s.body}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 2, delay: 0.5 }}
-            >
-              The forest remembers.
-            </motion.p>
+            Begin Again
+          </button>
 
-            <motion.div
-              className={s.dotRow}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1.5, delay: 2 }}
-            >
-              {LEVELS.map((l, i) => (
-                <div key={i} className={s.dot} style={{ background: l.accent }} />
-              ))}
-            </motion.div>
-
-            <motion.button
-              className={s.restartBtn}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 4 }}
-              onClick={restart}
-            >
-              Begin Again
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <button
+            className={`${s.wanderBtn} ${s.wanderBtnFade}`}
+            onClick={enterWander}
+            aria-label="Wander the woods — replay any single scene"
+          >
+            Wander the woods
+          </button>
+        </div>
+      )}
     </div>
   );
 }

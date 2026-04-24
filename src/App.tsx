@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from "framer-motion";
 import { useGameStore } from "./store";
 import { LEVELS } from "./levels";
 import IntroSequence from "./components/IntroSequence";
@@ -6,20 +5,16 @@ import PlayingScreen from "./components/PlayingScreen";
 import LevelWinScreen from "./components/LevelWinScreen";
 import ActTransition from "./components/ActTransition";
 import OutroSequence from "./components/OutroSequence";
+import WanderScreen from "./components/WanderScreen";
 import DevPanel from "./components/DevPanel";
 import { armAudioPreload } from "./audio";
+import fade from "./styles/Fade.module.css";
 
 // Arm the audio preload as early as possible — the AudioContext is
 // created and resumed on the first user gesture anywhere in the app,
 // so the first phrase completion doesn't stutter while the context
 // warms up.
 armAudioPreload();
-
-const screenVariants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.5 } },
-  exit: { opacity: 0, transition: { duration: 0.3 } },
-};
 
 export default function App() {
   const screen = useGameStore((g) => g.screen);
@@ -28,22 +23,18 @@ export default function App() {
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={screen}
-          variants={screenVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          style={{ minHeight: "100vh", background: bg }}
-        >
-          {screen === "intro" && <IntroSequence />}
-          {screen === "playing" && <PlayingScreen />}
-          {screen === "levelWin" && <LevelWinScreen />}
-          {screen === "actTransition" && <ActTransition />}
-          {screen === "outro" && <OutroSequence />}
-        </motion.div>
-      </AnimatePresence>
+      <div
+        key={screen}
+        className={fade.screenFade}
+        style={{ background: bg }}
+      >
+        {screen === "intro" && <IntroSequence />}
+        {screen === "playing" && <PlayingScreen />}
+        {screen === "levelWin" && <LevelWinScreen />}
+        {screen === "actTransition" && <ActTransition />}
+        {screen === "outro" && <OutroSequence />}
+        {screen === "wander" && <WanderScreen />}
+      </div>
       {new URLSearchParams(window.location.search).has("dev") && <DevPanel />}
     </>
   );

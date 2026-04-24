@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "../store";
 import { startIntroDrone, stopIntroDrone } from "../audio";
 import s from "../styles/Intro.module.css";
@@ -177,7 +176,9 @@ const PHASES = [
 ];
 
 export default function IntroSequence() {
-  const { startGame } = useGameStore();
+  const startGame = useGameStore((g) => g.startGame);
+  const enterWander = useGameStore((g) => g.enterWander);
+  const hasCompleted = useGameStore((g) => g.hasCompleted);
   const [time, setTime] = useState(0);
   const [showTitle, setShowTitle] = useState(false);
 
@@ -254,56 +255,44 @@ export default function IntroSequence() {
         <Spark opacity={phaseOpacity(3)} />
       </svg>
 
-      <AnimatePresence>
-        {showTitle && (
-          <motion.div
-            className={s.titleOverlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5 }}
+      {showTitle && (
+        <div className={s.titleOverlay}>
+          <svg viewBox="0 0 60 60" width="56" height="56" className={s.titleLogo}>
+            <circle cx="30" cy="30" r="28" fill="none" stroke="#3a5a2a" strokeWidth="1.5" />
+            <line x1="30" y1="42" x2="30" y2="18" stroke="#4a7a3a" strokeWidth="2" />
+            <line x1="30" y1="28" x2="20" y2="20" stroke="#4a7a3a" strokeWidth="1.5" />
+            <line x1="30" y1="32" x2="40" y2="24" stroke="#4a7a3a" strokeWidth="1.5" />
+            <line x1="30" y1="42" x2="22" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
+            <line x1="30" y1="42" x2="38" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
+            <circle cx="30" cy="15" r="3" fill="#6bbf6b" opacity="0.6" />
+          </svg>
+
+          <h1 className={s.title}>Inkwood</h1>
+
+          <button
+            className={s.beginBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              startGame();
+            }}
           >
-            {/* Logo */}
-            <motion.svg
-              viewBox="0 0 60 60"
-              width="56"
-              height="56"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.2, delay: 0.3 }}
-            >
-              <circle cx="30" cy="30" r="28" fill="none" stroke="#3a5a2a" strokeWidth="1.5" />
-              <line x1="30" y1="42" x2="30" y2="18" stroke="#4a7a3a" strokeWidth="2" />
-              <line x1="30" y1="28" x2="20" y2="20" stroke="#4a7a3a" strokeWidth="1.5" />
-              <line x1="30" y1="32" x2="40" y2="24" stroke="#4a7a3a" strokeWidth="1.5" />
-              <line x1="30" y1="42" x2="22" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
-              <line x1="30" y1="42" x2="38" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
-              <circle cx="30" cy="15" r="3" fill="#6bbf6b" opacity="0.6" />
-            </motion.svg>
+            Begin
+          </button>
 
-            <motion.h1
-              className={s.title}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.5 }}
-            >
-              Inkwood
-            </motion.h1>
-
-            <motion.button
-              className={s.beginBtn}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 1.5 }}
+          {hasCompleted && (
+            <button
+              className={s.wanderLink}
               onClick={(e) => {
                 e.stopPropagation();
-                startGame();
+                enterWander();
               }}
+              aria-label="Wander the woods — replay any single scene"
             >
-              Begin
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Wander the woods
+            </button>
+          )}
+        </div>
+      )}
 
       {!showTitle && (
         <div className={s.skipHint}>tap to skip</div>
