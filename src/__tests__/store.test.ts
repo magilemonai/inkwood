@@ -38,7 +38,8 @@ describe("typeChar — the input gate", () => {
 
   it("allows backspace at any point", () => {
     const target = useGameStore.getState().target();
-    useGameStore.getState().typeChar(target.slice(0, 3));
+    // typeChar accepts one forward char at a time, mirroring an input event.
+    for (let i = 1; i <= 3; i++) useGameStore.getState().typeChar(target.slice(0, i));
     expect(useGameStore.getState().typed.length).toBe(3);
     useGameStore.getState().typeChar(target.slice(0, 1));
     expect(useGameStore.getState().typed.length).toBe(1);

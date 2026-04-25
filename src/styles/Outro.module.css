@@ -47,16 +47,23 @@
   font-style: italic;
 }
 
-.dotRow {
+.dotRowTop {
+  position: absolute;
+  top: 1.5rem;
+  left: 0;
+  right: 0;
   display: flex;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.7rem;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
+.dotTop {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  opacity: 0.7;
+  box-shadow: 0 0 6px currentColor;
 }
 
 .restartBtn {
@@ -74,37 +81,10 @@
   background: rgba(216, 200, 144, 0.06);
 }
 
-.breathCount {
-  font-size: 0.82rem;
-  color: #8a7a5a;
-  font-style: italic;
-  letter-spacing: 0.04em;
-  margin-top: -0.2rem;
-}
-
-.wanderBtn {
-  padding: 0.45rem 1.4rem;
-  background: transparent;
-  border: 1px solid transparent;
-  color: #8a7a5a;
-  font-size: 0.82rem;
-  border-radius: 4px;
-  letter-spacing: 0.08em;
-  margin-top: -0.2rem;
-}
-
-.wanderBtn:hover {
-  color: #b8a880;
-  border-color: #403828;
-}
-
 /* ── CSS-driven fade-ins (replaces Framer Motion usage) ── */
 .textOverlayFade { opacity: 0; animation: fadeIn 2.5s ease-out forwards; }
 .bodyFade        { opacity: 0; animation: fadeIn 2s ease-out 0.5s forwards; }
-.breathCountFade { opacity: 0; animation: fadeIn 1.8s ease-out 1.4s forwards; }
-.dotRowFade      { opacity: 0; animation: fadeIn 1.5s ease-out 2s forwards; }
-.restartBtnFade  { opacity: 0; animation: fadeIn 1s ease-out 4s forwards; }
-.wanderBtnFade   { opacity: 0; animation: fadeIn 1s ease-out 4.6s forwards; }
+.restartBtnFade  { opacity: 0; animation: fadeIn 1s ease-out 2s forwards; }
 
 @keyframes fadeIn {
   to { opacity: 1; }

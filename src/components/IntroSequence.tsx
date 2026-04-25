@@ -257,14 +257,33 @@ export default function IntroSequence() {
 
       {showTitle && (
         <div className={s.titleOverlay}>
-          <svg viewBox="0 0 60 60" width="56" height="56" className={s.titleLogo}>
-            <circle cx="30" cy="30" r="28" fill="none" stroke="#3a5a2a" strokeWidth="1.5" />
-            <line x1="30" y1="42" x2="30" y2="18" stroke="#4a7a3a" strokeWidth="2" />
-            <line x1="30" y1="28" x2="20" y2="20" stroke="#4a7a3a" strokeWidth="1.5" />
-            <line x1="30" y1="32" x2="40" y2="24" stroke="#4a7a3a" strokeWidth="1.5" />
-            <line x1="30" y1="42" x2="22" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
-            <line x1="30" y1="42" x2="38" y2="50" stroke="#3a5a2a" strokeWidth="1.5" />
-            <circle cx="30" cy="15" r="3" fill="#6bbf6b" opacity="0.6" />
+          <svg viewBox="0 0 60 60" width="64" height="64" className={s.titleLogo}>
+            {/* Outer ring — medallion border */}
+            <circle cx="30" cy="30" r="26" fill="none"
+              stroke="#3a5a2a" strokeWidth="1.2" opacity="0.85" />
+            {/* Stave — vertical spine with subtle organic drift */}
+            <path
+              d="M30 12 C29.5 22, 30.5 32, 30 48"
+              stroke="#5a8a4a" strokeWidth="2.2" strokeLinecap="round" fill="none"
+            />
+            {/* Three diagonal strokes crossing the stave — Ogham nGéadal,
+                 varied lengths and progressively steeper angle to fan
+                 slightly downward. */}
+            <path
+              d="M24 19 L35 21"
+              stroke="#6aaa58" strokeWidth="1.9" strokeLinecap="round" fill="none"
+            />
+            <path
+              d="M22 28 L37 32"
+              stroke="#6aaa58" strokeWidth="1.9" strokeLinecap="round" fill="none"
+            />
+            <path
+              d="M21 37 L38 43"
+              stroke="#6aaa58" strokeWidth="1.9" strokeLinecap="round" fill="none"
+            />
+            {/* Tip spark — firefly catch on the topmost stroke */}
+            <circle cx="35" cy="21" r="1.4" fill="#d8e8c8" opacity="0.85" />
+            <circle cx="35" cy="21" r="0.5" fill="#ffffff" opacity="0.95" />
           </svg>
 
           <h1 className={s.title}>Inkwood</h1>

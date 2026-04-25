@@ -24,8 +24,9 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 0.8rem;
   width: 100%;
   max-width: 900px;
@@ -46,6 +47,8 @@
   overflow: hidden;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   font-family: inherit;
+  flex: 1 1 200px;
+  max-width: 260px;
 }
 
 .card:hover {
@@ -98,8 +101,9 @@
 }
 
 @media (max-width: 500px) {
-  .grid {
-    grid-template-columns: 1fr;
+  .card {
+    flex: 1 1 100%;
+    max-width: none;
   }
   .heading {
     font-size: 1.4rem;

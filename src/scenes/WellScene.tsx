@@ -29,9 +29,11 @@ const CAVERN_RIGHT = `
 
 function WellScene({ progress: p }: SceneProps) {
   // Water rises with an eased curve so it doesn't snap up during
-  // the second prompt — feels held, not extruded.
+  // the second prompt — feels held, not extruded. Rise extended from
+  // 88 → 100 so the column reaches the raised wall runes cleanly above
+  // the typing overlay.
   const easedP = 1 - (1 - p) * (1 - p);
-  const waterLevel = 208 - easedP * 88;
+  const waterLevel = 208 - easedP * 100;
 
   // Bucket lowers
   const bucketY = 48 + p * 52;
@@ -47,18 +49,20 @@ function WellScene({ progress: p }: SceneProps) {
   // songs home" reads as "remembered by the stones," not as literal
   // rune-projectiles on the river current.
   const wallRunes = [
-    // Near the central shaft (where water rises first)
-    { x: 178, y: 162, delay: 0.30 },
-    { x: 222, y: 158, delay: 0.34 },
-    { x: 182, y: 178, delay: 0.40 },
-    { x: 218, y: 174, delay: 0.44 },
+    // Near the central shaft (where water rises first). All y-values
+    // raised 12 SVG units from prior placement so the bottom runes
+    // clear the typing overlay.
+    { x: 178, y: 150, delay: 0.30 },
+    { x: 222, y: 146, delay: 0.34 },
+    { x: 182, y: 166, delay: 0.40 },
+    { x: 218, y: 162, delay: 0.44 },
     // Cavern-wall runes — light up when water reaches them
-    { x: 145, y: 168, delay: 0.52 },
-    { x: 255, y: 164, delay: 0.56 },
-    { x: 148, y: 184, delay: 0.62 },
-    { x: 252, y: 180, delay: 0.66 },
-    { x: 152, y: 196, delay: 0.72 },
-    { x: 248, y: 192, delay: 0.76 },
+    { x: 145, y: 156, delay: 0.52 },
+    { x: 255, y: 152, delay: 0.56 },
+    { x: 148, y: 172, delay: 0.62 },
+    { x: 252, y: 168, delay: 0.66 },
+    { x: 152, y: 184, delay: 0.72 },
+    { x: 248, y: 180, delay: 0.76 },
   ];
 
   return (

@@ -40,8 +40,6 @@ function easeInOut(t: number): number {
 
 export default function OutroSequence() {
   const restart = useGameStore((g) => g.restart);
-  const enterWander = useGameStore((g) => g.enterWander);
-  const breaths = useGameStore((g) => g.breaths);
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
   const showTextRef = useRef(false);
@@ -101,6 +99,14 @@ export default function OutroSequence() {
   const radiance = sub(time, 18, 4);
   const leyFlow = sub(time, 18, 3);
   const skyBright = sub(time, 0, 25);
+
+  // Dot opacity per level — each dot fades in as its scene appears in the panorama.
+  // Indices 0-7 mirror VIGNETTES (Garden → Sanctum); 8 is Tree; 9 is World.
+  const dotOpacity = [
+    ...VIGNETTES.map((_, i) => easeOut(sub(time, 3 + i * VIGNETTE_DUR, VIGNETTE_DUR))),
+    easeOut(sub(time, 12, 1.5)),
+    easeOut(sub(time, 18, 2)),
+  ];
 
   // Sky color shifts from near-black to deep twilight blue to warm
   const skyLightness = 4 + skyBright * 5 + radiance * 3;
@@ -523,26 +529,6 @@ export default function OutroSequence() {
               opacity={treeGrow}
             />
 
-            {/* Major branches */}
-            {[
-              { bx: -30, by: -85, cx1: -10, cy1: -70 },
-              { bx: 30, by: -85, cx1: 10, cy1: -70 },
-              { bx: -45, by: -65, cx1: -20, cy1: -55 },
-              { bx: 45, by: -65, cx1: 20, cy1: -55 },
-              { bx: -15, by: -95, cx1: -5, cy1: -80 },
-              { bx: 15, by: -95, cx1: 5, cy1: -80 },
-            ].map((br, bi) => {
-              const bp = sub(treeGrow, 0.3 + bi * 0.05, 0.5);
-              if (bp <= 0) return null;
-              return (
-                <path key={bi}
-                  d={`M210 ${195 - 80 * treeGrow} Q${210 + br.cx1 * bp} ${195 + br.cy1 * bp} ${210 + br.bx * bp} ${195 + br.by * bp}`}
-                  fill="none" stroke={`hsl(30, 15%, ${13 + radiance * 3}%)`}
-                  strokeWidth={2 - bi * 0.15} opacity={bp * 0.7}
-                />
-              );
-            })}
-
             {/* Canopy clusters — shifted up 25 with the trunk */}
             {[
               { cx: 170, cy: 90,  rx: 28, ry: 18 },
@@ -633,36 +619,27 @@ export default function OutroSequence() {
         )}
       </svg>
 
+      {/* Top dot row — each level's dot fades in as its panorama scene appears. */}
+      <div className={s.dotRowTop}>
+        {LEVELS.map((l, i) => (
+          <div
+            key={i}
+            className={s.dotTop}
+            style={{ background: l.accent, color: l.accent, opacity: dotOpacity[i] * 0.85 }}
+          />
+        ))}
+      </div>
+
       {/* Text overlay — CSS-staggered fade-ins, no Framer Motion. */}
       {showText && (
         <div className={`${s.textOverlay} ${s.textOverlayFade}`}>
           <p className={`${s.body} ${s.bodyFade}`}>The forest remembers.</p>
-
-          {breaths > 0 && (
-            <p className={`${s.breathCount} ${s.breathCountFade}`}>
-              You took {breaths} slow breath{breaths === 1 ? "" : "s"} in the woods.
-            </p>
-          )}
-
-          <div className={`${s.dotRow} ${s.dotRowFade}`}>
-            {LEVELS.map((l, i) => (
-              <div key={i} className={s.dot} style={{ background: l.accent }} />
-            ))}
-          </div>
 
           <button
             className={`${s.restartBtn} ${s.restartBtnFade}`}
             onClick={restart}
           >
             Begin Again
-          </button>
-
-          <button
-            className={`${s.wanderBtn} ${s.wanderBtnFade}`}
-            onClick={enterWander}
-            aria-label="Wander the woods — replay any single scene"
-          >
-            Wander the woods
           </button>
         </div>
       )}

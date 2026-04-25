@@ -176,8 +176,17 @@ export function samplePrompts(lvl: number, shuffle: boolean): string[] {
   return level.promptPool.map((slot) => slot[Math.floor(Math.random() * slot.length)]);
 }
 
-/** Respect ?canonical in the URL for deterministic screenshots. */
+/** Respect ?canonical in the URL for deterministic screenshots, and
+ *  hold canonical prompts on the first playthrough so a new player meets
+ *  the 5/5-rated phrasing. Once they've completed the game once, replays
+ *  sample from the pool for variety. The completion flag is the same
+ *  localStorage key the store writes — kept loose-coupled here so
+ *  samplePrompts callers don't need to thread it through. */
 export function shouldShufflePrompts(): boolean {
   if (typeof window === "undefined") return false;
-  return !new URLSearchParams(window.location.search).has("canonical");
+  if (new URLSearchParams(window.location.search).has("canonical")) return false;
+  try {
+    if (localStorage.getItem("inkwood-completed") !== "1") return false;
+  } catch { /* ignore */ }
+  return true;
 }

@@ -155,11 +155,36 @@ class AudioEngine {
     filter.connect(gain);
     gain.connect(this.masterGain!);
 
-    const now = ac.currentTime;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.008, now + 8);
+    const TARGET = 0.014;
+    const FADE_SEC = 6;
+    const scheduleFadeIn = () => {
+      const t = ac.currentTime;
+      gain.gain.cancelScheduledValues(t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(TARGET, t + FADE_SEC);
+    };
+    scheduleFadeIn();
 
     this.intro = { oscs, gain };
+
+    // Autoplay policy: AudioContext is suspended on first paint and the
+    // ramp above runs inaudibly past its target. Re-fire the fade once
+    // the player's first gesture unlocks the context, so the drone
+    // arrives the moment they touch the page.
+    if (ac.state === "suspended") {
+      const reFire = () => {
+        window.removeEventListener("pointerdown", reFire);
+        window.removeEventListener("keydown", reFire);
+        window.removeEventListener("touchstart", reFire);
+        if (this.intro && this.intro.gain === gain) {
+          try { ac.resume(); } catch { /* ignore */ }
+          scheduleFadeIn();
+        }
+      };
+      window.addEventListener("pointerdown", reFire, { once: true });
+      window.addEventListener("keydown", reFire, { once: true });
+      window.addEventListener("touchstart", reFire, { once: true });
+    }
   }
 
   stopIntroDrone() {
