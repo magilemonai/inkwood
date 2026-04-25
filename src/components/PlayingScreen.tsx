@@ -167,7 +167,11 @@ export default function PlayingScreen() {
 
         <div
           className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge && !showTapOverlay ? s.promptBoxIdleNudge : ""} ${showBreathRing ? s.promptBoxBreathing : ""}`}
-          style={{ border: `1px solid ${accent}25`, "--breath-color": accent } as React.CSSProperties}
+          style={{
+            border: `1px solid ${accent}25`,
+            "--breath-color": accent,
+            "--char-count": target.length || 1,
+          } as React.CSSProperties}
           onClick={focusInput}
         >
           {showTapOverlay && (
