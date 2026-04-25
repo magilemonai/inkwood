@@ -113,6 +113,22 @@
   position: relative;
 }
 
+/* Words wrap as a unit so long phrases don't break mid-word at the
+ * narrow viewports that need to wrap. Spaces sit between word runs
+ * and let flex-wrap pick a break point. */
+.wordRun {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.spaceRun {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: pre;
+}
+
 /* ── Golden pulse for first-time attention ── */
 @keyframes tapPulse {
   0%, 100% { opacity: 0.5; }
@@ -176,6 +192,15 @@
   animation: idleCaptionFade 1.4s ease-in-out infinite;
   pointer-events: none;
   font-style: italic;
+}
+
+/* On portrait the caption sits directly on top of the flavor text and
+ * the iOS keyboard is already up — the pulsing border alone is plenty
+ * of nudge. */
+@media (orientation: portrait) {
+  .promptBoxIdleNudge::after {
+    display: none;
+  }
 }
 
 @keyframes idleCaptionFade {

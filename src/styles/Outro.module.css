@@ -90,7 +90,9 @@
   to { opacity: 1; }
 }
 
-/* Portrait — constrain scene to landscape aspect ratio */
+/* Portrait — constrain scene to landscape aspect ratio, then let the
+ * text overlay claim the rest of the viewport so we don't end up with
+ * a dead black band between the scene and "The forest remembers." */
 @media (orientation: portrait) {
   .container {
     justify-content: flex-start;
@@ -110,6 +112,10 @@
     bottom: auto;
     padding: 1.5rem 2rem;
     gap: 1rem;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .heading {

@@ -131,35 +131,38 @@
   }
 }
 
-/* Portrait — constrain scene SVG to landscape aspect ratio */
+/* Portrait — let the dormant scene fill the viewport and overlay the
+ * title block over the bottom with a gradient scrim. Same composition
+ * language as the OG share image; eliminates the disconnected
+ * "scene strip + black gap + title block" stack on iPhone. */
 @media (orientation: portrait) {
   .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: block;
   }
 
   .sceneWrap {
-    position: relative;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    aspect-ratio: 8 / 5;
-    max-height: 45vh;
-    max-height: 45dvh;
+    height: 100%;
   }
 
   .titleOverlay {
-    position: relative;
-    inset: auto;
-    padding: 1.5rem 0;
-    gap: 1rem;
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 5rem 1rem 2.5rem;
+    gap: 0.9rem;
+    background: linear-gradient(to top,
+      rgba(5, 5, 5, 0.92) 0%,
+      rgba(5, 5, 5, 0.7) 50%,
+      rgba(5, 5, 5, 0) 100%);
   }
 
   .skipHint {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    transform: none;
-    margin-top: 1rem;
+    position: absolute;
+    bottom: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0;
   }
 }

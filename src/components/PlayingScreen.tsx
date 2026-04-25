@@ -176,37 +176,55 @@ export default function PlayingScreen() {
             </div>
           )}
 
-          {!showTapOverlay && target.split("").map((ch, i) => {
-            const state = charStates[i];
-            const isCursor = i === typed.length && !completing;
-            const flashReject = isCursor && rejectTick > 0;
-            return (
-              <span
-                key={i}
-                className={`${s.char} ${isCursor ? s.cursor : ""}`}
-                style={{
-                  color:
-                    state === "correct"
-                      ? accent
-                      : state === "error"
-                        ? "#e05050"
-                        : undefined,
-                  borderLeft: isCursor ? `2px solid ${accent}` : "none",
-                }}
-              >
-                {state === "pending" ? (
-                  <span
-                    key={flashReject ? `p-${rejectTick}` : "p"}
-                    className={`${s.charPending} ${flashReject ? s.charRejectFlashInner : ""}`}
-                  >
-                    {ch}
-                  </span>
-                ) : (
-                  ch
-                )}
+          {!showTapOverlay && (() => {
+            // Group chars into word runs so flex-wrap breaks at spaces
+            // rather than mid-word. Spaces themselves stay as their own
+            // chars between word groups (so the cursor can land on them
+            // and the layout still wraps cleanly).
+            const groups: { word: string; startIdx: number; isSpace: boolean }[] = [];
+            let cursor = 0;
+            for (const segment of target.split(/(\s+)/)) {
+              if (segment.length === 0) continue;
+              groups.push({ word: segment, startIdx: cursor, isSpace: /^\s+$/.test(segment) });
+              cursor += segment.length;
+            }
+            return groups.map((g, gi) => (
+              <span key={gi} className={g.isSpace ? s.spaceRun : s.wordRun}>
+                {g.word.split("").map((ch, j) => {
+                  const i = g.startIdx + j;
+                  const state = charStates[i];
+                  const isCursor = i === typed.length && !completing;
+                  const flashReject = isCursor && rejectTick > 0;
+                  return (
+                    <span
+                      key={i}
+                      className={`${s.char} ${isCursor ? s.cursor : ""}`}
+                      style={{
+                        color:
+                          state === "correct"
+                            ? accent
+                            : state === "error"
+                              ? "#e05050"
+                              : undefined,
+                        borderLeft: isCursor ? `2px solid ${accent}` : "none",
+                      }}
+                    >
+                      {state === "pending" ? (
+                        <span
+                          key={flashReject ? `p-${rejectTick}` : "p"}
+                          className={`${s.charPending} ${flashReject ? s.charRejectFlashInner : ""}`}
+                        >
+                          {ch}
+                        </span>
+                      ) : (
+                        ch
+                      )}
+                    </span>
+                  );
+                })}
               </span>
-            );
-          })}
+            ));
+          })()}
           {!showTapOverlay && typed.length >= target.length && !completing && (
             <span
               className={s.endCursor}
