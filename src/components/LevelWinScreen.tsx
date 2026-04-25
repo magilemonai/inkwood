@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGameStore } from "../store";
 import { LEVELS, getActLabel } from "../levels";
+import { useInput } from "../contexts/InputContext";
 import s from "../styles/WinScreens.module.css";
 
 export default function LevelWinScreen() {
   const lvl = useGameStore((g) => g.lvl);
   const advanceLevel = useGameStore((g) => g.advanceLevel);
+  const { focusInput } = useInput();
 
   // Capture level data at mount — prevents flash of next level during exit animation
   const [snapshot] = useState(() => ({ lvl, level: LEVELS[lvl] }));
@@ -15,17 +17,25 @@ export default function LevelWinScreen() {
   const { accent, bg } = level;
   const pct = Math.round(((snappedLvl + 1) / LEVELS.length) * 100);
 
+  // Continue: focus the persistent input synchronously so the iOS
+  // keyboard reopens during this gesture (it stays up across the screen
+  // swap because the input element itself is mounted at App root).
+  const advance = useCallback(() => {
+    focusInput();
+    advanceLevel();
+  }, [focusInput, advanceLevel]);
+
   // Keyboard: space or enter to advance
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        advanceLevel();
+        advance();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [advanceLevel]);
+  }, [advance]);
 
   return (
     <div className={s.container} style={{ background: bg }}>
@@ -44,7 +54,7 @@ export default function LevelWinScreen() {
       <button
         className={s.continueBtn}
         style={{ border: `1px solid ${accent}`, color: accent }}
-        onClick={advanceLevel}
+        onClick={advance}
       >
         Continue →
       </button>

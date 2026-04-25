@@ -7,6 +7,8 @@ import ActTransition from "./components/ActTransition";
 import OutroSequence from "./components/OutroSequence";
 import WanderScreen from "./components/WanderScreen";
 import DevPanel from "./components/DevPanel";
+import PersistentInput from "./components/PersistentInput";
+import { InputProvider } from "./contexts/InputContext";
 import { armAudioPreload } from "./audio";
 import fade from "./styles/Fade.module.css";
 
@@ -22,7 +24,8 @@ export default function App() {
   const bg = LEVELS[lvl]?.bg ?? "#060806";
 
   return (
-    <>
+    <InputProvider>
+      <PersistentInput />
       <div
         key={screen}
         className={fade.screenFade}
@@ -36,6 +39,6 @@ export default function App() {
         {screen === "wander" && <WanderScreen />}
       </div>
       {new URLSearchParams(window.location.search).has("dev") && <DevPanel />}
-    </>
+    </InputProvider>
   );
 }

@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { useGameStore } from "../store";
 import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
-import { startAmbient, playCompletionSweep, playTypeClick, toggleMute, isMuted } from "../audio";
+import { startAmbient, playCompletionSweep, toggleMute, isMuted } from "../audio";
+import { useInput } from "../contexts/InputContext";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
 
@@ -93,14 +94,14 @@ export default function PlayingScreen() {
   const levelProgress = useGameStore((g) => quantize(g.levelProgress()));
 
   // Actions come from the store getter and are stable references.
-  const typeChar = useGameStore((g) => g.typeChar);
   const startCompletion = useGameStore((g) => g.startCompletion);
   const advancePrompt = useGameStore((g) => g.advancePrompt);
 
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [inputFocused, setInputFocused] = useState(false);
+  // The input element lives at the App root (PersistentInput) so it
+  // survives screen transitions; we just borrow focus state and a
+  // gesture-driven focuser.
+  const { focusInput, inputFocused, rejectTick } = useInput();
   const [idleNudge, setIdleNudge] = useState(false);
-  const [rejectTick, setRejectTick] = useState(0);
 
   const charStates = getCharStates(typed, target);
   const hasError = charStates.some((st) => st === "error");
@@ -130,15 +131,6 @@ export default function PlayingScreen() {
     startAmbient(actIdx, lvl);
   }, [lvl]);
 
-  // ── Focus management ──
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-      setInputFocused(document.activeElement === inputRef.current);
-    }, 80);
-    return () => clearTimeout(timer);
-  }, [lvl, promptIdx]);
-
   // ── Idle nudge ──
   useEffect(() => {
     if (typed.length !== 0 || completing) return;
@@ -149,28 +141,6 @@ export default function PlayingScreen() {
     };
   }, [typed, completing, lvl, promptIdx]);
 
-
-  const handleType = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVal = e.target.value;
-    const wasForward = newVal.length > typed.length;
-    typeChar(newVal);
-    const acceptedTyped = useGameStore.getState().typed;
-    const acceptedForward = wasForward && acceptedTyped.length > typed.length;
-    const acceptedBackward = !wasForward && acceptedTyped.length !== typed.length;
-    if (acceptedForward) {
-      playTypeClick();
-      if (rejectTick > 0) setRejectTick(0);
-    } else if (wasForward && !acceptedForward) {
-      setRejectTick((t) => t + 1);
-    } else if (acceptedBackward && rejectTick > 0) {
-      setRejectTick(0);
-    }
-  };
-
-  const focusInput = () => {
-    inputRef.current?.focus();
-    setInputFocused(true);
-  };
 
   const showTapOverlay = !inputFocused && typed.length === 0;
   const showPulse = typed.length === 0 && !completing;
@@ -265,22 +235,6 @@ export default function PlayingScreen() {
             phrase {promptIdx + 1} of {totalPrompts}
           </span>
         </div>
-
-        <input
-          ref={inputRef}
-          className={s.hiddenInput}
-          type="text"
-          value={typed}
-          onChange={handleType}
-          onFocus={() => setInputFocused(true)}
-          onBlur={() => setInputFocused(false)}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          enterKeyHint="done"
-          aria-label="Type the incantation"
-        />
       </div>
     </div>
   );

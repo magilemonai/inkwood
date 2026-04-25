@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { useGameStore } from "../store";
 import { startAmbient } from "../audio";
 import { getActIndex } from "../levels";
+import { useInput } from "../contexts/InputContext";
 import s from "../styles/ActTransition.module.css";
 
 /**
@@ -282,14 +283,20 @@ const TRANSITIONS: Record<number, { title: string; Scene: React.FC }> = {
 export default function ActTransition() {
   const lvl = useGameStore((g) => g.lvl);
   const advanceLevel = useGameStore((g) => g.advanceLevel);
+  const { focusInput } = useInput();
 
   const transition = TRANSITIONS[lvl];
   const title = transition?.title ?? "";
   const Scene = transition?.Scene;
 
+  // Gesture-driven advance: focus the persistent input synchronously
+  // so the iOS keyboard reopens through the screen swap. The 7s auto-
+  // advance below is *not* a gesture and will leave the player with a
+  // single-tap-to-focus on the next playing screen.
   const advance = useCallback(() => {
+    focusInput();
     advanceLevel();
-  }, [advanceLevel]);
+  }, [focusInput, advanceLevel]);
 
   // Play the NEXT act's ambient during the transition so the tonal
   // shift is audible as a bridge. No cleanup: the engine crossfades.
@@ -300,9 +307,9 @@ export default function ActTransition() {
   }, [lvl]);
 
   useEffect(() => {
-    const timer = setTimeout(advance, 7000);
+    const timer = setTimeout(advanceLevel, 7000);
     return () => clearTimeout(timer);
-  }, [advance]);
+  }, [advanceLevel]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

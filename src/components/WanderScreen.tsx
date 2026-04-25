@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useGameStore } from "../store";
 import { LEVELS, getActIndex, ACT_LABELS } from "../levels";
 import { startAmbient } from "../audio";
+import { useInput } from "../contexts/InputContext";
 import s from "../styles/Wander.module.css";
 
 /**
@@ -12,11 +13,19 @@ import s from "../styles/Wander.module.css";
 export default function WanderScreen() {
   const wanderToLevel = useGameStore((g) => g.wanderToLevel);
   const restart = useGameStore((g) => g.restart);
+  const { focusInput } = useInput();
 
   // Play Act IV ambient as a gentle menu bed — neutral, restorative.
   useEffect(() => {
     startAmbient(3, 9);
   }, []);
+
+  // Tapping a chapter card focuses the persistent input synchronously
+  // so the iOS keyboard opens through the screen swap.
+  const enterLevel = (i: number) => {
+    focusInput();
+    wanderToLevel(i);
+  };
 
   return (
     <div className={s.container}>
@@ -34,7 +43,7 @@ export default function WanderScreen() {
                 borderColor: `${level.accent}40`,
                 background: level.bg,
               }}
-              onClick={() => wanderToLevel(i)}
+              onClick={() => enterLevel(i)}
               aria-label={`Enter ${level.title}`}
             >
               <span className={s.cardAct}>{ACT_LABELS[actIdx]}</span>

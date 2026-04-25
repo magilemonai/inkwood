@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { startIntroDrone, stopIntroDrone } from "../audio";
+import { useInput } from "../contexts/InputContext";
 import s from "../styles/Intro.module.css";
 
 /**
@@ -179,8 +180,18 @@ export default function IntroSequence() {
   const startGame = useGameStore((g) => g.startGame);
   const enterWander = useGameStore((g) => g.enterWander);
   const hasCompleted = useGameStore((g) => g.hasCompleted);
+  const { focusInput } = useInput();
   const [time, setTime] = useState(0);
   const [showTitle, setShowTitle] = useState(false);
+
+  // Begin: focus the singleton input synchronously inside the click
+  // handler so iOS opens its keyboard during this gesture. The input
+  // is mounted at App root, so focus survives the screen swap into
+  // PlayingScreen and the keyboard never has to reopen on first tap.
+  const handleBegin = () => {
+    focusInput();
+    startGame();
+  };
 
   // Start intro drone on mount
   useEffect(() => {
@@ -193,13 +204,14 @@ export default function IntroSequence() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        if (showTitle) startGame();
+        if (showTitle) handleBegin();
         else setShowTitle(true);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showTitle, startGame]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showTitle]);
 
   useEffect(() => {
     const start = performance.now();
@@ -292,7 +304,7 @@ export default function IntroSequence() {
             className={s.beginBtn}
             onClick={(e) => {
               e.stopPropagation();
-              startGame();
+              handleBegin();
             }}
           >
             Begin
