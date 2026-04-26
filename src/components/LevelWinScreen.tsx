@@ -49,7 +49,7 @@ export default function LevelWinScreen() {
       <h2 className={s.heading}>{level.title}</h2>
       <p className={s.winText}>{level.winText}</p>
       <div className={s.actLabel}>
-        {getActLabel(snappedLvl)} — {pct}% COMPLETE
+        {getActLabel(snappedLvl)} - {pct}% COMPLETE
       </div>
       <button
         className={s.continueBtn}

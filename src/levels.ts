@@ -39,7 +39,7 @@ export const LEVELS: Level[] = [
     scene: "cottage",
     accent: "#e89a30",
     bg: "#0d0905",
-    winText: "Warmth fills the rooms. A journal falls open — symbols you almost recognize.",
+    winText: "Warmth fills the rooms. A journal falls open. Symbols you almost recognize.",
   },
   {
     title: "The Night Sky",
@@ -79,7 +79,7 @@ export const LEVELS: Level[] = [
     scene: "bridge",
     accent: "#7aaa6a",
     bg: "#060a06",
-    winText: "Spirit-lanterns flicker. Footprints in the moss — not yours.",
+    winText: "Spirit-lanterns flicker. Footprints in the moss. Not yours.",
   },
   {
     title: "The Whispering Library",
@@ -106,7 +106,7 @@ export const LEVELS: Level[] = [
     scene: "stones",
     accent: "#88a8c8",
     bg: "#050608",
-    winText: "Light races between the stones. Not monuments — conduits.",
+    winText: "Light races between the stones. Conduits, all of them.",
   },
   {
     title: "The Moonlit Sanctum",
