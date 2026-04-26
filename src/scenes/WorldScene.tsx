@@ -330,24 +330,24 @@ function WorldScene({ progress: p }: SceneProps) {
               const y = s.baseY + bob;
               return (
                 <g key={`spirit${i}`} opacity={fp}>
-                  {/* Halo / aura */}
-                  <circle cx={s.x} cy={y - 5} r={4}
-                    fill="#d0b870" opacity={fp * 0.18} />
-                  {/* Head */}
-                  <circle cx={s.x} cy={y - 5} r={1.4}
-                    fill="#f0e0a8" opacity={fp * 0.7} />
-                  {/* Body — tapered robe shape */}
+                  {/* Outer halo — soft footprint, no hard edge */}
+                  <ellipse cx={s.x} cy={y - 1} rx={3.6} ry={5}
+                    fill="#d0b870" opacity={fp * 0.14} />
+                  {/* Teardrop silhouette — narrow at crown, widest at
+                       heart, softly tapered to floor */}
                   <path
-                    d={`M${s.x - 1.8} ${y - 3}
-                        C${s.x - 2.4} ${y - 1}, ${s.x - 2.2} ${y + 2}, ${s.x - 1.6} ${y + 4}
-                        L${s.x + 1.6} ${y + 4}
-                        C${s.x + 2.2} ${y + 2}, ${s.x + 2.4} ${y - 1}, ${s.x + 1.8} ${y - 3}
-                        Z`}
-                    fill="#d0b870" opacity={fp * 0.55}
+                    d={`M${s.x} ${y - 5}
+                        C${s.x - 1.6} ${y - 4}, ${s.x - 2.6} ${y - 2}, ${s.x - 2.5} ${y}
+                        C${s.x - 2.2} ${y + 2.5}, ${s.x - 1.2} ${y + 4}, ${s.x} ${y + 4}
+                        C${s.x + 1.2} ${y + 4}, ${s.x + 2.2} ${y + 2.5}, ${s.x + 2.5} ${y}
+                        C${s.x + 2.6} ${y - 2}, ${s.x + 1.6} ${y - 4}, ${s.x} ${y - 5} Z`}
+                    fill="#d0b870" opacity={fp * 0.18}
                   />
-                  {/* Inner light */}
-                  <ellipse cx={s.x} cy={y} rx={0.8} ry={1.8}
-                    fill="#ffe8a8" opacity={fp * 0.4} />
+                  {/* Inner pearl — bright at heart, fading */}
+                  <circle cx={s.x} cy={y - 0.5} r={1.8}
+                    fill="#d0b870" opacity={fp * 0.32} />
+                  <circle cx={s.x} cy={y - 0.5} r={0.9}
+                    fill="#fff8e0" opacity={fp * 0.65} />
                 </g>
               );
             })}
