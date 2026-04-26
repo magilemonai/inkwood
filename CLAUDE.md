@@ -129,10 +129,12 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
     ├── scenes/                  # One file per scene (all memo'd)
     │   ├── util.ts              # Shared sub() helper
     │   └── *Scene.tsx           # 10 scene files
+    ├── contexts/
+    │   └── InputContext.tsx     # Singleton typing input shared across screens
+    ├── share.ts                 # navigator.share + clipboard fallback
     ├── svg/
     │   ├── filters.tsx          # GlowFilter, MistFilter (SVG filter defs)
-    │   ├── primitives.tsx       # Only Star is still used (other exports dead)
-    │   └── palettes.ts          # Unused — can be deleted
+    │   └── primitives.tsx       # Only Star is exported (used by StarScene)
     └── styles/                  # CSS Modules per component
 ```
 
@@ -343,32 +345,40 @@ This file documents a multi-session collaboration that took the game from incons
 
 ### Major Milestones
 1. **Scene rebuilds** — WorldScene (network diagram → panoramic landscape), BridgeScene (cliffs + assembly), LibraryScene (hybrid cavern + hero tome opening). Earlier sessions rebuilt Garden, Cottage, Stars, Well, TreeScene.
-2. **Audio system** — Built from zero. Three-layer synthesis, per-act and per-scene variation, completion sweep, intro drone, act-transition bridging. Hard volume cap for safety.
+2. **Audio system** — Built from zero. Three-layer synthesis, per-act and per-scene variation, completion sweep, intro drone, act-transition bridging. Hard `MASTER_VOLUME` cap, plus a user-adjustable `userVolume` scalar exposed as a header slider.
 3. **Alpha feedback integration** — 13 feedback items fixed including audio safety (dropped volume 5x), outro replay bug, text box occlusion, bridge composition, cat opacity, mushroom trees, Great Tree roots, World well placement.
 4. **Mobile responsive** — Portrait layout with landscape-ratio scene container, compact typing area, `100dvh`, iOS quirks handled.
 5. **Particle system** — `useParticles` hook with physics (drift, fade, respawn), integrated into Garden (pollen), Library (dust), Sanctum (fireflies), Bridge (mist), Tree (leaf sparks).
 6. **Polish pass** — Library tome enlarged, cavern walls textured, Garden flowers replaced with bezier petals, Great Tree canopy opacity boosted, audio acts made more distinct (E2 root for Act II, shimmery 9th for Act III), nature texture layer added, shared `sub()` utility extracted, scene transition colors match level bg.
 7. **Infrastructure** — Dev panel gated behind `?dev` URL param, legacy inkwood.tsx deleted, screenshot tool updated, `/critique` slash command created with intro/outro capture.
+8. **Outro redesign** — Top-center dot row, dots fade in as their scene appears in the panorama, disconnected canopy stubs removed. Final card is "The forest remembers." + Begin Again + Wander + Share. Loops indefinitely until restart.
+9. **iOS keyboard fix** — Singleton input lifted to App root via `InputContext`, gesture-driven `focusInput()` on every screen-transition button (Begin, Continue, level cards). Survives the React tree swap so iOS keyboard stays up across interstitials.
+10. **Mobile portrait layout** — Letterboxed scenes at natural 8:5 ratio (matches viewBox so nothing crops), title and outro text blocks below. Prompt font auto-scales by `--char-count` so the longest canonical phrase fits one line.
+11. **Brand pass** — Ogham-style rune logo replaces the stick-tree, applied to title screen and favicon. OG image regenerated as Stars climax + wordmark + tagline. Em-dash audit on all card text.
+12. **Player UX** — Skip-intro for returning players (`hasCompleted` short-circuits the dormant-world animation); daily-seeded prompt rotation so replays vary by calendar day; in-app `Share` button via `navigator.share` + clipboard fallback.
 
 ### Total Improvements
 - All scenes rebuilt or polished to B+/A-
-- 20+ commits across this session's branch
-- `src/audio.ts` grown from zero to 380+ lines
+- 30+ commits over multiple sessions
+- `src/audio.ts` grown from zero to 460+ lines (incl. user volume + drone unlock)
 - `useParticles` hook + 5 scene integrations
 - 82-screenshot automated critique protocol
 - Mobile viewport properly handled on iOS Safari
+- Singleton input architecture with shared context
 
 ---
 
 ## Known Issues / Next Steps
 
-See `PERSONAS.md` for the latest priority stack. Top items:
+`PERSONAS.md` reflects the v13 critique snapshot. Most v13 items have shipped — see the session-history list above. Open work, lightly prioritized:
 
-1. **Delete dead code** — `TitleScreen.tsx`, `GameWinScreen.tsx`, unused `svg/primitives.tsx` exports, `svg/palettes.ts`, `scenes/index.ts`. ~500+ lines of unused code.
-2. **Trailer / landing page** — 30-second screen recording of Bridge + Stars + Tree for shareability.
-3. **Well water drama** — 0-40% transition lacks visual punch (feels like filling a bathtub).
-4. **Intro dormant trees** — bare stick silhouettes could have more organic character.
-5. **Library tome glow at 99%** — could radiate more light.
+1. **Intro dormant trees** — Y-shaped stick silhouettes still in `IntroSequence.tsx`. PERSONAS.md flagged this as the highest-impact remaining art item; first impression of the game.
+2. **Trailer (`scripts/trailer.mjs`)** — Playwright recording exists; ship a polished webm/mp4 alongside or in place of the OG image for richer share previews.
+3. **Library tome glow at 99%** — could radiate more light at full progress.
+4. **Cottage window shadow** — soft floor light pool when candles are lit; currently floor stays uniformly dark.
+5. **Run `/critique` again** — full multi-persona pass to surface what's drifted since v13.
+
+Custom domain (e.g. `inkwood.fun`) is the only fully-external item — needs a registration the user holds; once bought, drop a `CNAME` file in repo root and update `index.html` URLs.
 
 ---
 

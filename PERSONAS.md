@@ -1,5 +1,7 @@
 # Inkwood — Persona Review Panel v13
 
+> **⚠️ Stale snapshot.** This was captured 2026-04-13. Many priority-stack items below have shipped since (singleton input / iOS keyboard, outro redesign, rune logo + favicon, OG image, mobile portrait layout, em-dash audit, breaths cleanup, master volume slider, skip-intro, daily prompt rotation, share button). For the current state see `CLAUDE.md` Session History; re-run `/critique` to refresh.
+
 Date: 2026-04-13
 Trigger: Full six-persona critique cycle run after v12 alpha-test fixes shipped. 82 screenshots generated (10 scenes × 7 progress points + intro + outro timelapses). Code Reviewer verified via `eslint` + `tsc --noEmit`. Cody's v12 fixes pressure-tested visually.
 
