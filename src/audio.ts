@@ -95,6 +95,7 @@ class AudioEngine {
   private intro: IntroVoice | null = null;
   private lastTypeTime = 0;
   private preloadArmed = false;
+  private silenceArmed = false;
 
   constructor() {
     try { this.muted = localStorage.getItem(MUTE_KEY) === "1"; } catch { /* ignore */ }
@@ -117,11 +118,39 @@ class AudioEngine {
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.value = this.effectiveGain();
       this.masterGain.connect(this.ctx.destination);
+      this.armTerminationSilence();
     }
     if (this.ctx.state === "suspended") {
       this.ctx.resume();
     }
     return this.ctx;
+  }
+
+  /** When the page hides (tab close, navigation away, app switch on
+   *  iOS), the browser tears down the AudioContext while oscillators
+   *  are still mid-cycle. The abrupt termination produces an audible
+   *  click — sometimes a loud sine burst on iOS Safari specifically.
+   *  Setting masterGain.gain to 0 immediately on `pagehide` silences
+   *  everything before the browser can make noise about the cleanup.
+   *  Same listener also handles `visibilitychange` for backgrounding. */
+  private armTerminationSilence() {
+    if (typeof window === "undefined" || this.silenceArmed) return;
+    this.silenceArmed = true;
+    const silence = () => {
+      if (!this.masterGain || !this.ctx) return;
+      try {
+        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterGain.gain.value = 0;
+      } catch { /* context may already be closed */ }
+    };
+    window.addEventListener("pagehide", silence);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) silence();
+      else if (this.masterGain) {
+        // Restore on return-to-foreground.
+        this.masterGain.gain.value = this.effectiveGain();
+      }
+    });
   }
 
   /** Arm a listener on the first user gesture to unlock the AudioContext
