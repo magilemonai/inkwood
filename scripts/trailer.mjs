@@ -32,11 +32,34 @@
 import { chromium } from 'playwright-core';
 import { mkdirSync, readdirSync, renameSync, existsSync, statSync, copyFileSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
+import { homedir } from 'os';
 import { spawnSync } from 'child_process';
 
-const MAC_PATH = '/Users/cody/Library/Caches/ms-playwright/chromium-1217/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const LINUX_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const CHROME_PATH = existsSync(MAC_PATH) ? MAC_PATH : LINUX_PATH;
+/** Locate the Playwright-managed Chromium binary in a user-agnostic
+ *  way. Picks whichever exists. */
+function findChrome() {
+  const macCache = resolve(homedir(), 'Library/Caches/ms-playwright');
+  if (existsSync(macCache)) {
+    const versions = readdirSync(macCache).filter((d) => d.startsWith('chromium-'));
+    for (const v of versions.sort().reverse()) {
+      const p = resolve(macCache, v, 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing');
+      if (existsSync(p)) return p;
+    }
+  }
+  const linuxCache = resolve(homedir(), '.cache/ms-playwright');
+  if (existsSync(linuxCache)) {
+    const versions = readdirSync(linuxCache).filter((d) => d.startsWith('chromium-'));
+    for (const v of versions.sort().reverse()) {
+      const p = resolve(linuxCache, v, 'chrome-linux/chrome');
+      if (existsSync(p)) return p;
+    }
+  }
+  const sandboxFallback = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+  if (existsSync(sandboxFallback)) return sandboxFallback;
+  throw new Error('No Playwright Chromium found. Run `npx playwright install chromium`.');
+}
+
+const CHROME_PATH = findChrome();
 const BASE_URL = 'http://localhost:4173/inkwood/';
 const OUTPUT_DIR = './trailer-output';
 const VIDEO_SIZE = { width: 1280, height: 720 };
@@ -513,6 +536,29 @@ function muxAudio(trailerWebm) {
   copyFileSync(finalWebm, trailerWebm.replace(/\.webm$/, '-with-audio.webm'));
 
   console.log(`✔ ${finalWebm}`);
+
+  // Also encode an .mp4 alongside the .webm for platforms that won't
+  // autoplay webm (Twitter cards in particular). Same content, just
+  // re-wrapped: H.264 video + AAC audio.
+  const finalMp4 = resolve('public', 'trailer.mp4');
+  console.log('→ Encoding mp4 alongside webm…');
+  const mp4 = spawnSync('ffmpeg', [
+    '-y',
+    '-i', finalWebm,
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-preset', 'medium',
+    '-crf', '23',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-movflags', '+faststart',
+    finalMp4,
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  if (mp4.status !== 0) {
+    console.error('mp4 encode failed:', mp4.stderr?.toString().slice(-400));
+  } else {
+    console.log(`✔ ${finalMp4}`);
+  }
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

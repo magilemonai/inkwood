@@ -311,8 +311,21 @@ function GardenScene({ progress: p }: SceneProps) {
         const headY = baseY - f.stemH * fp;
         const ps = f.size * fp;
         const petalCount = 4 + (i % 2); // 4 or 5 petals
+        // Sway period varies per flower so the field doesn't pulse
+        // in unison; rotation pivots from the stem's base so the
+        // whole flower wobbles like it's catching wind.
+        const swayDur = (3 + (i % 4) * 0.4).toFixed(2);
+        const swayAmp = 2.5;
         return (
           <g key={i} opacity={fp}>
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              values={`0 ${f.x} ${baseY}; ${swayAmp} ${f.x} ${baseY}; 0 ${f.x} ${baseY}; ${-swayAmp} ${f.x} ${baseY}; 0 ${f.x} ${baseY}`}
+              keyTimes="0;0.25;0.5;0.75;1"
+              dur={`${swayDur}s`}
+              repeatCount="indefinite"
+            />
             {/* Stem — slight curve */}
             <path
               d={`M${f.x} ${baseY} C${f.x + 1 + (i % 3)} ${(baseY + headY) / 2}, ${f.x - 1 + (i % 2)} ${headY + 8} ${f.x} ${headY}`}

@@ -10,11 +10,36 @@
  */
 
 import { chromium } from 'playwright-core';
-import { mkdirSync, readFileSync, existsSync } from 'fs';
+import { mkdirSync, readFileSync, existsSync, readdirSync } from 'fs';
+import { homedir } from 'os';
+import { resolve } from 'path';
 
-const MAC_PATH = '/Users/cody/Library/Caches/ms-playwright/chromium-1217/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const LINUX_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const CHROME_PATH = existsSync(MAC_PATH) ? MAC_PATH : LINUX_PATH;
+/** Locate the Playwright-managed Chromium binary in a user-agnostic
+ *  way. Tries the macOS cache, the Linux cache (the original sandbox
+ *  layout), and the standard Linux fallback. Picks whichever exists. */
+function findChrome() {
+  const macCache = resolve(homedir(), 'Library/Caches/ms-playwright');
+  if (existsSync(macCache)) {
+    const versions = readdirSync(macCache).filter((d) => d.startsWith('chromium-'));
+    for (const v of versions.sort().reverse()) {
+      const p = resolve(macCache, v, 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing');
+      if (existsSync(p)) return p;
+    }
+  }
+  const linuxCache = resolve(homedir(), '.cache/ms-playwright');
+  if (existsSync(linuxCache)) {
+    const versions = readdirSync(linuxCache).filter((d) => d.startsWith('chromium-'));
+    for (const v of versions.sort().reverse()) {
+      const p = resolve(linuxCache, v, 'chrome-linux/chrome');
+      if (existsSync(p)) return p;
+    }
+  }
+  const sandboxFallback = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+  if (existsSync(sandboxFallback)) return sandboxFallback;
+  throw new Error('No Playwright Chromium found. Run `npx playwright install chromium`.');
+}
+
+const CHROME_PATH = findChrome();
 const BASE_URL = 'http://localhost:4173/inkwood/';
 const SCREENSHOT_DIR = './screenshots';
 

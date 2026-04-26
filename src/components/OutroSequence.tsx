@@ -648,9 +648,9 @@ export default function OutroSequence() {
           <button
             className={`${s.wanderBtn} ${s.wanderBtnFade}`}
             onClick={enterWander}
-            aria-label="Wander the woods - replay any single scene"
+            aria-label="Replay any level — pick a scene to revisit"
           >
-            Wander the woods
+            Replay any level
           </button>
 
           <button
