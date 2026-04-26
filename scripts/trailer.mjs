@@ -47,6 +47,11 @@ const FADE_IN = 0.9;           // seconds — black to scene at shot start
 const FADE_OUT = 0.7;          // seconds — scene to black at shot end
 const TYPE_LEAD = 1.0;         // seconds — pause before typing starts
 const TITLE_DURATION = 5;      // seconds — title card on-screen
+const PRE_ROLL = 5;            // seconds of guaranteed-black at recording
+                               // start — cropped out in post so any
+                               // intro flash during page boot is gone.
+                               // 5s gives wide margin for goto + React
+                               // mount + dormant intro renders.
 
 /**
  * Shot definitions. Each runs for `SHOT_DURATION` seconds. The `camera`
@@ -94,29 +99,49 @@ async function sleep(ms) {
 
 /** Pre-register a black overlay so it lands as early as possible on
  *  every navigation — before React mounts and before any dormant-world
- *  art can render. Without this, the goto + reload window leaks the
- *  intro animation into the start of the recording. */
+ *  art can render. Also hides the dev panel via CSS so the F2 toggle
+ *  driving jumpToScene never paints visibly. Buttons inside the panel
+ *  remain queryable and clickable (we use force-click). */
 async function preInjectFade(context) {
   await context.addInitScript(() => {
+    // CSS injected as the first thing — paints html black and hides
+    // the dev panel even before React mounts. The dev panel uses
+    // inline styles `position: fixed` + `z-index: 9999` + `top: 8`,
+    // a fingerprint we can target without touching its component code.
+    const style = document.createElement('style');
+    style.textContent = `
+      html, body { background: #000 !important; }
+      [style*="z-index: 9999"][style*="position: fixed"][style*="top: 8"] {
+        opacity: 0 !important;
+        pointer-events: auto;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+
     const inject = () => {
       if (document.getElementById('trailer-fade')) return;
-      // Force the page background black via inline style on <html> so
-      // there's no white flash even before <body> exists.
       document.documentElement.style.background = '#000';
       if (!document.body) return;
       const el = document.createElement('div');
       el.id = 'trailer-fade';
-      el.style.cssText = [
-        'position:fixed', 'inset:0', 'background:#000',
-        'z-index:99998', 'opacity:1', 'pointer-events:none',
+      // !important + max z-index so nothing in the React app's CSS can
+      // win against this. Explicit vw/vh because some flex/grid
+      // contexts don't resolve `inset:0` on a fixed element until
+      // layout's finished.
+      el.setAttribute('style', [
+        'position:fixed!important',
+        'top:0!important', 'left:0!important',
+        'width:100vw!important', 'height:100vh!important',
+        'background:#000!important',
+        'z-index:2147483647!important',
+        'opacity:1!important',
+        'pointer-events:none!important',
         'transition:opacity 0s linear',
-      ].join(';');
+      ].join(';'));
       document.body.appendChild(el);
     };
     inject();
     document.addEventListener('DOMContentLoaded', inject);
-    // <body> can appear after the script runs — observe and inject
-    // the moment it exists.
     const obs = new MutationObserver(() => {
       if (document.body && !document.getElementById('trailer-fade')) {
         inject();
@@ -132,29 +157,42 @@ async function fade(page, target, durationMs) {
     ({ target, durationMs }) => {
       const el = document.getElementById('trailer-fade');
       if (!el) return;
-      el.style.transition = `opacity ${durationMs}ms ease-out`;
-      el.style.opacity = String(target);
+      // The overlay's inline style sets opacity with !important so the
+      // React app's CSS can never accidentally hide it. setProperty
+      // preserves the priority flag while still letting us animate.
+      el.style.setProperty('transition', `opacity ${durationMs}ms ease-out`, 'important');
+      el.style.setProperty('opacity', String(target), 'important');
     },
     { target, durationMs }
   );
   await sleep(durationMs);
 }
 
+/** Map of scene title -> level index, mirroring src/levels.ts. */
+const TITLE_TO_LVL = {
+  'The Sleeping Garden': 0,
+  'The Dark Cottage': 1,
+  'The Night Sky': 2,
+  'The Dry Well': 3,
+  'The Forgotten Bridge': 4,
+  'The Whispering Library': 5,
+  'The Spirit Stones': 6,
+  'The Moonlit Sanctum': 7,
+  'The Great Tree': 8,
+  'The Waking World': 9,
+};
+
 async function jumpToScene(page, name) {
-  // Happens behind a fully-black overlay — dev panel pop is invisible.
-  await page.keyboard.press('F2');
+  // App.tsx exposes the Zustand store on window in ?dev mode. We use
+  // it to call jumpToLevel directly — no F2 toggle, no DevPanel UI,
+  // no visibility race during the cut between shots.
+  await page.evaluate(({ name, map }) => {
+    const w = /** @type {any} */ (window);
+    const store = w.__inkwoodStore?.getState();
+    const lvl = map[name];
+    if (store && lvl !== undefined) store.jumpToLevel(lvl);
+  }, { name, map: TITLE_TO_LVL });
   await sleep(180);
-  const btns = await page.$$('button');
-  for (const btn of btns) {
-    const t = await btn.textContent();
-    if (t && t.includes(name)) {
-      await btn.click();
-      break;
-    }
-  }
-  await sleep(150);
-  await page.keyboard.press('F2');
-  await sleep(120);
 }
 
 async function applyCamera(page, { from, to }, durationMs) {
@@ -249,10 +287,43 @@ async function main() {
   await preInjectFade(context);
 
   const page = await context.newPage();
+  // Paint the about:blank page solid black immediately so the
+  // recording has nothing white to capture before navigation.
+  await page.setContent(
+    '<!doctype html><html style="background:#000;height:100%"><body style="margin:0;background:#000;height:100%"></body></html>',
+  );
+  await sleep(150);
+
   await page.goto(BASE_URL + '?dev', { waitUntil: 'networkidle' });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
   await sleep(600);
+
+  // Belt-and-suspenders: explicitly (re-)create the overlay after the
+  // page has fully settled. addInitScript should have done this already,
+  // but if any race left it missing, this guarantees presence.
+  await page.evaluate(() => {
+    let el = document.getElementById('trailer-fade');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'trailer-fade';
+      document.body.appendChild(el);
+    }
+    el.setAttribute('style', [
+      'position:fixed!important',
+      'top:0!important', 'left:0!important',
+      'width:100vw!important', 'height:100vh!important',
+      'background:#000!important',
+      'z-index:2147483647!important',
+      'opacity:1!important',
+      'pointer-events:none!important',
+      'transition:opacity 0s linear',
+    ].join(';'));
+  });
+
+  // Hold guaranteed black at start so any flicker during page boot
+  // is comfortably inside the pre-roll window we'll crop out.
+  await sleep(PRE_ROLL * 1000);
 
   for (const shot of SHOTS) {
     console.log(`→ ${shot.name} (${SHOT_DURATION}s)`);
@@ -309,18 +380,18 @@ function muxAudio(trailerWebm) {
   const mixWav = resolve(OUTPUT_DIR, 'pad-mix.wav');
   const finalWebm = resolve('public', 'trailer.webm');
 
-  // Query the actual video duration so audio matches the full recording
-  // (the script's elapsed time exceeds SHOTS*SHOT_DURATION + TITLE
-  // because of jumpToScene overhead between shots). Without this the
-  // -shortest mux step clips the title splash off the end.
+  // Query the actual video duration. We'll trim PRE_ROLL seconds of
+  // start-of-recording black during mux, so audio is rendered to match
+  // the *post-crop* video length and aligned with the cropped timeline.
   const probe = spawnSync('ffprobe', [
     '-i', trailerWebm,
     '-show_entries', 'format=duration',
     '-v', 'quiet',
     '-of', 'csv=p=0',
   ], { encoding: 'utf8' });
-  const videoSec = parseFloat(probe.stdout?.trim()) || (SHOTS.length * SHOT_DURATION + TITLE_DURATION);
-  const totalSec = videoSec + 0.2;
+  const videoSec = parseFloat(probe.stdout?.trim()) || (PRE_ROLL + SHOTS.length * SHOT_DURATION + TITLE_DURATION);
+  const trimmedSec = videoSec - PRE_ROLL;
+  const totalSec = trimmedSec + 0.2;
   const shotMs = SHOT_DURATION;
 
   // Per-act chord definitions, transcribed from audio.ts ACT_AMBIENTS.
@@ -413,12 +484,17 @@ function muxAudio(trailerWebm) {
     return;
   }
 
-  console.log('→ Muxing audio onto trailer…');
+  console.log('→ Muxing audio onto trailer (crop pre-roll)…');
+  // Trim PRE_ROLL seconds off the start of the silent video so any
+  // page-boot flicker is gone. Audio was rendered with the same
+  // PRE_ROLL gap baked in, so no offset realignment needed.
   const muxStep = spawnSync('ffmpeg', [
     '-y',
-    '-i', trailerWebm,
+    '-ss', String(PRE_ROLL), '-i', trailerWebm,
     '-i', mixWav,
-    '-c:v', 'copy',
+    '-c:v', 'libvpx-vp9',
+    '-crf', '32',
+    '-b:v', '0',
     '-c:a', 'libopus',
     '-b:a', '96k',
     '-shortest',

@@ -18,6 +18,13 @@ import fade from "./styles/Fade.module.css";
 // warms up.
 armAudioPreload();
 
+// Dev mode hook: expose the store on window so external tooling
+// (the trailer recorder, e2e harnesses) can drive scene jumps
+// without poking the visible dev panel UI.
+if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("dev")) {
+  (window as unknown as { __inkwoodStore?: typeof useGameStore }).__inkwoodStore = useGameStore;
+}
+
 export default function App() {
   const screen = useGameStore((g) => g.screen);
   const lvl = useGameStore((g) => g.lvl);
