@@ -132,6 +132,44 @@ function DormantCottage({ opacity }: { opacity: number }) {
   );
 }
 
+/** Hand-crafted conifer silhouette templates — each path is centered
+ *  at x=0 and grows upward (negative y) from a base at y=0. The shapes
+ *  use cubic beziers to create irregular branch-layer bumps so the
+ *  treeline reads painterly rather than as twelve identical triangles. */
+const TREE_SILHOUETTES = [
+  // 0: tall narrow spire
+  "M -1 0 L -1 -3 C -5 -4 -3 -7 -3 -8 C -6 -11 -2 -13 -2 -14 C -5 -17 -2 -19 -1 -21 C -2 -24 0 -26 0 -27 C 1 -26 1 -24 2 -21 C 3 -19 5 -17 2 -14 C 3 -13 6 -11 3 -8 C 3 -7 5 -4 1 -3 L 1 0 Z",
+  // 1: medium conifer, slight right lean
+  "M -3 0 L -3 -2 C -8 -3 -5 -6 -5 -7 C -9 -9 -4 -11 -3 -12 C -6 -14 -2 -16 -1 -18 C -2 -20 0 -21 1 -21 C 2 -19 4 -18 4 -16 C 6 -14 3 -12 4 -11 C 8 -9 4 -7 4 -6 C 7 -4 4 -3 3 -2 L 3 0 Z",
+  // 2: short bushy / shrub
+  "M -3 0 L -3 -1 C -7 -2 -5 -5 -4 -6 C -8 -8 -5 -11 -3 -12 C -6 -13 -2 -15 -1 -16 C -2 -17 0 -18 0 -18 C 1 -17 2 -16 3 -15 C 5 -13 3 -12 3 -11 C 5 -9 6 -7 3 -6 C 5 -4 4 -2 3 -1 L 3 0 Z",
+  // 3: tall asymmetric, leans left
+  "M -2 0 L -2 -2 C -7 -4 -5 -7 -4 -8 C -8 -10 -3 -13 -3 -14 C -7 -16 -3 -18 -2 -20 C -4 -23 -1 -25 -1 -26 C 0 -27 0 -27 1 -26 C 1 -23 0 -21 2 -20 C 3 -18 5 -16 2 -14 C 3 -13 5 -10 2 -8 C 4 -6 6 -4 3 -2 L 3 0 Z",
+];
+
+/** Treeline placements — x position, template index, vertical jitter
+ *  for variety. Distances vary so the rhythm reads natural rather than
+ *  metric. */
+const TREELINE = [
+  { x: 12,  t: 1, dy: 0 },
+  { x: 30,  t: 0, dy: 1 },
+  { x: 48,  t: 2, dy: 0 },
+  { x: 72,  t: 3, dy: -1 },
+  { x: 100, t: 1, dy: 0 },
+  { x: 122, t: 0, dy: 1 },
+  { x: 148, t: 2, dy: 0 },
+  { x: 175, t: 3, dy: 0 },
+  { x: 198, t: 0, dy: -1 },
+  { x: 222, t: 1, dy: 1 },
+  { x: 248, t: 2, dy: 0 },
+  { x: 270, t: 3, dy: 0 },
+  { x: 296, t: 0, dy: 0 },
+  { x: 320, t: 1, dy: 1 },
+  { x: 344, t: 2, dy: -1 },
+  { x: 368, t: 3, dy: 0 },
+  { x: 388, t: 0, dy: 0 },
+];
+
 /** Dormant Sky — deep blue-grey, empty but visible */
 function DormantSky({ opacity }: { opacity: number }) {
   return (
@@ -140,10 +178,20 @@ function DormantSky({ opacity }: { opacity: number }) {
       <rect width="400" height="250" fill="hsl(225, 18%, 16%)" />
       {/* Horizon slightly lighter */}
       <rect x="0" y="175" width="400" height="57" fill="hsl(225, 12%, 19%)" />
-      {/* Treeline silhouettes — prominent */}
+      {/* Distant fog band where the treeline meets the horizon —
+           gives the silhouettes something to sit against. */}
+      <rect x="0" y="222" width="400" height="14" fill="hsl(225,10%,15%)" opacity="0.6" />
+      {/* Treeline base — soft ground line beneath the silhouettes. */}
       <rect x="0" y="232" width="400" height="18" fill="hsl(225,12%,10%)" />
-      {[0, 28, 55, 90, 128, 168, 205, 242, 278, 312, 348, 378].map((x, i) => (
-        <polygon key={i} points={`${x},232 ${x + 14},${214 - (i % 3) * 7} ${x + 28},232`} fill="hsl(225,12%,10%)" />
+      {/* Hand-drawn conifer silhouettes — varied templates, lightly
+           jittered baseline, occasional x perturbations. */}
+      {TREELINE.map((tree, i) => (
+        <path
+          key={i}
+          transform={`translate(${tree.x}, ${232 + tree.dy})`}
+          d={TREE_SILHOUETTES[tree.t]}
+          fill="hsl(225,12%,10%)"
+        />
       ))}
       {/* Moon — dead crescent, clearly visible */}
       <circle cx="342" cy="42" r="22" fill="hsl(225,15%,25%)" opacity="0.6" />
