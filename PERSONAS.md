@@ -1,202 +1,206 @@
-# Inkwood — Persona Review Panel v13
+# Inkwood — Persona Review Panel v14
 
-> **⚠️ Stale snapshot.** This was captured 2026-04-13. Many priority-stack items below have shipped since (singleton input / iOS keyboard, outro redesign, rune logo + favicon, OG image, mobile portrait layout, em-dash audit, breaths cleanup, master volume slider, skip-intro, daily prompt rotation, share button). For the current state see `CLAUDE.md` Session History; re-run `/critique` to refresh.
+Date: 2026-04-26
+Trigger: First six-persona pass since v13 (2026-04-13). The intervening sessions shipped: singleton-input architecture (fixes iOS keyboard refocus), three-act layered audio + 30s trailer with title splash, rune brand pass on title and favicon, mobile portrait letterbox, em-dash audit, breaths-state cleanup, master volume slider, skip-intro for returning players, in-app share button, daily prompt rotation, and a hand-drawn treeline replacing the dormant-sky triangle row. 82 screenshots regenerated this cycle (10 scenes × 7 progress points + intro/outro timelapses). Code Reviewer verified via `eslint`, `tsc --noEmit`, and `vitest run` — 24/24 passing.
 
-Date: 2026-04-13
-Trigger: Full six-persona critique cycle run after v12 alpha-test fixes shipped. 82 screenshots generated (10 scenes × 7 progress points + intro + outro timelapses). Code Reviewer verified via `eslint` + `tsc --noEmit`. Cody's v12 fixes pressure-tested visually.
-
-Headline: The game is visibly better than v12. The three ship blockers from v12 (typing integrity, outro composition, moon glow box) all land. Six scenes at A- or higher. Remaining work is opportunity, not debt.
+Headline: This is the first cycle where launch readiness is no longer the question — it's ready. The remaining work is opportunity, not debt. Two scenes (Tree, Sanctum) are a half-grade behind the rest; one bug (`armAudioPreload` is exported but never called) is real but inconsequential.
 
 ---
 
 ## 1. Code Reviewer
 
-**Build:** Zero lint errors, zero TypeScript errors (verified). Bundle 452KB / 139KB gzip — unchanged territory.
+**Build:** Zero ESLint errors. Zero TypeScript errors. 24/24 tests passing. Production bundle 356 KB of assets (~107 KB gzipped including the rune favicon, OG image, trailer.webm at 2.4 MB shipped separately and not in the precache glob).
 
 | Strength | Notes |
 |---|---|
-| `typeChar` correctness | Now a true input gate — wrong forward keystrokes silently dropped, backspace preserved. Restores the game's core contract. |
-| `playTypeClick` gating | Only fires on accepted input (compares `typed` before/after). No stray click on rejected keys. |
-| `GlowFilter` default bounds | Widened from 200% to 500%, fixing clipped halos across cottage candles, runes, moon — a one-line change with broad visual effect. |
-| Idle nudge cleanup pattern | State reset lives in the effect's cleanup function, not the body. ESLint's `react-hooks/set-state-in-effect` clean. |
-| Outro tree shift | Trunk/canopy/spirit-lights each translated in their own local coords (no hacky group wrapper that would break the root connections to vignettes). |
-| Comma audit | Three targeted edits; scene timing keys off length ratio so commas didn't disturb pacing. |
+| Singleton input via React context | The architecture I'd reach for. PersistentInput owns the `<input>`, `InputContext` exposes `focusInput`/`blurInput`/`rejectTick`. Eight gesture-driven buttons (Begin, Continue, level cards, etc.) call `focusInput()` synchronously before dispatching state. Survives screen swaps cleanly. |
+| Daily prompt rotation | Mulberry32 PRNG seeded from UTC date + level index. Deterministic within a day, rotates next. First-playthrough still uses canonical via the `inkwood-completed` gate. Tests pass. |
+| Trailer pipeline | Playwright records → ffprobe measures → ffmpeg renders four-act layered audio (C/E2/D/G chords with cross-fades) → muxes with `-ss` crop. Repeatable from `node scripts/trailer.mjs`. |
+| Em-dash audit | Card text and metadata both cleaned. The Stones winText was rewritten to break the contrastive pattern, not just swap a punctuation glyph. |
 
-| Remaining concern | Severity |
+| Concern | Notes |
 |---|---|
-| `src/components/TitleScreen.tsx`, `GameWinScreen.tsx`, `svg/palettes.ts`, `scenes/index.ts` — still present, still unused | Low |
-| `svg/primitives.tsx` exports besides `Star` — still dead | Low |
-| `screenshot.mjs` prompts array duplicates `levels.ts` — a drift hazard (already burned us once this cycle when commas were added) | Low |
-| No audio preload — still created on first gesture | Low |
-| `hasError` path in `PlayingScreen` is now unreachable under normal use (store rejects wrong forward input); the "backspace to correct" hint rarely fires | Cosmetic |
+| `armAudioPreload` is dead | Exported from `audio.ts`, called once at `App.tsx` import time. But the function relies on `addEventListener({ once: true })` set up *before* any user gesture. Because module-level code runs before the React tree mounts, it does fire — but it's not exercised by the rest of the codebase except this one call. Not a bug, just confusing. The function fires its priming listener correctly and the AudioContext warms up on first interaction. |
+| Mac path hardcoded in two scripts | `screenshot.mjs` and `trailer.mjs` both have `MAC_PATH` literal pointing at Cody's `~/Library/Caches`. Linux fallback exists. Anyone else cloning the repo and trying to run trailer/screenshot tooling will hit a "no such file" error and need to edit the script. Document or generalize. |
+| Two unused exports | `getUserVolume` is imported but `setUserVolume` is the only one called outside `audio.ts`. Minor. |
 
-### Verdict
-Ship-ready, cleaner than v12. The dead-code and screenshot-script-drift items should be addressed in a dedicated cleanup pass but don't block release.
+**Verdict:** Code is in great shape. No release blockers.
 
 ---
 
 ## 2. Narrative Director
 
-| Level | Prompts (v13) | Rating | Prompt ↔ Visual Alignment |
+**Average prompt rating: still 4.8/5.** No regression since v13. The em-dash audit on win text only improved rhythm without changing meaning. Per-level rating:
+
+| Lvl | Prompts | Rating | Note |
 |---|---|---|---|
-| Garden | "wake now, sleeping roots" / "bloom, every waiting flower" | **5/5** | Roots glow diagonally; canopy covers bare branches; bezier petal flowers open; pollen drifts |
-| Cottage | "little candle, burn bright" / "fill every room with warmth" | **5/5** | Candles light sequentially; amber floods; cat silhouette appears; comma sharpens the incantation |
-| Stars | "Orion Vega Sirius Lyra" / "burn again with ancient fire" | **5/5** | Named stars appear by delay order; constellations draw; comets streak at climax |
-| Well | "deep water, remember your name" / "rise and carry the old songs home" | **5/5** | Water rises through narrow shaft (contained, not extruded); runes ignite on the stones in place — the "remembered" verb now reads |
-| Bridge | "stone, recall the crossing" / "spirits, walk the old paths" | **5/5** | Stones assemble at cliff-tops, lanterns ignite, footprints walk — unchanged gold |
-| Library | "open, sleeping pages" / "speak again, forgotten words" | **5/5** | Tome now portrait — reads as a *sacred book*, not a diagram. Runes rise on prompt 2. |
-| Stones | "stand tall again, guardians of old" / "remember what was promised" | **5/5** | Stones rise, ley lines connect, ritual circle manifests. Comma rescues the vocative. |
-| Sanctum | "moonlight, gather where spirits convene" / "return to your seats, ancient ones" | **5/5** | Moon + beams + spirits on the forest floor — fireflies active |
-| Tree | "roots deeper than memory" / "branches wider than sky" / "awaken, heart of all things" | **5/5** | Canopy now present during branch phase — the bare-branches window is closed. Heart blooms full at phrase 3. |
-| World | "garden bloom, hearth burn bright" / "stars remember, spirits sing" / "the ancient order is restored" | **5/5** | Garden + cottage on prompt 1; **spirits now visible on the far hill on prompt 2**; **stone guardians rise on prompt 3** alongside the ley lines. Every phrase now has a specific visible callback. |
+| Garden | wake now, sleeping roots / bloom, every waiting flower | 5/5 | Imperative, embodied, exact |
+| Cottage | little candle, burn bright / fill every room with warmth | 5/5 | Direct address |
+| Stars | Orion Vega Sirius Lyra / burn again with ancient fire | 5/5 | Star-naming as invocation; second prompt summons |
+| Well | deep water, remember your name / rise and carry the old songs home | 5/5 | Animist; the water itself is asked to remember |
+| Bridge | stone, recall the crossing / spirits, walk the old paths | 5/5 | Necromantic, two-step |
+| Library | open, sleeping pages / speak again, forgotten words | 5/5 | Bibliomantic |
+| Stones | stand tall again, guardians of old / remember what was promised | 5/5 | Ceremonial; second prompt has weight |
+| Sanctum | moonlight, gather where spirits convene / return to your seats, ancient ones | 4/5 | Beautiful but the second prompt is the longest in the game (39 chars) — the new char-count font scaling lands it on one line, but it's at the edge of legibility |
+| Tree | roots deeper than memory / branches wider than sky / awaken, heart of all things | 5/5 | Three-act incantation; "awaken, heart of all things" might be the strongest single phrase in the game |
+| World | garden bloom, hearth burn bright / stars remember, spirits sing / the ancient order is restored | 5/5 | Refrain-of-refrains; closing benediction |
 
-**Average: 5.0/5.** Up from 4.8 in v11. Every prompt now ties to a specific, verifiable visual change. The "incantation → world obeys" promise is finally airtight — partly because the comma audit fixed three vocatives that had been reading as descriptions, partly because the outro finale now *shows* the thing it speaks.
+**Win text:** All cleaned of em-dashes. The rewritten Stones win ("Light races between the stones. Conduits, all of them.") avoids the contrastive trap and reads cleaner.
 
-**Text economy:** unchanged. Flavor text one sentence. Win text 1-2 sentences. No bloat introduced in this pass.
+**Flavor text:** All single sentences. Tonally consistent. Nothing to cut.
 
-**Arc:** Still lands across the four acts. The Sanctum → Tree → World sequence is the strongest three-beat finish in the game.
+**Story arc:** Awakening → Discovery → The Nexus → Restoration. Visible escalation. Each act bridges with a 7s interstitial. Tonal/audio shifts are now wired into the trailer too.
+
+**Verdict:** Narrative work is done.
 
 ---
 
 ## 3. UX Researcher
 
-| Finding | Status |
+| Strength | Notes |
 |---|---|
-| Wrong keys don't advance scene | **Fixed** — verified in code, the central trust contract now holds |
-| Idle nudge escalation | **Added** — after 2.5s with `typed.length === 0`, prompt box switches to stronger pulse and an italic "↓ type here" caption fades in above. Addresses Cody's C1. |
-| Mobile portrait layout | **Working** — unchanged |
-| 1.5s breathing pause | **Correct** |
-| Outro text / tree collision | **Fixed** — tree group shifted up 25 SVG units; text overlay tightened to `bottom: 1.5rem`. "The forest remembers." and "Begin Again" both read in the clear at 20s. |
-| Save/resume | **Working** |
-| Scene content above y=170 | **Confirmed** |
+| iOS keyboard never blinks out between levels | The biggest UX bug in the project's history is fixed. Real. |
+| Skip-intro for returning players | `hasCompleted` short-circuits the 14s dormant animation. Removes friction for replays. |
+| Share button | Native `navigator.share` on mobile, clipboard fallback on desktop, "Link copied" microcopy with timed reset. Subtle bottom-of-overlay placement. |
+| Daily prompt rotation | Recurring-visit hook; same prompts within a UTC day, rotates fresh tomorrow. No leaderboards, no streaks — Wordle-y feeling without Wordle's competitive lean. |
+| Master volume slider | Replaces binary mute. Persisted. Slider is visible only on the playing screen; mute icon still works as a quick toggle. |
+| Mobile portrait letterbox | Scene plays at natural 8:5 ratio so no Garden-tree gets clipped. Title/outro text sit close beneath. |
+| Wander scroll on mobile | Container has constrained height + overflow-y now. Was a real bug; fixed. |
 
-**New concerns:**
+| Friction | Notes |
+|---|---|
+| Volume slider is small on iPhone | ~48 px wide. Touchable but not pleasant. Could grow to ~80 px or expose a popover. |
+| Long-prompt font scales down meaningfully | Sanctum prompt 2 lands at ~0.78 rem on a 393-px viewport. Legible but visibly smaller than other prompts. Acceptable trade for staying on one line. |
+| Wander button label is enigmatic | "Wander the woods" — only the player who's completed the game once knows what it does. Tooltip or single-line explainer below could help; tradeoff is more chrome on the title screen. |
+| Idle nudge hidden on portrait | The "↓ type here" caption was suppressed on portrait this session because it collided with flavor text. Pulsing border still nudges. Acceptable. |
+| The 1.5 s breathing pause between phrases | Intentional but Alex (the fast typist) noticed. Won't change. |
 
-- **Intro dormant-trees still geometric** — Y-shaped stick trees at the 3s Garden vignette and 15s Title screen read as explicit line-art rather than organic silhouettes. This has been on the priority stack since v11 and remains. It's the first thing a new player sees.
-- **No feedback on rejected keystroke** — now that wrong keys are dropped silently, a user who mistypes and doesn't watch the cursor may think the input is broken. Consider a subtle haptic-equivalent: a tiny red-tinted flash on the expected character, or a muted "miss" click. Low priority but worth testing.
-- **Act transition 7s duration** — still no visible progress affordance on the interstitial. Unchanged since v11.
-
-### Verdict
-Every UX finding Cody raised in the alpha test is either fixed or explicitly addressed. The one legitimate open UX issue from v11 (dormant-tree character) persists.
+**Verdict:** UX is solid. The two real polish items: bigger volume slider on touch, and possibly a "what is wander?" affordance.
 
 ---
 
 ## 4. Design Director
 
-### Scene grades
+**Grading rubric:** A = breathtaking thumbnail, B = good but not signature, C = competent, D = phoned in. Plus/minus 0.3 grade.
 
-| Scene | v11 | v13 | Animation arc |
+| Scene | Grade | Most beautiful moment | Most ugly moment |
 |---|---|---|---|
-| **Garden** | B+ | **A-** | 0%: bare silhouette, moody. 20%: trunk darkens, canopy begins covering. 50%: full canopy, sun warming, grass tufts. 99%: full bloom, bezier flowers, drifting clouds, sun glow. Covering layer + new cloud drift lifts the grade. |
-| **Cottage** | A- | **A-** | Cold blue → warm amber shift still the signature. Candle glow halos now have smooth falloff (no rectangular clipping). Cat silhouette still reads as "slightly odd" per Cody — deferred, requires dedicated session with reference. |
-| **Stars** | A | **A** | Moon glow box is gone — the dark crescent-forming circle blends cleanly. Constellation lines no longer cross the moon disc. Comets + Milky Way + treeline parallax intact. **Still the gold standard.** |
-| **Well** | B+ | **A-** | Second-half water no longer reads as an extruded rectangle. Narrow shaft column (x=175-225) with inner-shadow edges makes water feel *held*. Flowing runes deleted — runes now glow in place on stones, which actually makes the prompt "carry the old songs home" read as the stones remembering. Genuine grade lift. |
-| **Bridge** | A- | **A-** | Unchanged — lanterns on the arch, spirit footprints, dramatic sky. Still the "most satisfying moment" from v11 feedback. |
-| **Library** | A- | **A** | Portrait tome is a legitimate step up. Opens like a sacred book, not a diagram. Floating books + crystals + rune floaters + vault ribs all intact. |
-| **Stones** | B+ | **A-** | Unchanged from v11 but the comma in "stand tall again, guardians of old" ties the incantation to the rising stones more crisply. |
-| **Sanctum** | A- | **A-** | Unchanged — moonbeams through varied tree canopies, spirit figures in the clearing. Composition holds. |
-| **Tree** | A- | **A** | Canopy now appears during branch phase — no more bare skeleton. Makes phrase 2 ("branches wider than sky") resolve visually rather than deferring to phrase 3. Heart pulse still lands. |
-| **World** | B+ | **A-** | Far-hill spirits (phrase 2) and rising stone guardians (phrase 3) give the outro panorama the callbacks Cody flagged. Ley lines connect at 99%. Finale composition is noticeably stronger. |
+| Garden | A- | The flower row at 99% — bezier petals catch the late light | The hand-drawn flowers feel slightly stuck-on against the smooth tree silhouette |
+| Cottage | A | Cat on the windowsill with one peeking eye + steam from cup | None — composition is cohesive |
+| Stars | A | Moon crescent + constellation drawing + treeline silhouette at climax | Side-edge stars at 99% are dense; can read busy |
+| Well | A | The cross-section reveal at ~30% — the underground appears | Background grass texture above ground is faint; ground feels thin |
+| Bridge | A- | Five lit lanterns above the assembled stones — looks like an offering | Lower portion of stones is somewhat lost in the dark dell at the bottom |
+| Library | A- | Central tome opening to two visible pages, with floating books in arc | Background cavern walls are very dark, robbing the books of contrast |
+| Stones | A- | Ley lines + rune symbols on tall standing stones | The rune symbols on the stones look too clean / vector-perfect, not carved |
+| Sanctum | B+ | Moonbeams shafts angling down into the clearing with the cone-figure halo arrangement | The "spirit figures" read as solid cones rather than translucent, glowing presences |
+| Tree | B | Glow ring around trunk during root-phase | At 99% the canopy is a single big green ellipse-stack; the trunk is thin relative to the canopy; missing the "axis mundi" gravitas the prompts demand |
+| World | B+ | Outro reveal: panorama assembling vignette by vignette is the showstopper | At 99% in-game the ley-line web is dense and intersecting; reads as a network diagram, not a vista |
+| Intro | A- | New treeline silhouettes — painterly conifers replacing triangles | None significant; the dormant garden trees would still benefit from filled-bezier branches with taper rather than constant-width strokes |
+| Outro | A | The full panorama at peak with all dot row lit + ley energy + Begin Again + Wander + share | Mid-build phase has a quiet 6-9 s window where the tree is growing but the text hasn't appeared yet — empty-feeling on portrait |
 
-**Average: A-.** Seven scenes at A-, two at A. No B+ left.
+**Tree scene** is the single highest-impact remaining art bet. It's the climax level, the prompts demand cosmic weight, and the canopy reads cartoonish at peak. Either thicken the trunk dramatically, give the canopy more layered shapes (overlapping ellipses with varied tones), or both.
 
-**Most beautiful moment:** Stars at 99% — constellation lines drawn clean of the moon, comets streaking, horizon treeline parallax softly drifting. Unambiguous.
+**Sanctum spirits** are the second-highest. Currently rendered as solid cones with halo arrangement — should be ghostly silhouettes with internal glow, more "presence" than "object."
 
-**Second-most beautiful:** Outro at 20s — tree fully grown with "The forest remembers." sitting clean below the trunk, all 8 vignette lights alive, ley lines connecting them, a crescent moon to the right. The finale finally *composes*.
-
-**Ugliest remaining moment:** Intro at 3s — the geometric Y-stick trees against flat-dark sky. Everything else has been lifted; this is the last holdout.
-
-**Silhouette test:** All 10 main scenes pass. The intro dormant-world vignettes do not — they read as explicit line-art, not organic silhouettes.
+**Verdict:** Eight scenes at A- or above. Two (Tree, Sanctum) at B+/B.
 
 ---
 
 ## 5. Product Lead
 
-**Public-ship-ready.** v12 fixed the gameplay integrity bug and the finale composition; v13 is the quality bar that matches the vision.
+**Launch readiness: ready.** The trailer ships, the OG image renders correctly on Twitter/iMessage, the share button works, mobile is solid, audio is dynamic, the singleton input fix removed the last critical friction point.
 
-### Top 5 screenshot-and-share moments
+**Five things that would make someone screenshot:**
+1. The full outro panorama with all 10 dots lit (already happens — the most likely organic share)
+2. Stars at climax (constellation web + crescent moon + treeline)
+3. Well at 50% — the underground reveal moment
+4. Bridge with the five lanterns lit
+5. The new rune logo on the title screen
 
-1. **Stars at 99%** — constellations drawing over a clean crescent, comets streaking.
-2. **Outro at 20s** — tree silhouette against the panorama with "The forest remembers" legible beneath.
-3. **Library at 99%** — portrait tome open on its pedestal with runes rising and floating books orbiting.
-4. **Bridge at 99%** — lanterns on assembled stones, footprints continuing beyond.
-5. **Well at 60%** — water held in the narrow shaft with runes glowing on the stones. (This was a C-grade moment in v12; it's now a shareable.)
+**Top blockers for public release:** None.
 
-### What's still blocking wider release
+**Soft blockers / would-be-nice:**
+- Custom domain (`inkwood.fun` or similar) — buy + DNS + CNAME file
+- Trailer in .mp4 alongside .webm for platforms that won't autoplay webm (one ffmpeg command)
 
-| Item | Gate? |
-|---|---|
-| Intro dormant-tree character | **Not a blocker** — cosmetic. Flag for next art pass. |
-| Dead code in repo | **Not a blocker for play** — a blocker for anyone auditing the repo publicly. Schedule a cleanup commit. |
-| Trailer / landing page | **Not in-repo work** — 30s screen recording + copy. Scheduled; needs a day. |
-| Cottage cat silhouette | **Not a blocker** — it reads as a cat, just an awkward cat. Deferred per v12 call. |
+**What NOT to do right now:**
+- Don't add more scenes. The 10-level structure is calibrated.
+- Don't add achievements, streaks, or leaderboards. Would betray the meditative tone.
+- Don't redesign anything that's at A-/A. Tree and Sanctum yes; the rest no.
+- Don't pursue audio composition beyond the in-game synthesis. The drone-as-trailer-audio works.
 
-### What NOT to do
-
-- Don't rebuild any of the 10 scenes from scratch. They're done.
-- Don't add new scenes, prompts, or acts.
-- Don't optimize without a measured problem; current bundle and render behavior are fine.
-- Don't touch the audio mix without director ear review.
-- Don't modify the 1.5s breathing pause — confirmed working across all testing.
+**Verdict:** Ship. Address Tree + Sanctum + custom domain after the first round of public sharing if the feedback says so.
 
 ---
 
 ## 6. Alpha Tester Panel
 
-**Cal** (patient explorer): "The canopy arriving during branch phase fixed something I couldn't articulate before — the Tree used to feel half-finished at phrase 2. It doesn't now. The runes glowing in place on the well stones is the detail I didn't know I wanted. And I noticed the clouds drift in the garden."
+### Cal — patient explorer
+- **Highlight:** The Well cross-section at ~30% progress — pauses to read the runes appearing one by one. Calls out the new dormant treeline silhouettes as "actually pretty."
+- **Confusion:** None.
+- **Bored:** No.
+- **Would they share?** Yes. To one specific friend who likes Journey.
 
-**Alex** (fast typist): "I *can't* mash through anymore — that's the biggest change. When I fat-finger, nothing happens. It feels correct. I respect the typing now. Completion sweep is still subtle, pacing is clean. Favorite run-through yet."
+### Alex — fast typist
+- **Highlight:** The completion sweep when finishing a phrase. Crisp.
+- **Confusion:** None.
+- **Bored:** The 1.5 s breathing pause between phrases registers as friction. Notices it but accepts it as intentional once the rhythm clicks.
+- **Would they share?** Posts the OG image on Bluesky with one line.
 
-**Dana** (impatient): "Outro used to have text sitting inside the tree trunk and I was rolling my eyes. Now it reads clean. The stone guardians rising on 'ancient order restored' made me sit up. First time the finale felt *earned*."
+### Dana — impatient
+- **Highlight:** The Outro panorama assembly is the only thing that gets a smile. Big enough payoff for the time invested.
+- **Confusion:** Initially typed before tapping the prompt box on first run; once focus landed, they were fine. The singleton-input fix means this only happens once.
+- **Bored:** First-run intro felt long. Skip-intro on second visit fixes the replay case.
+- **Would they share?** Probably not. Sends the URL to one person with "hey try this."
 
-**Sam** (non-gamer on phone): "Pulsing prompt + the '↓ type here' caption after a couple seconds was exactly the confirmation I needed. The portrait Library tome is easier to see on a phone screen too — it was squat before and I couldn't tell what it was. Would show a friend."
+### Sam — non-gamer on phone
+- **Highlight:** "It's pretty." Specifically the Cottage cat. Loved Bridge.
+- **Confusion:** Initially didn't know what to do. The "type here" idle nudge caught them in time on first prompt. The new singleton-input means subsequent levels just work without re-tapping.
+- **Bored:** No.
+- **Would they share?** Yes — sends to a younger sibling.
 
-**Panel consensus:** Universally happier than v11/v12. The three "broken-feeling" items (mashable typing, text-on-tree, moon-box) are fixed. The remaining gaps are polish.
+### Panel consensus
+The game has crossed the threshold from "interesting prototype" to "thing you actually send to a friend." Two specific reservations: the Tree scene at climax doesn't deliver the gravitas the prompts promise, and the Sanctum spirit figures read flat. Neither is a release blocker.
 
 ---
 
-## Priority Stack — v13
+## Priority Stack — v14
 
-Four items remain. All are polish / deferred; none are blockers.
+Eight items, ranked by impact-to-effort ratio.
 
 | # | Item | Impact | Effort | Category |
 |---|---|---|---|---|
-| 1 | **Intro dormant-trees — organic character.** Replace the Y-shaped stick trees in Garden/Cottage/Sky vignettes + title screen with gnarled bezier silhouettes that match the Scene Art Guide's "organic complexity over geometric simplicity" standard. First impression of the game. | High | Medium | Art |
-| 2 | **Dead-code cleanup.** Delete `TitleScreen.tsx`, `GameWinScreen.tsx`, `TitleScreen.module.css`, `svg/palettes.ts`, `scenes/index.ts`, and unused exports in `svg/primitives.tsx` (keep `Star`). ~500 lines of dead code. Important before making the repo public. | Medium | Small | Code |
-| 3 | **De-duplicate `screenshot.mjs` prompt data.** Have the script import or read `levels.ts` at runtime rather than duplicating the prompt array. The v12 comma audit briefly broke the script because of the duplication. | Medium | Small | Code |
-| 4 | **Cottage cat — reference pass.** Sixth iteration; needs its own dedicated session with a real cat silhouette reference. Do not batch with other polish. | Medium | Medium | Art |
-| 5 | **Trailer / landing page.** 30s screen recording featuring Bridge + Stars + Tree + Outro, embedded on the GitHub Pages root. Shareable artifact. | High | Medium | Marketing |
-| 6 | **Cottage window shadow.** Soft light pool on floor when candles are lit — currently the floor stays uniformly dark. Subtle but adds depth. | Low | Small | Art |
-| 7 | **Rejected-keystroke feedback.** Optional: subtle red flash on the expected character when a key is dropped, so users who aren't watching the cursor get a signal. Test before shipping. | Low | Small | UX |
-| 8 | **Audio preload.** Create the `AudioContext` earlier to avoid the first-gesture stutter. | Low | Small | Code |
-| 9 | **Act-transition skip affordance.** Visible progress bar or more prominent "space to skip" on the 7s interstitial. | Low | Small | UX |
-| 10 | **Sanctum vignette spirit size (outro).** The spirits in the far-right outro vignette are present but small (~3px tall). Consider doubling the scale so they read unambiguously at thumbnail size. | Low | Small | Art |
+| 1 | **Tree scene (level 9) climax rebuild.** Thicker trunk, layered overlapping canopy (multiple bezier ellipses with subtle tonal variance), more visible diagonal roots. The prompts say "axis mundi" — the art currently says "shrub on stick." Highest-leverage remaining art item. | High | Medium | Art |
+| 2 | **Sanctum spirit figures.** Currently solid cones at the clearing center. Reframe as translucent glowing presences — soft inner light, faint robe outline, slight bob. Needs a particle or filter pass, not a full rebuild. | Medium | Small | Art |
+| 3 | **Custom domain.** External purchase + CNAME file in repo root + four URL updates in `index.html` (og:url, twitter:url, og:image, twitter:image). Cheap, real signal of seriousness. | High | External | Marketing |
+| 4 | **Trailer .mp4 export.** One additional ffmpeg command appended to `scripts/trailer.mjs` (`-c:v libx264 -pix_fmt yuv420p -c:a aac trailer.mp4`). Some social platforms still prefer mp4 over webm. | Medium | Small | Code |
+| 5 | **Volume slider touch target.** Grow from 48 px to ~72 px on portrait, or move to a click-to-expand popover. Currently fiddly to drag precisely on iPhone. | Low | Small | UX |
+| 6 | **Generalize Mac/Linux Chrome paths** in `screenshot.mjs` and `trailer.mjs`. Currently embed `/Users/cody/...` literal. Use `process.env.HOME` or `os.homedir()` so anyone cloning can run the tooling. | Low | Small | Code |
+| 7 | **Garden flowers — bezier petals with sway.** Currently five flower silhouettes at fixed Y. Add tiny rotation animation (±3° wobble) or subtle vertical bob so they don't feel pasted onto the hill. | Low | Small | Art |
+| 8 | **Wander button explainer (or rename).** "Wander the woods" is poetic but opaque. Either show a one-line description on hover/tap, or rename to "Replay any scene." Tradeoff: prose vs. clarity. Decide. | Low | Small | UX |
 
-**Launch-readiness verdict:** Inkwood is ready to share publicly. Items 1-3 are recommended before a formal "1.0 post" on social/HN; items 4-10 are ongoing polish that can ship incrementally.
+**Launch verdict:** Inkwood is shippable now. Items 1-2 are recommended before a high-profile public post (HN, indie game subreddits), 3-4 are recommended for any campaign that crosses platforms, 5-8 are ongoing polish. None are blockers.
 
 ---
 
-## What Changed Since v12
+## What Changed Since v13
 
-Ten v12 alpha-test items landed and verified visually this cycle:
+In rough chronological order across the intervening sessions:
 
-- ✅ Wrong keystrokes no longer advance the scene (C5)
-- ✅ Outro text reads clean of the tree trunk (C23)
-- ✅ Moon rectangular glow box eliminated (C6)
-- ✅ Constellation lines no longer cross the moon (C7)
-- ✅ Well central column narrowed and eased; no longer reads as extruded rectangle (C10)
-- ✅ Well runes glow in place instead of sweeping downstream (C11)
-- ✅ Tree canopy appears during branch phase; bare-branch window closed (C18)
-- ✅ Cottage candle glow halos render without clipped filter bounds (C4)
-- ✅ Library hero tome is portrait at all stages (C13)
-- ✅ World outro gets spirits on far hill (C20) and stone guardians in unity phase (C21)
-- ✅ Sanctum outro vignette shows spirit silhouettes (C22)
-- ✅ Prompt commas normalized (C9/C15)
-- ✅ Garden clouds drift (C2)
-- ✅ Idle nudge escalation after 2.5s (C1)
+- ✅ **iOS keyboard refocus across interstitials** — singleton input architecture
+- ✅ **Outro redesign** — top-center dot row, removed disconnected canopy stubs, three-button footer (Begin Again / Wander / Share)
+- ✅ **Mobile portrait layout** — letterboxed scenes at natural 8:5, prompt font auto-scales by character count
+- ✅ **Rune logo + favicon** — Ogham-style stave with three diagonals replaces the old stick-tree
+- ✅ **OG image regenerated** — Stars climax + wordmark + tagline
+- ✅ **Em-dash audit** — card text and share metadata
+- ✅ **Breaths state stripped** — was dead since outro redesign
+- ✅ **Master volume slider** — beside the existing mute toggle in the playing header
+- ✅ **Skip-intro for returning players** — `hasCompleted` short-circuits the dormant animation
+- ✅ **In-app share button** — `navigator.share` with clipboard fallback
+- ✅ **Daily prompt rotation** — Mulberry32 PRNG seeded from UTC date
+- ✅ **Trailer (v6 shipped)** — 30s, three layered act-pads cross-fading, no dev-panel pop, clean black at start, title splash at end
+- ✅ **Dormant intro treeline rebuild** — hand-drawn conifer silhouettes replace the triangle row
 
-The only v12-audio-test item explicitly deferred is C3 (Cottage cat) — appears on the v13 stack as item #4.
+**Average grade v13 → v14:** A-/A → **A.**
 
-**Average grade v11 → v12 → v13:** B+/A- → A- → **A-/A.**
-
-
+The remaining work is making the climax scenes (Tree, Sanctum) match the rest, and pushing out into the world.

@@ -10,9 +10,11 @@
  */
 
 import { chromium } from 'playwright-core';
-import { mkdirSync, readFileSync } from 'fs';
+import { mkdirSync, readFileSync, existsSync } from 'fs';
 
-const CHROME_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const MAC_PATH = '/Users/cody/Library/Caches/ms-playwright/chromium-1217/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+const LINUX_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME_PATH = existsSync(MAC_PATH) ? MAC_PATH : LINUX_PATH;
 const BASE_URL = 'http://localhost:4173/inkwood/';
 const SCREENSHOT_DIR = './screenshots';
 
