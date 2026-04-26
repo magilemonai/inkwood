@@ -4,7 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/inkwood/',
+  // Custom domain (inkwood.codywymore.com) serves from root, so no
+  // /inkwood/ prefix on built asset paths.
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -18,8 +20,8 @@ export default defineConfig({
         background_color: '#060806',
         display: 'standalone',
         orientation: 'any',
-        scope: '/inkwood/',
-        start_url: '/inkwood/',
+        scope: '/',
+        start_url: '/',
         icons: [
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },

@@ -6,7 +6,7 @@
  * most platforms).
  */
 
-const SHARE_URL = "https://magilemonai.github.io/inkwood/";
+const SHARE_URL = "https://inkwood.codywymore.com/";
 const SHARE_TITLE = "Inkwood";
 const SHARE_TEXT = "Inkwood - a cozy typing game where every phrase is a spell.";
 

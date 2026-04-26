@@ -18,7 +18,7 @@ const MAC_PATH = '/Users/cody/Library/Caches/ms-playwright/chromium-1217/chrome-
 const LINUX_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const CHROME_PATH = existsSync(MAC_PATH) ? MAC_PATH : LINUX_PATH;
 
-const BASE_URL = 'http://localhost:5173/inkwood/?dev&canonical';
+const BASE_URL = 'http://localhost:5173/?dev&canonical';
 const OUTPUT = 'public/og-image.png';
 
 // Stars (level 2) canonical prompts: "Orion Vega Sirius Lyra" + "burn again with ancient fire".

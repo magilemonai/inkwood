@@ -60,7 +60,7 @@ function findChrome() {
 }
 
 const CHROME_PATH = findChrome();
-const BASE_URL = 'http://localhost:4173/inkwood/';
+const BASE_URL = 'http://localhost:4173/';
 const OUTPUT_DIR = './trailer-output';
 const VIDEO_SIZE = { width: 1280, height: 720 };
 

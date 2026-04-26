@@ -40,7 +40,7 @@ function findChrome() {
 }
 
 const CHROME_PATH = findChrome();
-const BASE_URL = 'http://localhost:4173/inkwood/';
+const BASE_URL = 'http://localhost:4173/';
 const SCREENSHOT_DIR = './screenshots';
 
 /**

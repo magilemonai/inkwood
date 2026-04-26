@@ -4,7 +4,7 @@ import { mkdirSync, existsSync } from 'fs';
 const MAC_PATH = '/Users/cody/Library/Caches/ms-playwright/chromium-1217/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
 const LINUX_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const CHROME = existsSync(MAC_PATH) ? MAC_PATH : LINUX_PATH;
-const URL = 'http://localhost:4173/inkwood/';
+const URL = 'http://localhost:4173/';
 
 mkdirSync('./screenshots', { recursive: true });
 
