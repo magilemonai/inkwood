@@ -101,6 +101,7 @@
   .sceneWrap {
     position: relative;
     width: 100%;
+    height: auto;
     aspect-ratio: 8 / 5;
     max-height: 50vh;
     max-height: 50dvh;
