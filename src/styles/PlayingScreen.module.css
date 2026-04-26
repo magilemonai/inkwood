@@ -42,6 +42,35 @@
 .headerLogo {
   font-size: 0.82rem;
   letter-spacing: 0.12em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.muteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 0.7em;
+  font-family: monospace;
+  padding: 0;
+  margin-left: 0.4em;
+}
+.muteBtn:hover { opacity: 0.8; }
+
+.volumeSlider {
+  width: 56px;
+  height: 14px;
+  cursor: pointer;
+  opacity: 0.55;
+}
+.volumeSlider:hover { opacity: 0.85; }
+
+@media (max-width: 640px) {
+  .volumeSlider {
+    width: 48px;
+  }
 }
 
 .headerTitle {

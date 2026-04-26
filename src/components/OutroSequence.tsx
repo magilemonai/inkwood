@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import { startAmbient } from "../audio";
+import { shareInkwood } from "../share";
 import s from "../styles/Outro.module.css";
 
 /**
@@ -44,6 +45,7 @@ export default function OutroSequence() {
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
   const showTextRef = useRef(false);
+  const [shareLabel, setShareLabel] = useState("Share");
 
   // Keyboard: space/enter to restart when text is showing
   useEffect(() => {
@@ -646,9 +648,23 @@ export default function OutroSequence() {
           <button
             className={`${s.wanderBtn} ${s.wanderBtnFade}`}
             onClick={enterWander}
-            aria-label="Wander the woods — replay any single scene"
+            aria-label="Wander the woods - replay any single scene"
           >
             Wander the woods
+          </button>
+
+          <button
+            className={`${s.shareLink} ${s.shareLinkFade}`}
+            onClick={async () => {
+              const result = await shareInkwood();
+              if (result === "copied" || result === "fallback") {
+                setShareLabel("Link copied");
+                setTimeout(() => setShareLabel("Share"), 1800);
+              }
+            }}
+            aria-label="Share Inkwood"
+          >
+            {shareLabel}
           </button>
         </div>
       )}

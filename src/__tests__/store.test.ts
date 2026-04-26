@@ -12,7 +12,6 @@ function resetStore(lvl: number = 0, promptIdx: number = 0) {
     typed: "",
     completing: false,
     activePrompts: samplePrompts(lvl, false),
-    breaths: 0,
   });
 }
 
@@ -97,13 +96,6 @@ describe("advancePrompt", () => {
     useGameStore.getState().advancePrompt();
     expect(useGameStore.getState().promptIdx).toBe(1);
     expect(useGameStore.getState().typed).toBe("");
-  });
-
-  it("increments breath count each phrase", () => {
-    const before = useGameStore.getState().breaths;
-    useGameStore.setState({ typed: useGameStore.getState().activePrompts[0] });
-    useGameStore.getState().advancePrompt();
-    expect(useGameStore.getState().breaths).toBe(before + 1);
   });
 
   it("transitions to levelWin between levels inside an act", () => {

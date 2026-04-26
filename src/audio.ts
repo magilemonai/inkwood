@@ -19,6 +19,7 @@
 const MASTER_VOLUME = 0.15;
 
 const MUTE_KEY = "inkwood-mute";
+const VOLUME_KEY = "inkwood-volume";
 
 // ── Act + scene ambient definitions ──────────────────────
 
@@ -87,6 +88,9 @@ class AudioEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private muted = false;
+  /** User-adjustable scalar 0..1 multiplied into the hard MASTER_VOLUME
+   *  cap. Persisted to localStorage so volume choice survives reloads. */
+  private userVolume = 1;
   private current: AmbientVoice | null = null;
   private intro: IntroVoice | null = null;
   private lastTypeTime = 0;
@@ -94,13 +98,24 @@ class AudioEngine {
 
   constructor() {
     try { this.muted = localStorage.getItem(MUTE_KEY) === "1"; } catch { /* ignore */ }
+    try {
+      const raw = localStorage.getItem(VOLUME_KEY);
+      if (raw !== null) {
+        const v = parseFloat(raw);
+        if (Number.isFinite(v) && v >= 0 && v <= 1) this.userVolume = v;
+      }
+    } catch { /* ignore */ }
+  }
+
+  private effectiveGain(): number {
+    return this.muted ? 0 : MASTER_VOLUME * this.userVolume;
   }
 
   private ensureCtx(): AudioContext {
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = this.muted ? 0 : MASTER_VOLUME;
+      this.masterGain.gain.value = this.effectiveGain();
       this.masterGain.connect(this.ctx.destination);
     }
     if (this.ctx.state === "suspended") {
@@ -400,13 +415,27 @@ class AudioEngine {
     this.muted = !this.muted;
     try { localStorage.setItem(MUTE_KEY, this.muted ? "1" : "0"); } catch { /* */ }
     if (this.masterGain) {
-      this.masterGain.gain.value = this.muted ? 0 : MASTER_VOLUME;
+      this.masterGain.gain.value = this.effectiveGain();
     }
     return this.muted;
   }
 
   isMuted(): boolean {
     return this.muted;
+  }
+
+  /** Set the user volume scalar (0..1). Persists across sessions. */
+  setUserVolume(v: number) {
+    if (!Number.isFinite(v)) return;
+    this.userVolume = Math.max(0, Math.min(1, v));
+    try { localStorage.setItem(VOLUME_KEY, String(this.userVolume)); } catch { /* */ }
+    if (this.masterGain) {
+      this.masterGain.gain.value = this.effectiveGain();
+    }
+  }
+
+  getUserVolume(): number {
+    return this.userVolume;
   }
 
   dispose() {
@@ -433,4 +462,6 @@ export function playCompletionSweep() { engine.playCompletionSweep(); }
 export function playTypeClick() { engine.playTypeClick(); }
 export function toggleMute() { return engine.toggleMute(); }
 export function isMuted() { return engine.isMuted(); }
+export function setUserVolume(v: number) { engine.setUserVolume(v); }
+export function getUserVolume() { return engine.getUserVolume(); }
 export function disposeAudio() { engine.dispose(); }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { startIntroDrone, stopIntroDrone } from "../audio";
 import { useInput } from "../contexts/InputContext";
+import { shareInkwood } from "../share";
 import s from "../styles/Intro.module.css";
 
 /**
@@ -182,7 +183,11 @@ export default function IntroSequence() {
   const hasCompleted = useGameStore((g) => g.hasCompleted);
   const { focusInput } = useInput();
   const [time, setTime] = useState(0);
-  const [showTitle, setShowTitle] = useState(false);
+  // Returning players (hasCompleted) skip the 14-second dormant-world
+  // animation and land directly on the title state. They've already
+  // seen the slow reveal — getting back to "Begin" should be instant.
+  const [showTitle, setShowTitle] = useState(hasCompleted);
+  const [shareLabel, setShareLabel] = useState("Share");
 
   // Begin: focus the singleton input synchronously inside the click
   // handler so iOS opens its keyboard during this gesture. The input
@@ -317,11 +322,26 @@ export default function IntroSequence() {
                 e.stopPropagation();
                 enterWander();
               }}
-              aria-label="Wander the woods — replay any single scene"
+              aria-label="Wander the woods - replay any single scene"
             >
               Wander the woods
             </button>
           )}
+
+          <button
+            className={s.shareLink}
+            onClick={async (e) => {
+              e.stopPropagation();
+              const result = await shareInkwood();
+              if (result === "copied" || result === "fallback") {
+                setShareLabel("Link copied");
+                setTimeout(() => setShareLabel("Share"), 1800);
+              }
+            }}
+            aria-label="Share Inkwood"
+          >
+            {shareLabel}
+          </button>
         </div>
       )}
 

@@ -4,7 +4,7 @@ import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
-import { startAmbient, playCompletionSweep, toggleMute, isMuted } from "../audio";
+import { startAmbient, playCompletionSweep, toggleMute, isMuted, getUserVolume, setUserVolume } from "../audio";
 import { useInput } from "../contexts/InputContext";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
@@ -28,6 +28,7 @@ const HeaderBar = memo(function HeaderBar() {
   const level = LEVELS[lvl];
   const accent = level.accent;
   const [audioMuted, setAudioMuted] = useState(isMuted);
+  const [volume, setVolume] = useState(getUserVolume);
 
   return (
     <div className={s.header}>
@@ -35,16 +36,30 @@ const HeaderBar = memo(function HeaderBar() {
         INKWOOD
         <button
           onClick={(e) => { e.stopPropagation(); setAudioMuted(toggleMute()); }}
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: accent, opacity: 0.4, fontSize: "0.6em", marginLeft: "0.5em",
-            fontFamily: "monospace", padding: 0,
-          }}
+          className={s.muteBtn}
+          style={{ color: accent }}
           aria-label={audioMuted ? "Unmute" : "Mute"}
           title={audioMuted ? "Unmute" : "Mute"}
         >
           {audioMuted ? "✉" : "♫"}
         </button>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={volume}
+          onChange={(e) => {
+            const v = parseFloat(e.target.value);
+            setVolume(v);
+            setUserVolume(v);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className={s.volumeSlider}
+          style={{ accentColor: accent }}
+          aria-label="Volume"
+          title="Volume"
+        />
       </span>
       <span className={s.headerTitle}>{level.title}</span>
       <span className={s.headerDots} aria-hidden="true">

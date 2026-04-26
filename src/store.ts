@@ -4,7 +4,6 @@ import type { Screen } from "./types";
 
 // ── localStorage persistence ──
 const SAVE_KEY = "inkwood-save";
-const BREATHS_KEY = "inkwood-breaths";
 const COMPLETED_KEY = "inkwood-completed";
 
 interface SaveData {
@@ -64,10 +63,6 @@ interface GameState {
   completing: boolean;
   /** Phrases chosen from each slot's pool at level entry. */
   activePrompts: string[];
-  /** Total phrases completed across the current playthrough. Persisted
-   *  in localStorage and shown on the outro as "You took N slow breaths
-   *  in the forest." Reset on restart(). */
-  breaths: number;
   /** Set once the player has completed the game at least once. Unlocks
    *  Wander mode and surfaces the chapter-select affordance. Persists
    *  across sessions. */
@@ -97,22 +92,6 @@ interface GameState {
   wanderToLevel: (lvl: number) => void;
 }
 
-function loadBreaths(): number {
-  try {
-    const raw = localStorage.getItem(BREATHS_KEY);
-    const n = raw ? parseInt(raw, 10) : 0;
-    return Number.isFinite(n) && n >= 0 ? n : 0;
-  } catch { return 0; }
-}
-
-function writeBreaths(n: number) {
-  try { localStorage.setItem(BREATHS_KEY, String(n)); } catch { /* ignore */ }
-}
-
-function clearBreaths() {
-  try { localStorage.removeItem(BREATHS_KEY); } catch { /* ignore */ }
-}
-
 function loadCompleted(): boolean {
   try { return localStorage.getItem(COMPLETED_KEY) === "1"; } catch { return false; }
 }
@@ -128,7 +107,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   typed: "",
   completing: false,
   activePrompts: initialActivePrompts,
-  breaths: loadBreaths(),
   hasCompleted: loadCompleted(),
   isWandering: false,
 
@@ -176,11 +154,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   startCompletion: () => set({ completing: true }),
 
   advancePrompt: () => {
-    const { promptIdx, lvl, activePrompts, breaths, isWandering } = get();
+    const { promptIdx, lvl, activePrompts, isWandering } = get();
     const total = activePrompts.length;
-    const nextBreaths = breaths + 1;
-    writeBreaths(nextBreaths);
-    set({ breaths: nextBreaths });
 
     if (promptIdx + 1 < total) {
       const nextIdx = promptIdx + 1;
@@ -220,7 +195,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   startGame: () => {
     const fresh = samplePrompts(0, shouldShufflePrompts());
-    clearBreaths();
     set({
       lvl: 0,
       promptIdx: 0,
@@ -228,7 +202,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       completing: false,
       screen: "playing",
       activePrompts: fresh,
-      breaths: 0,
       isWandering: false,
     });
     writeSave(0, 0, fresh);
@@ -237,7 +210,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   restart: () => {
     const fresh = samplePrompts(0, shouldShufflePrompts());
     clearSave();
-    clearBreaths();
     set({
       lvl: 0,
       promptIdx: 0,
@@ -245,7 +217,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       completing: false,
       screen: "intro",
       activePrompts: fresh,
-      breaths: 0,
       isWandering: false,
     });
   },

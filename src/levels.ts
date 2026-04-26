@@ -164,16 +164,41 @@ export function getActLabel(lvl: number): string {
   return `ACT ${idx + 1}`;
 }
 
+/** UTC date as YYYYMMDD integer — used as a deterministic seed so a
+ *  returning player gets the same prompt set throughout one calendar
+ *  day across reloads, and a fresh set the next day. Recurring-visit
+ *  hook for players who've already completed the canonical run. */
+function dailySeed(): number {
+  const d = new Date();
+  return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+}
+
+/** Mulberry32 PRNG — small, fast, deterministic from a seed. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), 1 | t);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /**
  * Sample a concrete prompt array for a level. When shuffle is off (or
  * the level has no pool), returns the canonical prompts array unchanged.
- * When shuffle is on, picks one phrase per slot uniformly from that
- * slot's alternatives.
+ * When shuffle is on, picks one phrase per slot from that slot's
+ * alternatives — deterministically seeded by today's UTC date so the
+ * choice is stable within a day and rotates each new day.
  */
 export function samplePrompts(lvl: number, shuffle: boolean): string[] {
   const level = LEVELS[lvl];
   if (!shuffle || !level.promptPool) return [...level.prompts];
-  return level.promptPool.map((slot) => slot[Math.floor(Math.random() * slot.length)]);
+  // Per-level seed offset (lvl * 7919, a small prime) so different
+  // levels pick different alternates on the same day.
+  const rand = mulberry32(dailySeed() + lvl * 7919);
+  return level.promptPool.map((slot) => slot[Math.floor(rand() * slot.length)]);
 }
 
 /** Respect ?canonical in the URL for deterministic screenshots, and
