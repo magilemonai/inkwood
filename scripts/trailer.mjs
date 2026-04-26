@@ -92,20 +92,38 @@ async function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** Inject a fade-to-black overlay (created once on first use). The
- *  overlay sits above everything including the dev panel, so any
- *  scene-switching work that happens while opacity = 1 is invisible. */
-async function ensureFadeOverlay(page) {
-  await page.evaluate(() => {
-    if (document.getElementById('trailer-fade')) return;
-    const el = document.createElement('div');
-    el.id = 'trailer-fade';
-    el.style.cssText = [
-      'position:fixed', 'inset:0', 'background:#000',
-      'z-index:99998', 'opacity:1', 'pointer-events:none',
-      'transition:opacity 0s linear',
-    ].join(';');
-    document.body.appendChild(el);
+/** Pre-register a black overlay so it lands as early as possible on
+ *  every navigation — before React mounts and before any dormant-world
+ *  art can render. Without this, the goto + reload window leaks the
+ *  intro animation into the start of the recording. */
+async function preInjectFade(context) {
+  await context.addInitScript(() => {
+    const inject = () => {
+      if (document.getElementById('trailer-fade')) return;
+      // Force the page background black via inline style on <html> so
+      // there's no white flash even before <body> exists.
+      document.documentElement.style.background = '#000';
+      if (!document.body) return;
+      const el = document.createElement('div');
+      el.id = 'trailer-fade';
+      el.style.cssText = [
+        'position:fixed', 'inset:0', 'background:#000',
+        'z-index:99998', 'opacity:1', 'pointer-events:none',
+        'transition:opacity 0s linear',
+      ].join(';');
+      document.body.appendChild(el);
+    };
+    inject();
+    document.addEventListener('DOMContentLoaded', inject);
+    // <body> can appear after the script runs — observe and inject
+    // the moment it exists.
+    const obs = new MutationObserver(() => {
+      if (document.body && !document.getElementById('trailer-fade')) {
+        inject();
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.documentElement, { childList: true, subtree: true });
   });
 }
 
@@ -226,15 +244,15 @@ async function main() {
     recordVideo: { dir: OUTPUT_DIR, size: VIDEO_SIZE },
   });
 
+  // Register the black overlay so it's there from the very first
+  // frame of every page load — before React renders the intro.
+  await preInjectFade(context);
+
   const page = await context.newPage();
   await page.goto(BASE_URL + '?dev', { waitUntil: 'networkidle' });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
   await sleep(600);
-
-  // Mount the fade overlay (starts at opacity 1 — fully black) so the
-  // initial dev-panel poke is hidden behind it.
-  await ensureFadeOverlay(page);
 
   for (const shot of SHOTS) {
     console.log(`→ ${shot.name} (${SHOT_DURATION}s)`);
@@ -286,11 +304,23 @@ function muxAudio(trailerWebm) {
     resolve(OUTPUT_DIR, 'pad-act1.wav'),
     resolve(OUTPUT_DIR, 'pad-act2.wav'),
     resolve(OUTPUT_DIR, 'pad-act3.wav'),
+    resolve(OUTPUT_DIR, 'pad-act4.wav'),
   ];
   const mixWav = resolve(OUTPUT_DIR, 'pad-mix.wav');
   const finalWebm = resolve('public', 'trailer.webm');
 
-  const totalSec = SHOTS.length * SHOT_DURATION + TITLE_DURATION + 0.5;
+  // Query the actual video duration so audio matches the full recording
+  // (the script's elapsed time exceeds SHOTS*SHOT_DURATION + TITLE
+  // because of jumpToScene overhead between shots). Without this the
+  // -shortest mux step clips the title splash off the end.
+  const probe = spawnSync('ffprobe', [
+    '-i', trailerWebm,
+    '-show_entries', 'format=duration',
+    '-v', 'quiet',
+    '-of', 'csv=p=0',
+  ], { encoding: 'utf8' });
+  const videoSec = parseFloat(probe.stdout?.trim()) || (SHOTS.length * SHOT_DURATION + TITLE_DURATION);
+  const totalSec = videoSec + 0.2;
   const shotMs = SHOT_DURATION;
 
   // Per-act chord definitions, transcribed from audio.ts ACT_AMBIENTS.
@@ -312,6 +342,12 @@ function muxAudio(trailerWebm) {
       root: 146.83, ratios: [1, 1.335, 1.5, 2, 3],
       weights: [1.0, 0.55, 0.55, 0.4, 0.25],
       filter: 400, lfo: 0.08,
+    },
+    { // Act IV — Title card — G2 root, the Restoration bed.
+      // Closes the trailer warmly under the wordmark.
+      root: 98, ratios: [1, 1.25, 1.5, 2, 3],
+      weights: [1.0, 0.6, 0.5, 0.4, 0.25],
+      filter: 320, lfo: 0.05,
     },
   ];
 
@@ -347,15 +383,20 @@ function muxAudio(trailerWebm) {
   }
 
   // Place each pad at its shot's start (with a 1s pre-roll lead-in
-  // so the pad blooms before the scene visuals do).
-  // Garden pad: starts at -1s (effectively from t=0 with the lead-in
-  // already inside the pad), Well at +7s, Stones at +15s. Pads run
-  // ~12s each so they overlap by ~4s with the next.
+  // so the pad blooms before the scene visuals do). Pads run ~12s
+  // and overlap by ~4s, so they cross-fade through each scene. The
+  // Act IV pad covers the title card.
   console.log('→ Mixing pads with timed cross-fades…');
-  const offsets = [0, (shotMs - 1) * 1000, (2 * shotMs - 1) * 1000];
+  const offsets = [
+    0,
+    (shotMs - 1) * 1000,
+    (2 * shotMs - 1) * 1000,
+    (3 * shotMs - 1) * 1000,
+  ];
+  const padIns = padWavs.map((_, i) => `[d${i}]`).join('');
   const mixFilter = [
     ...padWavs.map((_, i) => `[${i}]adelay=${offsets[i]}|${offsets[i]}[d${i}]`),
-    `[d0][d1][d2]amix=inputs=3:duration=longest:weights=1 1 1[mixed]`,
+    `${padIns}amix=inputs=${padWavs.length}:duration=longest:weights=1 1 1 1[mixed]`,
     `[mixed]volume=0.85,afade=t=out:st=${(totalSec - 2).toFixed(2)}:d=2[out]`,
   ].join(';');
   const padInputs = padWavs.map((p) => ['-i', p]).flat();
