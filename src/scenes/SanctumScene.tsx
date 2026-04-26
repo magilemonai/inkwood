@@ -91,77 +91,83 @@ function ForestTree({
   );
 }
 
-/** Spirit figure - translucent humanoid bezier shape */
+/** Spirit figure — translucent teardrop silhouette with a soft inner
+ *  glow and outer halo. Reads as presence, not object: mostly air,
+ *  with a bright pearl of light at heart-height. */
 function SpiritFigure({
   x,
   y,
   height,
   opacity,
   color,
+  index,
 }: {
   x: number;
   y: number;
   height: number;
   opacity: number;
   color: string;
+  index: number;
 }) {
   const topY = y - height;
-  const headR = height * 0.1;
-  const bodyW = height * 0.18;
+  const heartY = topY + height * 0.45; // bright core sits at upper-mid
+  const bodyW = height * 0.28;
+  const haloR = height * 0.65;
+  // Each spirit gets its own gradient ID so per-figure colors don't
+  // collide in the SVG defs namespace.
+  const coreId = `spiritCore-${index}`;
+  const haloId = `spiritHalo-${index}`;
   return (
     <g opacity={opacity}>
-      {/* Glow behind spirit */}
-      <ellipse
-        cx={x}
-        cy={y - height * 0.4}
-        rx={bodyW * 2}
-        ry={height * 0.55}
-        fill={color}
-        opacity={0.08}
-      />
-      {/* Flowing robe body - wider at base, narrow at shoulders */}
+      <defs>
+        {/* Inner-light radial — bright at the heart, fading to nothing */}
+        <radialGradient id={coreId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff8e0" stopOpacity={0.7} />
+          <stop offset="35%" stopColor={color} stopOpacity={0.45} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </radialGradient>
+        {/* Outer halo — soft, broad, barely there */}
+        <radialGradient id={haloId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={color} stopOpacity={0.18} />
+          <stop offset="60%" stopColor={color} stopOpacity={0.06} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </radialGradient>
+      </defs>
+
+      {/* Outer halo — establishes the spirit's footprint without
+           defining a hard edge */}
+      <ellipse cx={x} cy={heartY} rx={haloR * 0.85} ry={haloR}
+        fill={`url(#${haloId})`} />
+
+      {/* Teardrop silhouette — narrow rounded crown, widest at heart,
+           tapering to a soft point at the floor. Asymmetric controls
+           keep it from reading as a perfect oval. */}
       <path
-        d={`M${x - bodyW * 1.3} ${y}
-            C${x - bodyW * 1.1} ${y - height * 0.25},
-             ${x - bodyW * 0.5} ${y - height * 0.55},
-             ${x - bodyW * 0.3} ${topY + headR * 2.5}
-            L${x + bodyW * 0.3} ${topY + headR * 2.5}
-            C${x + bodyW * 0.5} ${y - height * 0.55},
-             ${x + bodyW * 1.1} ${y - height * 0.25},
-             ${x + bodyW * 1.3} ${y}
+        d={`M${x} ${topY}
+            C${x - bodyW * 0.5} ${topY + height * 0.08},
+             ${x - bodyW * 1.0} ${topY + height * 0.32},
+             ${x - bodyW * 0.95} ${topY + height * 0.55}
+            C${x - bodyW * 0.85} ${topY + height * 0.78},
+             ${x - bodyW * 0.45} ${topY + height * 0.94},
+             ${x} ${y}
+            C${x + bodyW * 0.45} ${topY + height * 0.94},
+             ${x + bodyW * 0.85} ${topY + height * 0.78},
+             ${x + bodyW * 0.95} ${topY + height * 0.55}
+            C${x + bodyW * 1.0} ${topY + height * 0.32},
+             ${x + bodyW * 0.5} ${topY + height * 0.08},
+             ${x} ${topY}
             Z`}
         fill={color}
-        opacity={0.35}
+        opacity={0.16}
       />
-      {/* Inner light core */}
-      <path
-        d={`M${x - bodyW * 0.6} ${y}
-            C${x - bodyW * 0.5} ${y - height * 0.3},
-             ${x - bodyW * 0.2} ${y - height * 0.55},
-             ${x} ${topY + headR * 3}
-            C${x + bodyW * 0.2} ${y - height * 0.55},
-             ${x + bodyW * 0.5} ${y - height * 0.3},
-             ${x + bodyW * 0.6} ${y}
-            Z`}
-        fill={color}
-        opacity={0.2}
-      />
-      {/* Head */}
+
+      {/* Inner glow — radial pearl at heart height, brightest center */}
       <ellipse
         cx={x}
-        cy={topY + headR}
-        rx={headR}
-        ry={headR * 1.15}
-        fill={color}
-        opacity={0.4}
-      />
-      {/* Head bright center */}
-      <circle
-        cx={x}
-        cy={topY + headR}
-        r={headR * 0.4}
-        fill="white"
-        opacity={0.2}
+        cy={heartY}
+        rx={bodyW * 0.7}
+        ry={height * 0.32}
+        fill={`url(#${coreId})`}
       />
     </g>
   );
@@ -478,6 +484,7 @@ function SanctumScene({ progress: p }: SceneProps) {
         return sp > 0 ? (
           <SpiritFigure
             key={i}
+            index={i}
             x={s.x}
             y={s.y}
             height={s.h}

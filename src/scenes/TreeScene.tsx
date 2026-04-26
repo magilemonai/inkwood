@@ -25,35 +25,44 @@ import ParticleField from "../components/ParticleField";
 // ─── HAND-CRAFTED PATHS ────────────────────────────────────
 
 /** Massive trunk — gnarled, ancient, the spine of the world.
- *  Center at x=200, base at y=155, crown at y=55.
- *  Wide at base (~50px), narrowing at crown (~16px). */
+ *  Center at x=200, base at y=172, crown at y=56.
+ *  Substantially wider than the previous trunk (84 at base, 32 at
+ *  crown) so the canopy reads as held by a body rather than a stick.
+ *  The bottom extends to y=172 so the trunk visibly roots into the
+ *  ground rather than ending in mid-air. */
 const TRUNK = `
-  M170 160
-  C168 154, 166 148, 167 142
-  C168 136, 164 132, 166 126
-  C167 120, 164 116, 166 110
-  C168 104, 165 98, 168 92
-  C170 86, 173 80, 176 74
-  C179 68, 183 62, 188 58
-  L212 58
-  C217 62, 221 68, 224 74
-  C227 80, 230 86, 232 92
-  C235 98, 232 104, 234 110
-  C236 116, 233 120, 234 126
-  C236 132, 232 136, 233 142
-  C234 148, 232 154, 230 160
+  M158 172
+  C156 162, 158 154, 156 144
+  C155 134, 158 124, 156 114
+  C155 104, 158 94, 161 84
+  C164 74, 168 66, 173 60
+  C177 58, 181 56, 184 56
+  L216 56
+  C219 56, 223 58, 227 60
+  C232 66, 236 74, 239 84
+  C242 94, 245 104, 244 114
+  C242 124, 245 134, 244 144
+  C242 154, 244 162, 242 172
   Z`;
 
-/** Bark detail lines — carved into the trunk surface */
+/** Bark detail lines — carved into the trunk surface. Now denser and
+ *  longer so the wider trunk reads as textured wood, not a flat shape. */
 const BARK_LINES = [
-  "M182 145 C184 138, 180 130, 183 122",
-  "M218 140 C216 132, 220 124, 217 116",
-  "M190 100 C192 92, 188 84, 191 76",
-  "M210 105 C208 96, 212 88, 209 80",
-  "M195 130 C197 124, 194 118, 196 112",
-  // Knot/burl details
-  "M185 118 C183 116, 182 114, 184 112 C186 110, 188 112, 186 114",
-  "M216 132 C218 130, 220 128, 218 126 C216 124, 214 126, 216 128",
+  // Long vertical grooves
+  "M178 168 C181 152, 175 138, 180 124 C184 110, 178 96, 182 82",
+  "M222 168 C220 154, 225 140, 220 126 C217 112, 222 98, 219 84",
+  "M192 160 C194 146, 190 132, 195 118 C198 104, 193 90, 197 78",
+  "M208 160 C206 146, 210 132, 205 118 C202 104, 207 90, 203 78",
+  // Mid grooves
+  "M185 148 C187 138, 184 128, 187 118",
+  "M215 148 C213 138, 216 128, 213 118",
+  "M195 138 C197 130, 194 122, 196 114",
+  "M205 138 C203 130, 206 122, 204 114",
+  // Knot / burl details
+  "M173 122 C170 119, 168 116, 172 113 C176 116, 175 119, 173 122",
+  "M227 130 C230 127, 232 124, 228 121 C224 124, 225 127, 227 130",
+  "M183 92 C180 90, 179 88, 182 86 C185 88, 184 90, 183 92",
+  "M218 104 C221 102, 222 100, 219 98 C216 100, 217 102, 218 104",
 ];
 
 /** 8 major roots — thick brown paths spreading DIAGONALLY outward.
@@ -293,6 +302,27 @@ function TreeScene({ progress: p }: SceneProps) {
           <path d={CANOPY}
             fill={`hsl(${120 + p * 15}, ${20 + heartPhase * 30}%, ${10 + heartPhase * 16}%)`}
             opacity={heartPhase * 0.88} />
+          {/* Canopy depth puffs — overlapping ellipses on top of the
+               flat fill so the canopy reads as layered foliage rather
+               than one big shape. Lighter tones in upper-front clusters,
+               darker tones in lower/back to create the impression of
+               leaf masses catching different amounts of light. */}
+          {[
+            { cx: 80,  cy: 28, rx: 42, ry: 16, hue: 122, l: 14 },
+            { cx: 320, cy: 28, rx: 42, ry: 16, hue: 122, l: 14 },
+            { cx: 200, cy: 18, rx: 78, ry: 18, hue: 124, l: 18 },
+            { cx: 140, cy: 38, rx: 48, ry: 14, hue: 120, l: 12 },
+            { cx: 260, cy: 38, rx: 48, ry: 14, hue: 120, l: 12 },
+            { cx: 200, cy: 50, rx: 60, ry: 12, hue: 118, l: 10 },
+          ].map((puff, i) => (
+            <ellipse
+              key={`puff-${i}`}
+              cx={puff.cx} cy={puff.cy}
+              rx={puff.rx} ry={puff.ry}
+              fill={`hsl(${puff.hue + p * 4}, ${22 + heartPhase * 22}%, ${puff.l + heartPhase * 6}%)`}
+              opacity={heartPhase * 0.55}
+            />
+          ))}
           {/* Leaf texture — tiny dots across canopy for organic feel */}
           {heartPhase > 0.3 && Array.from({ length: 25 }).map((_, i) => {
             const lx = 25 + (i * 37 + 11) % 360;
