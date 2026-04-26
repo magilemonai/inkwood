@@ -224,6 +224,15 @@ function CottageScene({ progress: p }: SceneProps) {
               Z
             `} fill={catColor} />
 
+            {/* ── EARS — drawn before the head so the head silhouette
+                 covers any ear base that sticks past the skull. Bases
+                 trimmed to sit inside the head's top arc so no orphan
+                 sliver hangs in space at either ear's outer edge. ── */}
+            {/* Far ear (left) */}
+            <path d="M 108 100 Q 109 93 112 92 Q 115 96 116 100 Z" fill={catColor} />
+            {/* Near ear (right) — barely taller */}
+            <path d="M 123 101 Q 125 91 129 91 Q 131 96 131 101 Z" fill={catColor} />
+
             {/* ── HEAD — overlaps front of body, bottom sits on the sill. ── */}
             <path d={`
               M 103 125
@@ -234,12 +243,6 @@ function CottageScene({ progress: p }: SceneProps) {
               L 105 128
               Z
             `} fill={catColor} />
-
-            {/* ── EARS — short, rounded-base triangles. ── */}
-            {/* Far ear (left) */}
-            <path d="M 105 100 Q 107 93 111 92 Q 115 96 117 101 Z" fill={catColor} />
-            {/* Near ear (right) — barely taller */}
-            <path d="M 122 101 Q 125 91 129 91 Q 132 96 133 102 Z" fill={catColor} />
 
             {/* ── FACE ── */}
             {/* Open amber eye (right/near) */}

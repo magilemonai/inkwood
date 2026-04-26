@@ -204,12 +204,16 @@
 
   /* Scale the prompt font down for long phrases so they fit on one
    * line — including the extra 3px the cursor border adds to whichever
-   * char is active. --char-count is set inline by React. The
-   * coefficient is intentionally conservative so mid-typing layout
-   * doesn't tip a "just barely fits" line into a wrap. clamp caps
-   * short phrases at 1.05rem and floors long ones at 0.7rem. */
+   * char is active. --char-count is set inline by React. We also
+   * tighten letter-spacing and shave horizontal padding on portrait
+   * so the longest canonical phrase ("moonlight, gather where
+   * spirits convene", 39 chars) clears the cursor mid-typing without
+   * wrapping. clamp caps short phrases at 1.05rem and floors long
+   * ones at 0.7rem. */
   .promptBox {
-    font-size: clamp(0.7rem, calc(78vw / var(--char-count, 30) / 0.6), 1.05rem);
+    font-size: clamp(0.7rem, calc(74vw / var(--char-count, 30) / 0.55), 1.05rem);
+    letter-spacing: 0.04em;
+    padding: 0.6rem 0.55rem;
   }
 }
 

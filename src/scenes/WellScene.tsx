@@ -29,11 +29,12 @@ const CAVERN_RIGHT = `
 
 function WellScene({ progress: p }: SceneProps) {
   // Water rises with an eased curve so it doesn't snap up during
-  // the second prompt — feels held, not extruded. Rise extended from
-  // 88 → 100 so the column reaches the raised wall runes cleanly above
-  // the typing overlay.
+  // the second prompt — feels held, not extruded. Capped at delta=92
+  // so peak waterLevel = 116, four SVG units below the ground line
+  // (y=112). Earlier delta=100 had water surfacing through the grass
+  // which read as illogical.
   const easedP = 1 - (1 - p) * (1 - p);
-  const waterLevel = 208 - easedP * 100;
+  const waterLevel = 208 - easedP * 92;
 
   // Bucket lowers
   const bucketY = 48 + p * 52;
