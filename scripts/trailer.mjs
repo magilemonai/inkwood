@@ -58,10 +58,11 @@ const SHOTS = [
     name: 'Garden — wake',
     sceneName: 'The Sleeping Garden',
     typeText: 'wake now, sleeping roots',
-    // Slow push-in toward the tree as it grows in.
+    // Gentle push-in toward the tree — opens the trailer with motion
+    // that feels intentional, not eager.
     camera: {
       from: 'scale(1) translate(0, 0)',
-      to:   'scale(1.32) translate(-6%, -3%)',
+      to:   'scale(1.18) translate(-3%, -2%)',
     },
   },
   {
@@ -274,61 +275,124 @@ async function main() {
   }
 }
 
-/** Render the in-game intro drone (two sine tones through a low-pass)
- *  and mux it onto the silent trailer. Matches audio.ts's drone:
- *  C2 (65.41 Hz) + G2 (98 Hz), lowpass ~200 Hz, gentle fade in/out. */
+/** Three-pad ambient mirroring the game's per-act tonal shifts:
+ *  Act I (Garden, C root), Act II (Well, E2 root), Act III (Stones,
+ *  D root). Each pad is a chord of sine partials matching audio.ts's
+ *  ACT_AMBIENTS table, low-passed and tremolo'd; pads cross-fade into
+ *  each other on the shot boundaries so the audio progresses through
+ *  the trailer instead of holding one drone the whole time. */
 function muxAudio(trailerWebm) {
-  const droneWav = resolve(OUTPUT_DIR, 'drone.wav');
+  const padWavs = [
+    resolve(OUTPUT_DIR, 'pad-act1.wav'),
+    resolve(OUTPUT_DIR, 'pad-act2.wav'),
+    resolve(OUTPUT_DIR, 'pad-act3.wav'),
+  ];
+  const mixWav = resolve(OUTPUT_DIR, 'pad-mix.wav');
   const finalWebm = resolve('public', 'trailer.webm');
 
-  // Total trailer length: SHOTS * SHOT_DURATION + TITLE_DURATION + a
-  // small tail so the drone doesn't cut hard against the closing fade.
   const totalSec = SHOTS.length * SHOT_DURATION + TITLE_DURATION + 0.5;
+  const shotMs = SHOT_DURATION;
 
-  const droneFilter = [
-    `[0][1]amix=inputs=2:duration=longest:weights=1 1`,
-    `lowpass=f=200`,
-    `volume=0.42`,
-    // Long fade-in matches the in-game drone's 6-second build.
-    `afade=t=in:d=4`,
-    // Tail fade-out under the closing title fade.
-    `afade=t=out:st=${(totalSec - 2).toFixed(2)}:d=2`,
-  ].join(',');
+  // Per-act chord definitions, transcribed from audio.ts ACT_AMBIENTS.
+  // Weights bias the fundamental and slightly soften the upper partials.
+  const ACTS = [
+    { // Act I — Garden — C major triad over C3
+      root: 130.81, ratios: [1, 1.25, 1.5, 2],
+      weights: [1.0, 0.6, 0.55, 0.4],
+      filter: 280, lfo: 0.06,
+    },
+    { // Act II — Well — E2 with a 1.2 partial for that "minor 2nd"
+      // tension Cody mapped to Discovery
+      root: 82.41, ratios: [1, 1.2, 1.5, 2, 2.4],
+      weights: [1.0, 0.45, 0.55, 0.45, 0.3],
+      filter: 200, lfo: 0.04,
+    },
+    { // Act III — Stones — D root with the shimmering 9th from
+      // 1.335 partial and an octave reach
+      root: 146.83, ratios: [1, 1.335, 1.5, 2, 3],
+      weights: [1.0, 0.55, 0.55, 0.4, 0.25],
+      filter: 400, lfo: 0.08,
+    },
+  ];
 
-  console.log('→ Rendering drone audio (ffmpeg)…');
-  const droneRender = spawnSync('ffmpeg', [
+  console.log('→ Rendering act pads (ffmpeg)…');
+  for (let i = 0; i < ACTS.length; i++) {
+    const act = ACTS[i];
+    // Each pad is rendered to cover its shot plus a 2s tail/lead for
+    // cross-fading.
+    const padDur = shotMs + 4;
+    const inputs = act.ratios.map((r) => [
+      '-f', 'lavfi', '-i', `sine=frequency=${(act.root * r).toFixed(3)}:duration=${padDur}`,
+    ]).flat();
+    const mixIns = act.ratios.map((_, j) => `[${j}]`).join('');
+    const filter = [
+      `${mixIns}amix=inputs=${act.ratios.length}:duration=longest:weights=${act.weights.join(' ')}`,
+      `lowpass=f=${act.filter}`,
+      `tremolo=f=${Math.max(0.1, act.lfo).toFixed(2)}:d=0.18`,
+      `volume=0.5`,
+      `afade=t=in:d=2`,
+      `afade=t=out:st=${(padDur - 2).toFixed(2)}:d=2`,
+    ].join(',');
+    const r = spawnSync('ffmpeg', [
+      '-y',
+      ...inputs,
+      '-filter_complex', filter,
+      '-ar', '44100', '-ac', '2',
+      padWavs[i],
+    ], { stdio: ['ignore', 'ignore', 'pipe'] });
+    if (r.status !== 0) {
+      console.error(`pad-act${i + 1} render failed:`, r.stderr?.toString().slice(-400));
+      return;
+    }
+  }
+
+  // Place each pad at its shot's start (with a 1s pre-roll lead-in
+  // so the pad blooms before the scene visuals do).
+  // Garden pad: starts at -1s (effectively from t=0 with the lead-in
+  // already inside the pad), Well at +7s, Stones at +15s. Pads run
+  // ~12s each so they overlap by ~4s with the next.
+  console.log('→ Mixing pads with timed cross-fades…');
+  const offsets = [0, (shotMs - 1) * 1000, (2 * shotMs - 1) * 1000];
+  const mixFilter = [
+    ...padWavs.map((_, i) => `[${i}]adelay=${offsets[i]}|${offsets[i]}[d${i}]`),
+    `[d0][d1][d2]amix=inputs=3:duration=longest:weights=1 1 1[mixed]`,
+    `[mixed]volume=0.85,afade=t=out:st=${(totalSec - 2).toFixed(2)}:d=2[out]`,
+  ].join(';');
+  const padInputs = padWavs.map((p) => ['-i', p]).flat();
+  const mix = spawnSync('ffmpeg', [
     '-y',
-    '-f', 'lavfi', '-i', `sine=frequency=65.41:duration=${totalSec}`,
-    '-f', 'lavfi', '-i', `sine=frequency=98:duration=${totalSec}`,
-    '-filter_complex', droneFilter,
+    ...padInputs,
+    '-filter_complex', mixFilter,
+    '-map', '[out]',
     '-ar', '44100', '-ac', '2',
-    droneWav,
+    mixWav,
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
-  if (droneRender.status !== 0) {
-    console.error('ffmpeg drone render failed:', droneRender.stderr?.toString().slice(-400));
+  if (mix.status !== 0) {
+    console.error('pad mix failed:', mix.stderr?.toString().slice(-400));
     return;
   }
 
   console.log('→ Muxing audio onto trailer…');
-  const mux = spawnSync('ffmpeg', [
+  const muxStep = spawnSync('ffmpeg', [
     '-y',
     '-i', trailerWebm,
-    '-i', droneWav,
+    '-i', mixWav,
     '-c:v', 'copy',
     '-c:a', 'libopus',
     '-b:a', '96k',
     '-shortest',
     finalWebm,
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
-  if (mux.status !== 0) {
-    console.error('ffmpeg mux failed:', mux.stderr?.toString().slice(-400));
+  if (muxStep.status !== 0) {
+    console.error('ffmpeg mux failed:', muxStep.stderr?.toString().slice(-400));
     return;
   }
 
-  // Tidy: keep the silent trailer in trailer-output for archival; delete
-  // the intermediate drone.wav.
-  try { unlinkSync(droneWav); } catch { /* */ }
-  // Also drop a copy alongside in trailer-output so post-prod has it handy.
+  // Tidy: drop the intermediate pad wavs.
+  for (const w of [...padWavs, mixWav]) {
+    try { unlinkSync(w); } catch { /* */ }
+  }
+  // Keep an archival copy alongside the silent recording.
   copyFileSync(finalWebm, trailerWebm.replace(/\.webm$/, '-with-audio.webm'));
 
   console.log(`✔ ${finalWebm}`);
