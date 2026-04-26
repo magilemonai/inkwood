@@ -30,8 +30,9 @@
  */
 
 import { chromium } from 'playwright-core';
-import { mkdirSync, readdirSync, renameSync, existsSync, statSync } from 'fs';
+import { mkdirSync, readdirSync, renameSync, existsSync, statSync, copyFileSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
+import { spawnSync } from 'child_process';
 
 const MAC_PATH = '/Users/cody/Library/Caches/ms-playwright/chromium-1217/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
 const LINUX_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
@@ -40,12 +41,12 @@ const BASE_URL = 'http://localhost:4173/inkwood/';
 const OUTPUT_DIR = './trailer-output';
 const VIDEO_SIZE = { width: 1280, height: 720 };
 
-const TYPE_SPEED = 120;        // ms per character — deliberate, not blazing
-const SHOT_DURATION = 5;       // seconds per gameplay shot
-const FADE_IN = 0.7;           // seconds — black to scene at shot start
-const FADE_OUT = 0.5;          // seconds — scene to black at shot end
-const TYPE_LEAD = 0.6;         // seconds — pause before typing starts
-const TITLE_DURATION = 4;      // seconds — title card on-screen
+const TYPE_SPEED = 180;        // ms per character — slow, contemplative
+const SHOT_DURATION = 8;       // seconds per gameplay shot
+const FADE_IN = 0.9;           // seconds — black to scene at shot start
+const FADE_OUT = 0.7;          // seconds — scene to black at shot end
+const TYPE_LEAD = 1.0;         // seconds — pause before typing starts
+const TITLE_DURATION = 5;      // seconds — title card on-screen
 
 /**
  * Shot definitions. Each runs for `SHOT_DURATION` seconds. The `camera`
@@ -57,45 +58,31 @@ const SHOTS = [
     name: 'Garden — wake',
     sceneName: 'The Sleeping Garden',
     typeText: 'wake now, sleeping roots',
+    // Slow push-in toward the tree as it grows in.
     camera: {
       from: 'scale(1) translate(0, 0)',
-      to:   'scale(1.18) translate(-2%, -1%)',
-    },
-  },
-  {
-    name: 'Cottage — candle',
-    sceneName: 'The Dark Cottage',
-    typeText: 'little candle, burn bright',
-    camera: {
-      from: 'scale(1.05) translate(3%, 0)',
-      to:   'scale(1.16) translate(-3%, 0)',
+      to:   'scale(1.32) translate(-6%, -3%)',
     },
   },
   {
     name: 'Well — water',
     sceneName: 'The Dry Well',
     typeText: 'deep water, remember your name',
+    // Push down into the cavern as the water rises — the cross-section
+    // is the wow, so frame travels deeper through the shot.
     camera: {
-      from: 'scale(1.1) translate(0, -6%)',
-      to:   'scale(1.2) translate(0, -10%)',
-    },
-  },
-  {
-    name: 'Library — tome',
-    sceneName: 'The Whispering Library',
-    typeText: 'open, sleeping pages',
-    camera: {
-      from: 'scale(1) translate(0, 0)',
-      to:   'scale(1.22) translate(0, 2%)',
+      from: 'scale(1.04) translate(0, -2%)',
+      to:   'scale(1.34) translate(0, -14%)',
     },
   },
   {
     name: 'Stones — rise',
     sceneName: 'The Spirit Stones',
     typeText: 'stand tall again, guardians',
+    // Big pull-back as stones rise — gives them physical scale.
     camera: {
-      from: 'scale(1.15) translate(0, 2%)',
-      to:   'scale(1.02) translate(0, 0)',
+      from: 'scale(1.28) translate(0, 6%)',
+      to:   'scale(0.98) translate(0, -1%)',
     },
   },
 ];
@@ -268,15 +255,83 @@ async function main() {
     .filter((f) => f.endsWith('.webm') && f.startsWith('page@'))
     .map((f) => ({ f, mtime: statSync(resolve(OUTPUT_DIR, f)).mtimeMs }))
     .sort((a, b) => b.mtime - a.mtime);
+  let silentTrailerPath = null;
   if (files.length > 0) {
     const latest = files[0].f;
     const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const target = `trailer-${stamp}.webm`;
-    renameSync(resolve(OUTPUT_DIR, latest), resolve(OUTPUT_DIR, target));
-    console.log(`✔ ${resolve(OUTPUT_DIR, target)}`);
+    silentTrailerPath = resolve(OUTPUT_DIR, target);
+    renameSync(resolve(OUTPUT_DIR, latest), silentTrailerPath);
+    console.log(`✔ ${silentTrailerPath}`);
   }
 
   await browser.close();
+
+  // ── Audio: render the intro drone via ffmpeg, mux with the silent
+  //    trailer to produce the final shipping artifact at public/trailer.webm.
+  if (silentTrailerPath) {
+    muxAudio(silentTrailerPath);
+  }
+}
+
+/** Render the in-game intro drone (two sine tones through a low-pass)
+ *  and mux it onto the silent trailer. Matches audio.ts's drone:
+ *  C2 (65.41 Hz) + G2 (98 Hz), lowpass ~200 Hz, gentle fade in/out. */
+function muxAudio(trailerWebm) {
+  const droneWav = resolve(OUTPUT_DIR, 'drone.wav');
+  const finalWebm = resolve('public', 'trailer.webm');
+
+  // Total trailer length: SHOTS * SHOT_DURATION + TITLE_DURATION + a
+  // small tail so the drone doesn't cut hard against the closing fade.
+  const totalSec = SHOTS.length * SHOT_DURATION + TITLE_DURATION + 0.5;
+
+  const droneFilter = [
+    `[0][1]amix=inputs=2:duration=longest:weights=1 1`,
+    `lowpass=f=200`,
+    `volume=0.42`,
+    // Long fade-in matches the in-game drone's 6-second build.
+    `afade=t=in:d=4`,
+    // Tail fade-out under the closing title fade.
+    `afade=t=out:st=${(totalSec - 2).toFixed(2)}:d=2`,
+  ].join(',');
+
+  console.log('→ Rendering drone audio (ffmpeg)…');
+  const droneRender = spawnSync('ffmpeg', [
+    '-y',
+    '-f', 'lavfi', '-i', `sine=frequency=65.41:duration=${totalSec}`,
+    '-f', 'lavfi', '-i', `sine=frequency=98:duration=${totalSec}`,
+    '-filter_complex', droneFilter,
+    '-ar', '44100', '-ac', '2',
+    droneWav,
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  if (droneRender.status !== 0) {
+    console.error('ffmpeg drone render failed:', droneRender.stderr?.toString().slice(-400));
+    return;
+  }
+
+  console.log('→ Muxing audio onto trailer…');
+  const mux = spawnSync('ffmpeg', [
+    '-y',
+    '-i', trailerWebm,
+    '-i', droneWav,
+    '-c:v', 'copy',
+    '-c:a', 'libopus',
+    '-b:a', '96k',
+    '-shortest',
+    finalWebm,
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  if (mux.status !== 0) {
+    console.error('ffmpeg mux failed:', mux.stderr?.toString().slice(-400));
+    return;
+  }
+
+  // Tidy: keep the silent trailer in trailer-output for archival; delete
+  // the intermediate drone.wav.
+  try { unlinkSync(droneWav); } catch { /* */ }
+  // Also drop a copy alongside in trailer-output so post-prod has it handy.
+  copyFileSync(finalWebm, trailerWebm.replace(/\.webm$/, '-with-audio.webm'));
+
+  console.log(`✔ ${finalWebm}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
