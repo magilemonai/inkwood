@@ -40,6 +40,7 @@ function easeInOut(t: number): number {
 
 export default function OutroSequence() {
   const restart = useGameStore((g) => g.restart);
+  const enterWander = useGameStore((g) => g.enterWander);
   const [time, setTime] = useState(0);
   const [showText, setShowText] = useState(false);
   const showTextRef = useRef(false);
@@ -118,7 +119,7 @@ export default function OutroSequence() {
         viewBox="0 0 420 260"
         className={s.sceneWrap}
         style={{ width: "100%", height: "100%" }}
-        preserveAspectRatio="xMidYMid slice"
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           {/* Glow filters for each vignette */}
@@ -640,6 +641,14 @@ export default function OutroSequence() {
             onClick={restart}
           >
             Begin Again
+          </button>
+
+          <button
+            className={`${s.wanderBtn} ${s.wanderBtnFade}`}
+            onClick={enterWander}
+            aria-label="Wander the woods — replay any single scene"
+          >
+            Wander the woods
           </button>
         </div>
       )}

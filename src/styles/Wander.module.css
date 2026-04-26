@@ -1,12 +1,13 @@
 .container {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 3rem 1.5rem 2rem;
   gap: 1.2rem;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .heading {

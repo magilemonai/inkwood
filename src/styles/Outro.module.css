@@ -81,10 +81,28 @@
   background: rgba(216, 200, 144, 0.06);
 }
 
+.wanderBtn {
+  padding: 0.55rem 1.6rem;
+  background: transparent;
+  border: 1px solid #3a5a2a;
+  color: #8ab878;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  border-radius: 4px;
+  margin-top: 0.4rem;
+}
+
+.wanderBtn:hover {
+  color: #a8d090;
+  border-color: #5a8a4a;
+  background: rgba(74, 122, 58, 0.08);
+}
+
 /* ── CSS-driven fade-ins (replaces Framer Motion usage) ── */
 .textOverlayFade { opacity: 0; animation: fadeIn 2.5s ease-out forwards; }
 .bodyFade        { opacity: 0; animation: fadeIn 2s ease-out 0.5s forwards; }
 .restartBtnFade  { opacity: 0; animation: fadeIn 1s ease-out 2s forwards; }
+.wanderBtnFade   { opacity: 0; animation: fadeIn 1s ease-out 2.6s forwards; }
 
 @keyframes fadeIn {
   to { opacity: 1; }

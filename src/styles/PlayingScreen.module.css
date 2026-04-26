@@ -203,13 +203,13 @@
   }
 
   /* Scale the prompt font down for long phrases so they fit on one
-   * line. --char-count is set inline by React from target.length;
-   * 0.65 is the approximate per-character em-width including the
-   * 0.06em letter-spacing of the prompt. clamp keeps it readable
-   * for short phrases (cap 1.05rem) and prevents shrinking past
-   * legibility for unusually long ones (floor 0.78rem). */
+   * line — including the extra 3px the cursor border adds to whichever
+   * char is active. --char-count is set inline by React. The
+   * coefficient is intentionally conservative so mid-typing layout
+   * doesn't tip a "just barely fits" line into a wrap. clamp caps
+   * short phrases at 1.05rem and floors long ones at 0.7rem. */
   .promptBox {
-    font-size: clamp(0.78rem, calc(92vw / var(--char-count, 30) / 0.65), 1.05rem);
+    font-size: clamp(0.7rem, calc(78vw / var(--char-count, 30) / 0.6), 1.05rem);
   }
 }
 
