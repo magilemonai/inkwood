@@ -2,7 +2,8 @@
 
 > A cozy, meditative typing game where the player is a forest scribe whose typed words bring a dormant world back to life.
 
-**Live site:** https://magilemonai.github.io/inkwood/
+**Live site:** https://inkwood.codywymore.com/
+**Status:** v1.0 shipped 2026-04-26.
 **Dev panel:** Append `?dev` to the URL, press F2 to jump between scenes.
 
 ---
@@ -43,7 +44,7 @@ intro → playing → [levelWin | actTransition] → playing → ... → outro �
 
 ---
 
-## Current State (End of Session — v11)
+## Current State (v1.0 — shipped)
 
 ### Scene Quality
 All 10 scenes at **B+ or above** (6 scenes at A-). See `PERSONAS.md` for the full scene-by-scene breakdown.
@@ -356,6 +357,10 @@ This file documents a multi-session collaboration that took the game from incons
 10. **Mobile portrait layout** — Letterboxed scenes at natural 8:5 ratio (matches viewBox so nothing crops), title and outro text blocks below. Prompt font auto-scales by `--char-count` so the longest canonical phrase fits one line.
 11. **Brand pass** — Ogham-style rune logo replaces the stick-tree, applied to title screen and favicon. OG image regenerated as Stars climax + wordmark + tagline. Em-dash audit on all card text.
 12. **Player UX** — Skip-intro for returning players (`hasCompleted` short-circuits the dormant-world animation); daily-seeded prompt rotation so replays vary by calendar day; in-app `Share` button via `navigator.share` + clipboard fallback.
+13. **Scene polish (v14)** — Tree trunk widened with bark detail and overlapping canopy puffs; Sanctum / World / Outro spirit figures rebuilt as translucent teardrops with radial-gradient pearls and halos; Garden flowers now sway via `<animateTransform>`. Cat ear occlusion fixed; Well water no longer surfaces through ground.
+14. **Audio safety** — `armTerminationSilence()` silences master gain on `pagehide` and `visibilitychange` to kill the loud sine burst on mobile tab-close. Mute slider compacted to icon-only on mobile.
+15. **Long-prompt typography** — `--char-count` CSS clamp + `.wordRun` / `.spaceRun` flex containers so long phrases never wrap mid-typing.
+16. **v1.0 launch (2026-04-26)** — Custom domain `inkwood.codywymore.com` (CNAME in `public/`, base path `/`). PWA kept enabled (offline play, installable). GoatCounter analytics wired with per-screen pageviews via `src/analytics.ts` (paths: `/intro`, `/play/{scene}`, `/win/{scene}`, `/transition/{scene}`, `/outro`, `/wander`).
 
 ### Total Improvements
 - All scenes rebuilt or polished to B+/A-
@@ -370,15 +375,13 @@ This file documents a multi-session collaboration that took the game from incons
 
 ## Known Issues / Next Steps
 
-`PERSONAS.md` reflects the v13 critique snapshot. Most v13 items have shipped — see the session-history list above. Open work, lightly prioritized:
+v1.0 has shipped. `PERSONAS.md` reflects the v14 critique snapshot. Open work, lightly prioritized:
 
-1. **Intro dormant trees** — Y-shaped stick silhouettes still in `IntroSequence.tsx`. PERSONAS.md flagged this as the highest-impact remaining art item; first impression of the game.
-2. **Trailer (`scripts/trailer.mjs`)** — Playwright recording exists; ship a polished webm/mp4 alongside or in place of the OG image for richer share previews.
-3. **Library tome glow at 99%** — could radiate more light at full progress.
-4. **Cottage window shadow** — soft floor light pool when candles are lit; currently floor stays uniformly dark.
-5. **Run `/critique` again** — full multi-persona pass to surface what's drifted since v13.
-
-Custom domain (e.g. `inkwood.fun`) is the only fully-external item — needs a registration the user holds; once bought, drop a `CNAME` file in repo root and update `index.html` URLs.
+1. **Library tome glow at 99%** — could radiate more light at full progress.
+2. **Cottage window shadow** — soft floor light pool when candles are lit; currently floor stays uniformly dark.
+3. **Trailer publishing** — `scripts/trailer.mjs` produces a polished mp4; consider pinning the latest export to a release asset and updating share previews to point at it.
+4. **Run `/critique` again** — full multi-persona pass to surface what's drifted since v14, now with v1.0 in the wild.
+5. **Watch GoatCounter** — first-day funnel data should tell us where players drop off (intro → play/garden → … → outro). Use this to drive the next round of UX work.
 
 ---
 
