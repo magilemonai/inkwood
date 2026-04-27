@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useGameStore } from "./store";
 import { LEVELS } from "./levels";
 import IntroSequence from "./components/IntroSequence";
@@ -10,6 +11,7 @@ import DevPanel from "./components/DevPanel";
 import PersistentInput from "./components/PersistentInput";
 import { InputProvider } from "./contexts/InputContext";
 import { armAudioPreload } from "./audio";
+import { trackPageview } from "./analytics";
 import fade from "./styles/Fade.module.css";
 
 // Arm the audio preload as early as possible — the AudioContext is
@@ -29,6 +31,29 @@ export default function App() {
   const screen = useGameStore((g) => g.screen);
   const lvl = useGameStore((g) => g.lvl);
   const bg = LEVELS[lvl]?.bg ?? "#060806";
+
+  useEffect(() => {
+    const level = LEVELS[lvl];
+    const sceneSlug = level?.scene ?? "unknown";
+    const sceneTitle = level?.title ?? "Inkwood";
+    let path = "/";
+    let title = "Inkwood";
+    switch (screen) {
+      case "intro":
+        path = "/intro"; title = "Inkwood — Intro"; break;
+      case "playing":
+        path = `/play/${sceneSlug}`; title = `Inkwood — ${sceneTitle}`; break;
+      case "levelWin":
+        path = `/win/${sceneSlug}`; title = `Inkwood — ${sceneTitle} complete`; break;
+      case "actTransition":
+        path = `/transition/${sceneSlug}`; title = "Inkwood — Act transition"; break;
+      case "outro":
+        path = "/outro"; title = "Inkwood — Outro"; break;
+      case "wander":
+        path = "/wander"; title = "Inkwood — Wander"; break;
+    }
+    trackPageview(path, title);
+  }, [screen, lvl]);
 
   return (
     <InputProvider>
