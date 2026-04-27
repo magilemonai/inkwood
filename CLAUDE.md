@@ -47,19 +47,19 @@ intro → playing → [levelWin | actTransition] → playing → ... → outro �
 ## Current State (v1.0 — shipped)
 
 ### Scene Quality
-All 10 scenes at **B+ or above** (6 scenes at A-). See `PERSONAS.md` for the full scene-by-scene breakdown.
+**Eight scenes at A- or above** per the v14 critique, with Tree and Sanctum rebuilt after v14 (estimated A-/A- post-rebuild). See `PERSONAS.md` for the full scene-by-scene breakdown.
 
 | Scene | Grade | Defining Element |
 |---|---|---|
-| Garden | B+ | Canopy covering layer, bezier petal flowers, physics pollen |
-| Cottage | A- | Cold blue → warm amber temperature shift, cat silhouette, rug, hanging herbs |
+| Garden | A- | Bezier petal flowers with sway animation, canopy covering layer, physics pollen |
+| Cottage | A | Cold blue → warm amber temperature shift, cat silhouette (loaf pose, peeking eye), rug, hanging herbs |
 | Stars | A | **Gold standard.** Constellation drawing, moon crescent, comets at climax |
-| Well | B+ | Cross-section showing underground, river with flow lines, runes flowing downstream |
+| Well | A | Cross-section reveal at ~30%, river with flow lines, runes flowing downstream |
 | Bridge | A- | Stones assembling at cliff-tops, lanterns above, spirit footprints |
 | Library | A- | Gothic cavern with sacred book pedestals, central tome opens, crystals, floating books |
-| Stones | B+ | Standing stones rise, ley lines draw, ritual circle, heather/moss patches |
-| Sanctum | A- | Varied tree canopies, moon beams, spirit figures, firefly particles |
-| Tree | A- | Three-phase (roots/branches/canopy) glow, leaf sparks, diagonal roots beyond viewport |
+| Stones | A- | Standing stones rise, ley lines draw, ritual circle, heather/moss patches |
+| Sanctum | A- (post-rebuild) | Translucent teardrop spirits with radial-gradient pearls + halos, moon beams, firefly particles |
+| Tree | A- (post-rebuild) | Widened trunk with bark detail, six overlapping canopy puffs, three-phase root/branch/canopy glow |
 | World | B+ | Panoramic landscape assembles with callbacks to all prior levels, ley lines connect |
 
 ### Technical Stack

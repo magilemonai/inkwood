@@ -1,5 +1,20 @@
 # Inkwood — Persona Review Panel v14
 
+> **Post-v14 status note (2026-04-26 evening):** Most of the v14 priority stack
+> shipped the same day this critique was written. ✅ Tree rebuild (widened
+> trunk, layered canopy puffs), ✅ Sanctum spirits (translucent teardrops with
+> radial-gradient pearls + halos — also propagated to World and Outro), ✅
+> custom domain (inkwood.codywymore.com with CNAME), ✅ trailer .mp4 export,
+> ✅ Mac/Linux Chrome path generalization (findChrome helper), ✅ Garden flower
+> sway, ✅ Wander → "Replay any level" rename. The only v14 polish items still
+> open are the iPhone volume slider touch target (now hidden on mobile in
+> favor of icon-only mute) and the soft-blocker cottage/library polish notes.
+>
+> Plus, **v1.0 launched 2026-04-26** with GoatCounter analytics wired for
+> per-screen pageviews. Run `/critique` for a v15 with the v1.0-in-the-wild
+> lens — the grades and priority stack below are the v14 snapshot, kept for
+> historical reference.
+
 Date: 2026-04-26
 Trigger: First six-persona pass since v13 (2026-04-13). The intervening sessions shipped: singleton-input architecture (fixes iOS keyboard refocus), three-act layered audio + 30s trailer with title splash, rune brand pass on title and favicon, mobile portrait letterbox, em-dash audit, breaths-state cleanup, master volume slider, skip-intro for returning players, in-app share button, daily prompt rotation, and a hand-drawn treeline replacing the dormant-sky triangle row. 82 screenshots regenerated this cycle (10 scenes × 7 progress points + intro/outro timelapses). Code Reviewer verified via `eslint`, `tsc --noEmit`, and `vitest run` — 24/24 passing.
 
