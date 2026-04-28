@@ -66,96 +66,36 @@
   box-shadow: 0 0 6px currentColor;
 }
 
-/* Begin Again — outro primary, same underline-as-affordance pattern as
- * the intro Begin button, in the outro's amber palette. Underline
- * always visible so mobile (no hover) still reads as tappable. */
 .restartBtn {
-  padding: 0.7rem 2rem;
+  padding: 0.7rem 2.8rem;
   background: transparent;
-  border: none;
-  color: #e8d8a0;
-  font-family: inherit;
-  font-size: 1.05rem;
-  letter-spacing: 0.28em;
-  text-indent: 0.28em;
-  text-shadow: 0 0 14px rgba(216, 200, 144, 0.16);
-  cursor: pointer;
-  position: relative;
-  margin-top: 0.5rem;
-  transition: color 0.4s ease, text-shadow 0.4s ease, letter-spacing 0.4s ease;
-}
-
-.restartBtn::after {
-  content: "";
-  position: absolute;
-  left: 28%;
-  bottom: 0.35rem;
-  width: 44%;
-  height: 1px;
-  background: #e8d8a0;
-  opacity: 0.55;
-  transition: width 0.45s ease, left 0.45s ease, opacity 0.45s ease;
-}
-
-.restartBtn:hover,
-.restartBtn:focus-visible,
-.restartBtn:active {
-  color: #f5e8c0;
-  text-shadow: 0 0 22px rgba(240, 220, 160, 0.4);
-  letter-spacing: 0.32em;
-  outline: none;
-}
-
-.restartBtn:hover::after,
-.restartBtn:focus-visible::after,
-.restartBtn:active::after {
-  width: 60%;
-  left: 20%;
-  opacity: 0.9;
-}
-
-/* Replay any level — outro secondary. Same warm amber family as Begin
- * Again, dimmer/less saturated to maintain hierarchy. */
-.wanderBtn {
-  padding: 0.5rem 1.6rem;
-  background: transparent;
-  border: none;
-  color: #b8a878;
-  font-family: inherit;
-  font-size: 0.85rem;
-  letter-spacing: 0.18em;
-  text-indent: 0.18em;
-  cursor: pointer;
-  position: relative;
-  margin-top: 0.4rem;
-  transition: color 0.4s ease;
-}
-
-.wanderBtn::after {
-  content: "";
-  position: absolute;
-  left: 30%;
-  bottom: 0.2rem;
-  width: 40%;
-  height: 1px;
-  background: #b8a878;
-  opacity: 0.45;
-  transition: width 0.4s ease, left 0.4s ease, opacity 0.4s ease;
-}
-
-.wanderBtn:hover,
-.wanderBtn:focus-visible,
-.wanderBtn:active {
+  border: 1px solid #6a6040;
   color: #d8c890;
-  outline: none;
+  font-size: 1rem;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+  margin-top: 0.5rem;
 }
 
-.wanderBtn:hover::after,
-.wanderBtn:focus-visible::after,
-.wanderBtn:active::after {
-  width: 60%;
-  left: 20%;
-  opacity: 0.8;
+.restartBtn:hover {
+  background: rgba(216, 200, 144, 0.06);
+}
+
+.wanderBtn {
+  padding: 0.55rem 1.6rem;
+  background: transparent;
+  border: 1px solid #3a5a2a;
+  color: #8ab878;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  border-radius: 4px;
+  margin-top: 0.4rem;
+}
+
+.wanderBtn:hover {
+  color: #a8d090;
+  border-color: #5a8a4a;
+  background: rgba(74, 122, 58, 0.08);
 }
 
 .shareLink {
@@ -219,9 +159,7 @@
   }
 
   .restartBtn {
-    padding: 0.55rem 1.6rem;
-    font-size: 0.95rem;
-    letter-spacing: 0.26em;
-    text-indent: 0.26em;
+    padding: 0.5rem 2rem;
+    font-size: 0.9rem;
   }
 }
