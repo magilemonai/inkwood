@@ -114,12 +114,13 @@
   opacity: 0.9;
 }
 
-/* Replay any level — outro secondary, smaller and dimmer */
+/* Replay any level — outro secondary. Same warm amber family as Begin
+ * Again, dimmer/less saturated to maintain hierarchy. */
 .wanderBtn {
   padding: 0.5rem 1.6rem;
   background: transparent;
   border: none;
-  color: #9ab088;
+  color: #b8a878;
   font-family: inherit;
   font-size: 0.85rem;
   letter-spacing: 0.18em;
@@ -137,7 +138,7 @@
   bottom: 0.2rem;
   width: 40%;
   height: 1px;
-  background: #9ab088;
+  background: #b8a878;
   opacity: 0.45;
   transition: width 0.4s ease, left 0.4s ease, opacity 0.4s ease;
 }
@@ -145,7 +146,7 @@
 .wanderBtn:hover,
 .wanderBtn:focus-visible,
 .wanderBtn:active {
-  color: #c8d8b0;
+  color: #d8c890;
   outline: none;
 }
 

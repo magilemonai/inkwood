@@ -82,12 +82,13 @@
 }
 
 /* Replay-any-level — same underline-as-affordance pattern as Begin,
- * smaller and dimmer to maintain hierarchy. */
+ * same cream-green hue family, dimmer to maintain hierarchy. Hover
+ * brings it up to Begin's rest color so the family relationship reads. */
 .wanderLink {
   padding: 0.55rem 1.6rem;
   border: none;
   background: transparent;
-  color: #9ab088;
+  color: #a8c498;
   font-family: inherit;
   font-size: 0.85rem;
   letter-spacing: 0.18em;
@@ -106,7 +107,7 @@
   bottom: 0.25rem;
   width: 40%;
   height: 1px;
-  background: #9ab088;
+  background: #a8c498;
   opacity: 0.45;
   transition: width 0.4s ease, left 0.4s ease, opacity 0.4s ease;
 }
@@ -114,7 +115,7 @@
 .wanderLink:hover,
 .wanderLink:focus-visible,
 .wanderLink:active {
-  color: #c8d8b0;
+  color: #c8e0b8;
   outline: none;
 }
 
