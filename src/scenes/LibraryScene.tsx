@@ -165,14 +165,22 @@ function LibraryScene({ progress: p }: SceneProps) {
         </linearGradient>
 
         <radialGradient id="bookLight" cx="50%" cy="58%" r="40%">
-          <stop offset="0%" stopColor="#e0c0d8" stopOpacity={pageLightP * 0.22} />
-          <stop offset="50%" stopColor="#c088b0" stopOpacity={pageLightP * 0.08} />
+          <stop offset="0%" stopColor="#e0c0d8" stopOpacity={pageLightP * 0.22 + wordP * 0.28} />
+          <stop offset="50%" stopColor="#c088b0" stopOpacity={pageLightP * 0.08 + wordP * 0.14} />
           <stop offset="100%" stopColor="#c088b0" stopOpacity={0} />
         </radialGradient>
 
         <radialGradient id="archGlow" cx="50%" cy="45%" r="35%">
-          <stop offset="0%" stopColor="#c088b0" stopOpacity={p * 0.08} />
+          <stop offset="0%" stopColor="#c088b0" stopOpacity={p * 0.08 + wordP * 0.20} />
           <stop offset="100%" stopColor="#c088b0" stopOpacity={0} />
+        </radialGradient>
+
+        {/* Beacon that ignites from the tome at phrase 2. Wider, warmer
+             than the bookLight; intended to wash the cavern. */}
+        <radialGradient id="tomeBeacon" cx="50%" cy="52%" r="60%">
+          <stop offset="0%" stopColor="#f0d8e0" stopOpacity={wordP * 0.32} />
+          <stop offset="35%" stopColor="#d8a0c0" stopOpacity={wordP * 0.16} />
+          <stop offset="100%" stopColor="#d8a0c0" stopOpacity={0} />
         </radialGradient>
       </defs>
 
@@ -224,6 +232,9 @@ function LibraryScene({ progress: p }: SceneProps) {
       {/* ── BOOK LIGHT from hero tome ── */}
       {pageLightP > 0 && <rect width="400" height="250" fill="url(#bookLight)" />}
 
+      {/* ── TOME BEACON — phrase-2 cavern wash ── */}
+      {wordP > 0 && <rect width="400" height="250" fill="url(#tomeBeacon)" />}
+
       {/* ── CRYSTALS ── */}
       {CRYSTALS.map((c, i) => {
         const cp = sub(crystalP, i * 0.05, 0.3);
@@ -231,14 +242,18 @@ function LibraryScene({ progress: p }: SceneProps) {
         const h = c.h * cp;
         const w = 5 + (i % 3) * 2;
         const tipY = c.from === "floor" ? c.baseY - h : c.baseY + h;
-        const brightness = 30 + p * 35;
+        // Phrase-2 pulse: each crystal flares brighter on a staggered
+        // cycle so the cavern reads as resonant rather than uniform.
+        const phase = (i * 0.7) % (Math.PI * 2);
+        const pulse = wordP > 0 ? 0.5 + 0.5 * Math.sin(p * 18 + phase) : 0;
+        const brightness = 30 + p * 35 + wordP * 20 + pulse * wordP * 15;
         return (
-          <g key={`cr${i}`} opacity={cp * 0.8}>
+          <g key={`cr${i}`} opacity={Math.min(1, cp * 0.8 + wordP * 0.2)}>
             <polygon
               points={`${c.x - w / 2},${c.baseY} ${c.x - 1},${tipY} ${c.x + w * 0.3},${tipY + (c.from === "floor" ? 2 : -2)} ${c.x + w / 2},${c.baseY}`}
               fill={`hsl(290, ${25 + p * 25}%, ${brightness}%)`}
               transform={`rotate(${c.angle}, ${c.x}, ${c.baseY})`}
-              filter={cp > 0.4 ? "url(#crystalGlow)" : undefined}
+              filter={cp > 0.4 || wordP > 0.3 ? "url(#crystalGlow)" : undefined}
             />
             {/* Secondary shard */}
             <polygon
@@ -313,16 +328,23 @@ function LibraryScene({ progress: p }: SceneProps) {
           const pageW = spread * 32;
           const bookY = 108;
           const bookH = 44;
+          // Pages warm and brighten with phrase 2; at full progress the
+          // parchment is suffused with golden light.
+          const pageColor = wordP > 0
+            ? `hsl(${42 - wordP * 4}, ${20 + wordP * 30}%, ${85 + wordP * 8}%)`
+            : "#e8e0d0";
           return (
             <g>
               <rect x={197 - pageW - 2} y={bookY} width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
               <rect x={197 - pageW} y={bookY + 1} width={pageW} height={bookH - 2} rx="0.5"
-                fill="#e8e0d0" opacity={spread * 0.7} />
+                fill={pageColor} opacity={spread * 0.7 + wordP * 0.3} />
               {spread > 0.3 && [0, 4, 8, 12, 16, 20, 24, 28, 32].map((dy) => (
                 <line key={`tl${dy}`} x1={197 - pageW + 2} y1={bookY + 4 + dy}
                   x2={197 - pageW + pageW * 0.8} y2={bookY + 4 + dy}
-                  stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
+                  stroke={wordP > 0 ? "#a04880" : "#c088b0"}
+                  strokeWidth={0.3 + wordP * 0.4}
+                  opacity={spread * 0.3 + wordP * 0.6} />
               ))}
             </g>
           );
@@ -333,25 +355,43 @@ function LibraryScene({ progress: p }: SceneProps) {
           const pageW = spread * 32;
           const bookY = 108;
           const bookH = 44;
+          const pageColor = wordP > 0
+            ? `hsl(${44 - wordP * 4}, ${22 + wordP * 30}%, ${86 + wordP * 8}%)`
+            : "#ede5d8";
           return (
             <g>
               <rect x="203" y={bookY} width={pageW + 2} height={bookH} rx="1"
                 fill={`hsl(280, ${12 + p * 8}%, ${10 + p * 5}%)`} opacity={spread * 0.8} />
               <rect x="203" y={bookY + 1} width={pageW} height={bookH - 2} rx="0.5"
-                fill="#ede5d8" opacity={spread * 0.7} />
+                fill={pageColor} opacity={spread * 0.7 + wordP * 0.3} />
               {spread > 0.3 && [0, 4, 8, 12, 16, 20, 24, 28, 32].map((dy) => (
                 <line key={`tr${dy}`} x1="206" y1={bookY + 4 + dy}
                   x2={203 + pageW * 0.8} y2={bookY + 4 + dy}
-                  stroke="#c088b0" strokeWidth="0.3" opacity={spread * 0.3 + wordP * 0.2} />
+                  stroke={wordP > 0 ? "#a04880" : "#c088b0"}
+                  strokeWidth={0.3 + wordP * 0.4}
+                  opacity={spread * 0.3 + wordP * 0.6} />
               ))}
             </g>
           );
         })()}
 
-        {/* Book glow — proportioned to the new aspect */}
+        {/* Book glow — proportioned to the new aspect, brightened on phrase 2 */}
         {spread > 0.2 && (
-          <ellipse cx="200" cy="130" rx={28 * spread} ry={24 * spread}
-            fill="#c088b0" opacity={spread * 0.08} filter="url(#pageGlow)" />
+          <ellipse cx="200" cy="130" rx={28 * spread + wordP * 12} ry={24 * spread + wordP * 8}
+            fill="#e0a8c0" opacity={spread * 0.08 + wordP * 0.18} filter="url(#pageGlow)" />
+        )}
+
+        {/* Voice rays — angled bands of light rising from the open book
+             toward the arch. Only on phrase 2. */}
+        {wordP > 0.1 && (
+          <g opacity={wordP * 0.55}>
+            {[-32, -16, 0, 16, 32].map((dx, i) => (
+              <path key={`ray${i}`}
+                d={`M${200 + dx * 0.2} 124 L${200 + dx} ${72 - wordP * 30} L${200 + dx + 4} ${72 - wordP * 30} L${200 + dx * 0.2 + 4} 124 Z`}
+                fill="#e8c0d8"
+                opacity={0.18 + wordP * 0.18 - Math.abs(dx) * 0.003} />
+            ))}
+          </g>
         )}
       </g>
 
@@ -415,7 +455,7 @@ function LibraryScene({ progress: p }: SceneProps) {
 
       {/* ── WARM WASH at high progress ── */}
       {wordP > 0 && (
-        <rect width="400" height="250" fill="#c088b0" opacity={wordP * 0.04} />
+        <rect width="400" height="250" fill="#d0a0c0" opacity={wordP * 0.10} />
       )}
     </svg>
   );
