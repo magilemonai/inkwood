@@ -25,66 +25,79 @@ function DormantGarden({ opacity }: { opacity: number }) {
       <path d="M0 185 Q100 155 200 178 Q300 195 400 170 L400 250 L0 250Z" fill="hsl(40, 4%, 20%)" />
       <path d="M0 205 Q80 188 180 200 Q280 215 400 195 L400 250 L0 250Z" fill="hsl(40, 3%, 22%)" />
 
-      {/* ── Left dormant tree — gnarled bare oak silhouette ── */}
+      {/* ── Left dormant tree — bare oak silhouette with filled branches ── */}
       <g>
-        {/* Trunk — bezier with slight curve */}
-        <path d="M74 208
-                 C73 198, 76 190, 74 180
-                 C72 170, 77 160, 75 150
-                 C73 140, 78 132, 76 122
-                 C76 118, 78 115, 80 113
-                 C82 115, 84 118, 84 122
-                 C84 132, 87 140, 85 150
-                 C83 160, 86 170, 84 180
-                 C82 190, 85 198, 84 208 Z"
+        {/* Trunk + main forking branches as one continuous filled silhouette.
+             Tapers from wide base to narrow fork, with two thick limbs
+             extending up-left and up-right that themselves fork. */}
+        <path d="M70 210
+                 C68 198, 72 184, 71 168
+                 C70 154, 74 140, 73 124
+                 C72 116, 76 108, 78 102
+                 C72 92, 60 84, 50 76
+                 C44 72, 38 68, 32 64
+                 L34 60
+                 C40 64, 48 68, 56 74
+                 C66 82, 76 90, 82 100
+                 C82 92, 80 80, 78 68
+                 L82 66
+                 C84 78, 86 90, 86 100
+                 C90 90, 100 80, 110 72
+                 C118 67, 124 64, 130 62
+                 L130 66
+                 C124 70, 116 76, 108 84
+                 C100 92, 92 100, 88 108
+                 C88 122, 90 138, 89 154
+                 C88 170, 91 186, 90 200
+                 C90 206, 88 210, 88 212 Z"
           fill="hsl(30, 5%, 28%)" />
-        {/* Major branches — bare, tapered, forking */}
-        <path d="M76 145 C70 140, 60 134, 50 128 C44 125, 38 122, 32 118"
-          fill="none" stroke="hsl(30, 5%, 28%)" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M82 138 C88 132, 96 126, 104 120 C110 115, 115 111, 120 107"
-          fill="none" stroke="hsl(30, 5%, 28%)" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M78 128 C74 120, 70 112, 66 104"
-          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M82 118 C83 108, 82 98, 80 90"
-          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M82 122 C88 114, 94 106, 98 98"
-          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="1.8" strokeLinecap="round" />
-        {/* Smaller twigs */}
-        <path d="M50 128 C48 122, 46 118, 44 114" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M104 120 C106 114, 108 110, 110 106" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M80 90 C76 84, 74 80, 72 76" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M80 90 C82 84, 84 80, 86 76" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.2" strokeLinecap="round" />
+        {/* Secondary tapered branches — small wedges off the main fork */}
+        <path d="M55 76 C52 72, 48 66, 44 60 L46 58 C50 64, 54 70, 58 74 Z"
+          fill="hsl(30, 5%, 26%)" />
+        <path d="M118 76 C122 72, 126 68, 130 64 L132 66 C128 70, 124 74, 120 78 Z"
+          fill="hsl(30, 5%, 26%)" />
+        {/* Fine twigs — kept as thin strokes for delicacy */}
+        <path d="M34 60 C32 57, 30 55, 28 53" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M82 66 C82 60, 81 56, 80 52" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M84 70 C86 64, 88 60, 90 56" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M130 64 C132 60, 134 58, 136 56" fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.1" strokeLinecap="round" />
       </g>
 
       {/* ── Right dormant tree — leaning slightly the other way ── */}
       <g>
-        {/* Trunk */}
-        <path d="M304 198
-                 C303 188, 306 180, 304 170
-                 C302 160, 307 150, 305 140
-                 C303 130, 308 120, 306 110
-                 C306 105, 308 102, 310 100
-                 C312 102, 314 105, 314 110
-                 C314 120, 317 130, 315 140
-                 C313 150, 316 160, 314 170
-                 C312 180, 315 188, 314 198 Z"
+        {/* Trunk + forking branches — mirrored composition with different
+             jitter so the two trees don't read as identical twins. */}
+        <path d="M298 200
+                 C296 188, 300 174, 299 158
+                 C298 144, 302 130, 301 116
+                 C300 108, 304 100, 306 94
+                 C300 84, 290 76, 280 68
+                 C274 64, 268 60, 262 56
+                 L264 52
+                 C270 56, 278 60, 286 66
+                 C294 72, 302 80, 308 90
+                 C308 82, 306 70, 304 58
+                 L308 56
+                 C310 70, 312 82, 312 92
+                 C316 82, 326 72, 336 64
+                 C344 58, 350 54, 358 50
+                 L358 54
+                 C352 58, 344 64, 336 72
+                 C328 80, 320 88, 316 96
+                 C316 110, 318 126, 317 142
+                 C316 158, 319 174, 318 188
+                 C318 194, 316 200, 316 202 Z"
           fill="hsl(30, 5%, 26%)" />
-        {/* Major branches */}
-        <path d="M306 130 C300 124, 290 118, 280 112 C274 108, 268 105, 262 102"
-          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M312 124 C318 118, 326 112, 334 106 C340 102, 346 98, 352 95"
-          fill="none" stroke="hsl(30, 5%, 26%)" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M308 115 C304 106, 302 98, 300 90"
-          fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M312 105 C314 96, 313 86, 311 78"
-          fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M312 108 C318 100, 322 92, 326 84"
-          fill="none" stroke="hsl(30, 5%, 24%)" strokeWidth="1.8" strokeLinecap="round" />
-        {/* Twigs */}
-        <path d="M280 112 C278 106, 276 102, 274 98" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M334 106 C336 100, 338 96, 340 92" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M311 78 C308 72, 306 68, 304 64" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M311 78 C314 72, 316 68, 318 64" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.2" strokeLinecap="round" />
+        {/* Secondary wedges */}
+        <path d="M285 68 C282 64, 278 58, 274 52 L276 50 C280 56, 284 62, 288 66 Z"
+          fill="hsl(30, 5%, 24%)" />
+        <path d="M340 64 C344 60, 348 56, 352 52 L354 54 C350 58, 346 62, 342 66 Z"
+          fill="hsl(30, 5%, 24%)" />
+        {/* Fine twigs */}
+        <path d="M264 52 C262 49, 260 47, 258 45" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M308 56 C308 50, 307 46, 306 42" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M310 60 C312 54, 314 50, 316 46" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M358 50 C360 46, 362 44, 364 42" fill="none" stroke="hsl(30, 5%, 22%)" strokeWidth="1.1" strokeLinecap="round" />
       </g>
 
       {/* Dead flower stems — bare, slightly curved */}
@@ -216,6 +229,36 @@ function Spark({ opacity }: { opacity: number }) {
   );
 }
 
+/** Title accent — a faint warm dawn glow on the horizon + one drifting
+ *  amber mote. Visible only on the title screen, signals the warmth
+ *  that's coming without breaking the dormant-world frame. */
+function TitleAccent() {
+  return (
+    <g>
+      <defs>
+        <radialGradient id="dawnGlow" cx="50%" cy="100%" r="55%">
+          <stop offset="0%" stopColor="hsl(28, 60%, 55%)" stopOpacity="0.18" />
+          <stop offset="55%" stopColor="hsl(28, 50%, 35%)" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="hsl(28, 40%, 20%)" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect x="0" y="160" width="400" height="90" fill="url(#dawnGlow)" />
+      <g>
+        <circle r="1.4" fill="hsl(40, 80%, 70%)" opacity="0.85">
+          <animate attributeName="cx" values="80;120;160;200;240;280;320" dur="14s" repeatCount="indefinite" />
+          <animate attributeName="cy" values="120;108;118;100;115;104;112" dur="14s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0;0.85;0.7;0.9;0.6;0.85;0" dur="14s" repeatCount="indefinite" />
+        </circle>
+        <circle r="0.5" fill="white" opacity="0.95">
+          <animate attributeName="cx" values="80;120;160;200;240;280;320" dur="14s" repeatCount="indefinite" />
+          <animate attributeName="cy" values="120;108;118;100;115;104;112" dur="14s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0;0.95;0.8;1;0.7;0.95;0" dur="14s" repeatCount="indefinite" />
+        </circle>
+      </g>
+    </g>
+  );
+}
+
 // Phases: black beat → garden → cottage → sky → spark → title
 const PHASES = [
   { start: 0.8, end: 4.5 },  // dormant garden (starts after a beat of black)
@@ -318,6 +361,7 @@ export default function IntroSequence() {
         <DormantCottage opacity={phaseOpacity(1)} />
         <DormantSky opacity={phaseOpacity(2)} />
         <Spark opacity={phaseOpacity(3)} />
+        {showTitle && <TitleAccent />}
       </svg>
 
       {showTitle && (
@@ -393,7 +437,7 @@ export default function IntroSequence() {
         </div>
       )}
 
-      {!showTitle && (
+      {!showTitle && time < PHASES[3].start && (
         <div className={s.skipHint}>tap to skip</div>
       )}
     </div>
