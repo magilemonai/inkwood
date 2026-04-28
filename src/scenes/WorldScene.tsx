@@ -109,16 +109,18 @@ const LEY_POINTS = [
   { x: 200, y: 40,  label: "tree" },     // center top
 ];
 
-// Complete graph across all 7 ley-point nodes — every location
-// connects to every other, so "the ancient order is restored" reads as
-// a fully-woven web rather than a sparse network. 21 connections total.
+// Six spokes radiating out from the Great Tree (#6) — the axis mundi
+// connects every prior location to itself. A previous version drew
+// the complete graph (21 connections); at climax it read as a network
+// diagram, not a vista. The radial pattern echoes the outro panorama
+// where each location's energy returns to the central tree.
 const LEY_CONNECTIONS: [number, number][] = [
-  [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
-  [1, 2], [1, 3], [1, 4], [1, 5], [1, 6],
-  [2, 3], [2, 4], [2, 5], [2, 6],
-  [3, 4], [3, 5], [3, 6],
-  [4, 5], [4, 6],
-  [5, 6],
+  [0, 6], // garden  → tree
+  [1, 6], // cottage → tree
+  [2, 6], // stars   → tree
+  [3, 6], // well    → tree
+  [4, 6], // bridge  → tree
+  [5, 6], // stones  → tree
 ];
 
 function WorldScene({ progress: p }: SceneProps) {
@@ -214,36 +216,43 @@ function WorldScene({ progress: p }: SceneProps) {
         <rect width="400" height="250" fill="url(#dawnGlow)" />
       )}
 
-      {/* ── GREAT TREE SILHOUETTE — rises during unity phase ── */}
+      {/* ── GREAT TREE SILHOUETTE — rises during unity phase ──
+           Scaled down to 70% from v14 (was overwhelming the frame at
+           climax). Re-centered around (200, 60) so it still anchors
+           the composition without dominating it. */}
       {unityP > 0 && (() => {
         const treeRise = sub(unityP, 0, 0.5);
         const canopyP = sub(unityP, 0.3, 0.4);
         const offsetY = (1 - treeRise) * 30;
+        // 0.7 scale around (200, 60): 0.7*200 + a = 200 → a = 60; same for y
+        const scaleX = 0.7;
+        const treeTransform = `translate(${60}, ${18 + offsetY}) scale(${scaleX})`;
+        const canopyTransform = `translate(${60}, ${18 + offsetY * 0.5}) scale(${scaleX})`;
         return (
-          <g opacity={treeRise * 0.85}>
+          <g opacity={treeRise * 0.78}>
             {/* Trunk */}
             <path d={GREAT_TREE_TRUNK}
               fill={`hsl(140, ${10 + unityP * 15}%, ${8 + unityP * 6}%)`}
-              transform={`translate(0, ${offsetY})`} />
-            {/* Canopy — fades in after trunk */}
+              transform={treeTransform} />
+            {/* Canopy — fades in after trunk, dimmed for less dominance */}
             {canopyP > 0 && (
               <path d={GREAT_TREE_CANOPY}
                 fill={`hsl(130, ${15 + unityP * 20}%, ${10 + unityP * 8}%)`}
-                opacity={canopyP * 0.9}
-                transform={`translate(0, ${offsetY * 0.5})`} />
+                opacity={canopyP * 0.65}
+                transform={canopyTransform} />
             )}
             {/* Roots spreading into hills */}
             {TREE_ROOTS.map((r, i) => (
               <path key={`r${i}`} d={r}
                 fill="none"
                 stroke={`hsl(50, ${20 + unityP * 30}%, ${12 + unityP * 10}%)`}
-                strokeWidth={1.5}
-                opacity={sub(unityP, 0.2 + i * 0.1, 0.3) * 0.4}
+                strokeWidth={1.2}
+                opacity={sub(unityP, 0.2 + i * 0.1, 0.3) * 0.35}
                 transform={`translate(0, ${offsetY * 0.3})`} />
             ))}
-            {/* Tree glow — inner light */}
+            {/* Tree glow — inner light, scaled with the tree */}
             {canopyP > 0.3 && (
-              <ellipse cx="200" cy={45 + offsetY * 0.5} rx="25" ry="18"
+              <ellipse cx="200" cy={48 + offsetY * 0.5} rx="18" ry="13"
                 fill="#d8c890" opacity={sub(canopyP, 0.3, 0.5) * 0.08} />
             )}
           </g>
@@ -500,33 +509,36 @@ function WorldScene({ progress: p }: SceneProps) {
         ) : null;
       })}
 
-      {/* ── LEY LINES — unity phase, golden connections ── */}
-      {unityP > 0.2 && LEY_CONNECTIONS.map(([a, b], i) => {
+      {/* ── LEY LINES — unity phase, golden connections.
+           Six spokes from each location to the central tree, staggered
+           and dimmer than v14: the previous laser-bright complete graph
+           dominated the frame at 99%. */}
+      {unityP > 0.15 && LEY_CONNECTIONS.map(([a, b], i) => {
         const la = LEY_POINTS[a];
         const lb = LEY_POINTS[b];
-        const lp = sub(unityP, 0.2 + i * 0.04, 0.25);
+        const lp = sub(unityP, 0.15 + i * 0.08, 0.4);
         if (lp <= 0) return null;
 
-        const mx = (la.x + lb.x) / 2 + ((i % 3) - 1) * 10;
-        const my = (la.y + lb.y) / 2 - 5;
+        const mx = (la.x + lb.x) / 2 + ((i % 3) - 1) * 8;
+        const my = (la.y + lb.y) / 2 - 4;
         const lineLen = Math.sqrt((lb.x - la.x) ** 2 + (lb.y - la.y) ** 2) * 1.2;
 
         return (
           <g key={`ley${i}`}>
-            {/* Outer glow line */}
+            {/* Outer glow line — dimmed from 0.12 to 0.06 */}
             <path
               d={`M${la.x} ${la.y} Q${mx} ${my} ${lb.x} ${lb.y}`}
-              fill="none" stroke="#d8c890" strokeWidth={2}
+              fill="none" stroke="#d8c890" strokeWidth={1.6}
               strokeDasharray={lineLen}
               strokeDashoffset={lineLen * (1 - lp)}
-              opacity={lp * 0.12} />
-            {/* Inner bright line */}
+              opacity={lp * 0.06} />
+            {/* Inner bright line — dimmed from 0.3 to 0.18 */}
             <path
               d={`M${la.x} ${la.y} Q${mx} ${my} ${lb.x} ${lb.y}`}
-              fill="none" stroke="#f0e8c0" strokeWidth={0.6}
+              fill="none" stroke="#f0e8c0" strokeWidth={0.5}
               strokeDasharray={lineLen}
               strokeDashoffset={lineLen * (1 - lp)}
-              opacity={lp * 0.3} />
+              opacity={lp * 0.18} />
           </g>
         );
       })}
