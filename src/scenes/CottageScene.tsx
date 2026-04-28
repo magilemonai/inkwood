@@ -304,15 +304,33 @@ function CottageScene({ progress: p }: SceneProps) {
         stroke={`hsl(35, ${8 + p * 10}%, ${14 + p * 5}%)`}
         strokeWidth="0.4" opacity={0.2 + p * 0.15} />
 
-      {/* ── FLOOR WARMTH — candlelight reflections on floorboards ── */}
+      {/* ── FLOOR WARMTH — candlelight reflections on floorboards.
+           Unified shelf-spanning wash plus per-candle pools. Bumped from
+           v14 (was opacity 0.04) — at that level the floor still read
+           as uniformly dark, missing the cozy reflection the candles
+           imply. */}
+      {(c1 + c2 + c3) > 0.3 && (
+        <ellipse cx="265" cy="200" rx={92} ry={11}
+          fill="#e89a30" opacity={(c1 + c2 + c3) * 0.035} />
+      )}
       {c1 > 0.3 && (
-        <ellipse cx="210" cy="198" rx="35" ry="8" fill="#e89a30" opacity={c1 * 0.04} />
+        <ellipse cx="210" cy="198" rx="32" ry="7" fill="#e89a30" opacity={c1 * 0.11} />
       )}
       {c2 > 0.3 && (
-        <ellipse cx="262" cy="198" rx="38" ry="9" fill="#e89a30" opacity={c2 * 0.05} />
+        <ellipse cx="262" cy="198" rx="34" ry="8" fill="#e89a30" opacity={c2 * 0.12} />
       )}
       {c3 > 0.3 && (
-        <ellipse cx="318" cy="198" rx="32" ry="7" fill="#e89a30" opacity={c3 * 0.04} />
+        <ellipse cx="318" cy="198" rx="30" ry="7" fill="#e89a30" opacity={c3 * 0.10} />
+      )}
+      {/* Bright cores — small, brighter centers under each lit candle */}
+      {c1 > 0.5 && (
+        <ellipse cx="210" cy="198" rx="14" ry="4" fill="#f0b050" opacity={c1 * 0.10} />
+      )}
+      {c2 > 0.5 && (
+        <ellipse cx="262" cy="198" rx="16" ry="4" fill="#f0b050" opacity={c2 * 0.11} />
+      )}
+      {c3 > 0.5 && (
+        <ellipse cx="318" cy="198" rx="13" ry="4" fill="#f0b050" opacity={c3 * 0.09} />
       )}
 
       {/* ── WINDOW LIGHT on floor — soft amber pool beneath the window

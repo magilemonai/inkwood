@@ -88,6 +88,16 @@ function StonesScene({ progress: p }: SceneProps) {
       <defs>
         <GlowFilter id="runeGlow" radius={5} color="#88a8c8" opacity={0.6} />
         <GlowFilter id="leyGlow" radius={3} color="#88a8c8" opacity={0.5} />
+        {/* Carved-rune roughening: turbulence + displacement gives the
+             vector-perfect rune strokes a hand-chiseled wobble so they
+             read as weathered carvings rather than computer glyphs.
+             A separate seed per rune index would be ideal; one shared
+             filter reads "uniformly carved by the same hand" which is
+             also true to the lore. */}
+        <filter id="runeCarved" x="-30%" y="-30%" width="160%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.7" />
+        </filter>
 
         <linearGradient id="stonesSky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={`hsl(${skyH}, ${skyS}%, ${skyL + 4}%)`} />
@@ -250,12 +260,14 @@ function StonesScene({ progress: p }: SceneProps) {
               x2={s.x + hw + s.lean - 2} y2={topY + 1}
               stroke={`hsl(220, 5%, ${22 + p * 5}%)`}
               strokeWidth="2" strokeLinecap="round" opacity={sp * 0.4} />
-            {/* Rune */}
+            {/* Rune — chained filters: outer glow, inner carved roughening */}
             {runeP > 0 && (
               <g opacity={runeP} filter="url(#runeGlow)"
                 transform={`translate(${s.x}, ${topY + rise * 0.4})`}>
-                <path d={RUNE_SHAPES[i]} fill="none"
-                  stroke="#88a8c8" strokeWidth="1.2" strokeLinecap="round" />
+                <g filter="url(#runeCarved)">
+                  <path d={RUNE_SHAPES[i]} fill="none"
+                    stroke="#88a8c8" strokeWidth="1.4" strokeLinecap="round" />
+                </g>
               </g>
             )}
           </g>

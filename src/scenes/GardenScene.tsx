@@ -9,14 +9,14 @@ import ParticleField from "../components/ParticleField";
 // ─── HAND-CRAFTED SVG PATHS ────────────────────────────────
 
 /** Oak trunk that SPLITS into two main limbs at the crown.
- *  One continuous shape — trunk widens, then forks left and right.
- *  This is the whole wood structure below the canopy. */
+ *  One continuous shape — trunk tapers from a wide base, narrows toward
+ *  the fork, then branches left and right. The base flare lets the
+ *  dormant silhouette read as a sleeping tree, not a hollow log. */
 const TRUNK_AND_LIMBS = `
-  M112 195
-  C111 189, 110 183, 109 177
-  C108 171, 107 166, 106 160
-  C105 155, 104 150, 105 145
-  C106 140, 106 135, 106 128
+  M98 195
+  C100 188, 103 181, 105 174
+  C106 167, 106 160, 106 153
+  C106 146, 106 138, 106 130
   C106 122, 105 116, 106 110
   C107 106, 110 102, 114 98
   C110 92, 100 82, 88 72
@@ -31,11 +31,10 @@ const TRUNK_AND_LIMBS = `
   C182 50, 172 54, 162 60
   C150 68, 140 76, 134 84
   C128 94, 133 102, 136 110
-  C137 118, 137 124, 137 130
-  C137 136, 138 142, 138 148
-  C138 154, 138 160, 137 166
-  C136 172, 135 178, 134 184
-  C133 189, 132 192, 132 195
+  C137 118, 138 124, 138 130
+  C138 138, 139 146, 139 153
+  C140 160, 141 167, 143 174
+  C145 181, 147 188, 148 195
   Z`;
 
 /** Secondary branches off the two main limbs — small forks */

@@ -302,15 +302,24 @@ function TreeScene({ progress: p }: SceneProps) {
           <path d={CANOPY}
             fill={`hsl(${120 + p * 15}, ${20 + heartPhase * 30}%, ${10 + heartPhase * 16}%)`}
             opacity={heartPhase * 0.88} />
+          {/* Soft upward bleed — a faint green wash at the top of frame
+               so the canopy reads as continuous with the sky beyond,
+               not a hard-edged hat. */}
+          <rect width="400" height="50" fill={`hsl(${122 + p * 8}, 28%, ${10 + heartPhase * 6}%)`}
+            opacity={heartPhase * 0.4} />
           {/* Canopy depth puffs — overlapping ellipses on top of the
                flat fill so the canopy reads as layered foliage rather
-               than one big shape. Lighter tones in upper-front clusters,
-               darker tones in lower/back to create the impression of
-               leaf masses catching different amounts of light. */}
+               than one big shape. Three tip puffs (cy<14) break the
+               upper silhouette so the crown reaches up, not just out. */}
           {[
+            // Spire tips — reach above the main canopy mass
+            { cx: 160, cy: 8,  rx: 22, ry: 10, hue: 126, l: 18 },
+            { cx: 240, cy: 8,  rx: 22, ry: 10, hue: 126, l: 18 },
+            { cx: 200, cy: 2,  rx: 28, ry: 12, hue: 128, l: 22 },
+            // Main mass
             { cx: 80,  cy: 28, rx: 42, ry: 16, hue: 122, l: 14 },
             { cx: 320, cy: 28, rx: 42, ry: 16, hue: 122, l: 14 },
-            { cx: 200, cy: 18, rx: 78, ry: 18, hue: 124, l: 18 },
+            { cx: 200, cy: 18, rx: 78, ry: 22, hue: 124, l: 18 },
             { cx: 140, cy: 38, rx: 48, ry: 14, hue: 120, l: 12 },
             { cx: 260, cy: 38, rx: 48, ry: 14, hue: 120, l: 12 },
             { cx: 200, cy: 50, rx: 60, ry: 12, hue: 118, l: 10 },

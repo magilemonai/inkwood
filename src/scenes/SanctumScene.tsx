@@ -117,8 +117,18 @@ function SpiritFigure({
   // collide in the SVG defs namespace.
   const coreId = `spiritCore-${index}`;
   const haloId = `spiritHalo-${index}`;
+  // Per-figure pulse offset so the spirits don't all breathe in lockstep.
+  const pulseDelay = `-${(index * 0.7).toFixed(1)}s`;
   return (
     <g opacity={opacity}>
+      {/* Slow opacity pulse — 0.7 → 1 → 0.7 over 4s, staggered per index
+           so the gathered spirits read as breathing presences rather than
+           static silhouettes. */}
+      <animate attributeName="opacity"
+        values={`${opacity * 0.7};${opacity};${opacity * 0.7}`}
+        dur="4s"
+        begin={pulseDelay}
+        repeatCount="indefinite" />
       <defs>
         {/* Inner-light radial — bright at the heart, fading to nothing */}
         <radialGradient id={coreId} cx="50%" cy="50%" r="50%">
@@ -202,13 +212,15 @@ function SanctumScene({ progress: p }: SceneProps) {
     { x: 230, delay: 0.3 },
   ];
 
-  // Spirit figures in a loose circle in the clearing
+  // Spirit figures in a loose circle in the clearing.
+  // Heights grown ~30% from v14 — at the previous scale they read as
+  // fireflies more than presences when sitting beneath the moonbeams.
   const spirits = [
-    { x: 155, y: 165, h: 32, delay: 0.55 },
-    { x: 180, y: 168, h: 28, delay: 0.6 },
-    { x: 200, y: 162, h: 35, delay: 0.65 },
-    { x: 220, y: 167, h: 30, delay: 0.7 },
-    { x: 245, y: 164, h: 33, delay: 0.75 },
+    { x: 155, y: 165, h: 42, delay: 0.55 },
+    { x: 180, y: 168, h: 36, delay: 0.6 },
+    { x: 200, y: 162, h: 46, delay: 0.65 },
+    { x: 220, y: 167, h: 39, delay: 0.7 },
+    { x: 245, y: 164, h: 43, delay: 0.75 },
   ];
 
   // Stars
