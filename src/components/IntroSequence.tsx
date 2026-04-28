@@ -204,18 +204,6 @@ function DormantSky({ opacity }: { opacity: number }) {
   );
 }
 
-/** The spark — the tiny sign of dormant power */
-function Spark({ opacity }: { opacity: number }) {
-  return (
-    <g opacity={opacity}>
-      <circle cx="200" cy="125" r="40" fill="#6bbf6b" opacity={0.03} />
-      <circle cx="200" cy="125" r="15" fill="#6bbf6b" opacity={0.06} />
-      <circle cx="200" cy="125" r="3" fill="#90d870" opacity={0.4} />
-      <circle cx="200" cy="125" r="1" fill="white" opacity={0.6} />
-    </g>
-  );
-}
-
 /** Title accent — a faint warm dawn glow on the horizon + one drifting
  *  amber mote. Visible only on the title screen, signals the warmth
  *  that's coming without breaking the dormant-world frame. */
@@ -246,13 +234,14 @@ function TitleAccent() {
   );
 }
 
-// Phases: black beat → garden → cottage → sky → spark → title
-const PHASES = [
-  { start: 0.8, end: 4.5 },  // dormant garden (starts after a beat of black)
-  { start: 4, end: 8 },      // dormant cottage
-  { start: 7.5, end: 11.5 }, // dormant sky
-  { start: 11, end: 14.5 },  // spark
-  { start: 14, end: 99 },    // title
+// Title now appears immediately on load; the dormant vignettes cycle
+// continuously behind it as ambient background. Three phases at 8 s
+// each crossfade with 1.2 s overlap and loop forever via modulo time.
+const CYCLE_LEN = 24;
+const LOOP_PHASES = [
+  { start: 0,  end: 9 },   // dormant garden
+  { start: 8,  end: 17 },  // dormant cottage
+  { start: 16, end: 25 },  // dormant sky (extends past CYCLE_LEN; wrap handled below)
 ];
 
 export default function IntroSequence() {
@@ -261,10 +250,6 @@ export default function IntroSequence() {
   const hasCompleted = useGameStore((g) => g.hasCompleted);
   const { focusInput } = useInput();
   const [time, setTime] = useState(0);
-  // Returning players (hasCompleted) skip the 14-second dormant-world
-  // animation and land directly on the title state. They've already
-  // seen the slow reveal — getting back to "Begin" should be instant.
-  const [showTitle, setShowTitle] = useState(hasCompleted);
   const [shareLabel, setShareLabel] = useState("Share");
 
   // Begin: focus the singleton input synchronously inside the click
@@ -282,20 +267,23 @@ export default function IntroSequence() {
     return () => { stopIntroDrone(); };
   }, []);
 
-  // Keyboard: space/enter to skip or begin
+  // Keyboard: space/enter to begin
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        if (showTitle) handleBegin();
-        else setShowTitle(true);
+        handleBegin();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTitle]);
+  }, []);
 
+  // Free-running rAF tick — drives the looping background phases.
+  // No upper bound on elapsed time; the phaseOpacity function uses
+  // `time % CYCLE_LEN` so the cycle continues until the user navigates
+  // away from this screen.
   useEffect(() => {
     const start = performance.now();
     let frame: number;
@@ -303,41 +291,43 @@ export default function IntroSequence() {
     const tick = () => {
       const now = performance.now();
       const elapsed = (now - start) / 1000;
-      // Throttle state updates to ~15 Hz
       if (now - lastUpdate > 66) {
         lastUpdate = now;
         setTime(elapsed);
-        if (elapsed >= 14 && !showTitle) {
-          setShowTitle(true);
-        }
       }
-      if (elapsed < 18) {
-        frame = requestAnimationFrame(tick);
-      }
+      frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [showTitle]);
+  }, []);
 
-  // Compute phase opacities with crossfade
-  const phaseOpacity = (idx: number) => {
-    const { start, end } = PHASES[idx];
-    const fadeIn = 1.2;
-    const fadeOut = 1.2;
-    if (time < start) return 0;
-    if (time < start + fadeIn) return (time - start) / fadeIn;
-    if (time < end - fadeOut) return 1;
-    if (time < end) return (end - time) / fadeOut;
+  // Crossfade segment for one phase at a given absolute time within
+  // its window. Returns 0 outside the window.
+  const segmentOpacity = (t: number, start: number, end: number) => {
+    const fade = 1.2;
+    if (t < start) return 0;
+    if (t < start + fade) return (t - start) / fade;
+    if (t < end - fade) return 1;
+    if (t < end) return (end - t) / fade;
     return 0;
   };
 
-  const handleSkip = () => {
-    if (showTitle) return; // let button handle it
-    setShowTitle(true);
+  // Loop-aware opacity — sample the phase at t, t + CYCLE_LEN, and
+  // t - CYCLE_LEN so phases that cross the wrap point still crossfade
+  // cleanly.
+  const phaseOpacity = (idx: number) => {
+    const t = time % CYCLE_LEN;
+    const { start, end } = LOOP_PHASES[idx];
+    return Math.max(
+      segmentOpacity(t, start, end),
+      segmentOpacity(t + CYCLE_LEN, start, end),
+      segmentOpacity(t - CYCLE_LEN, start, end),
+    );
   };
 
+
   return (
-    <div className={s.container} onClick={handleSkip}>
+    <div className={s.container}>
       <svg
         viewBox="0 0 400 250"
         className={s.sceneWrap}
@@ -347,12 +337,10 @@ export default function IntroSequence() {
         <DormantGarden opacity={phaseOpacity(0)} />
         <DormantCottage opacity={phaseOpacity(1)} />
         <DormantSky opacity={phaseOpacity(2)} />
-        <Spark opacity={phaseOpacity(3)} />
-        {showTitle && <TitleAccent />}
+        <TitleAccent />
       </svg>
 
-      {showTitle && (
-        <div className={s.titleOverlay}>
+      <div className={s.titleOverlay}>
           <svg viewBox="0 0 60 60" width="64" height="64" className={s.titleLogo}>
             {/* Outer ring — medallion border */}
             <circle cx="30" cy="30" r="26" fill="none"
@@ -422,11 +410,6 @@ export default function IntroSequence() {
             {shareLabel}
           </button>
         </div>
-      )}
-
-      {!showTitle && time < PHASES[3].start && (
-        <div className={s.skipHint}>tap to skip</div>
-      )}
     </div>
   );
 }
