@@ -26,7 +26,7 @@ Core loop:
 intro → playing → [levelWin | actTransition] → playing → ... → outro → (loops until restart)
 ```
 
-- **Intro:** Three animated dormant-world vignettes (garden → cottage → sky) → spark → title → Begin
+- **Intro:** Title + Begin appear immediately on a soft black background. The three dormant-world vignettes (garden → cottage → sky) crossfade behind the title on a 24-second loop until the player taps Begin. A drifting amber firefly mote and a faint dawn-glow horizon hint at the warmth coming. (Earlier versions ran a 14s linear sequence + spark transition; that's been retired.)
 - **Playing:** Scene fills viewport, typing overlay at bottom
 - **Level Win:** Brief narrative text, space/enter to continue (within an act)
 - **Act Transition:** 7-second animated interstitial (after levels 2, 5, 8) with next act's audio
@@ -47,20 +47,20 @@ intro → playing → [levelWin | actTransition] → playing → ... → outro �
 ## Current State (v1.0 — shipped)
 
 ### Scene Quality
-**Eight scenes at A- or above** per the v14 critique, with Tree and Sanctum rebuilt after v14 (estimated A-/A- post-rebuild). See `PERSONAS.md` for the full scene-by-scene breakdown.
+**Post-v15 grades.** Library, Tree, Sanctum, Cottage, and Stones each got a polish pass after v15 (see Session History #17). World is unchanged from v14 (the v15 rebalance attempt was reverted per director feedback). See `PERSONAS.md` for the full scene-by-scene breakdown.
 
 | Scene | Grade | Defining Element |
 |---|---|---|
-| Garden | A- | Bezier petal flowers with sway animation, canopy covering layer, physics pollen |
-| Cottage | A | Cold blue → warm amber temperature shift, cat silhouette (loaf pose, peeking eye), rug, hanging herbs |
+| Garden | A- | Bezier petal flowers with sway animation, canopy covering layer, physics pollen, tapered dormant trunk |
+| Cottage | A | Cold blue → warm amber shift, cat silhouette (loaf pose, peeking eye), candle floor pools at ~0.10–0.14 opacity |
 | Stars | A | **Gold standard.** Constellation drawing, moon crescent, comets at climax |
 | Well | A | Cross-section reveal at ~30%, river with flow lines, runes flowing downstream |
 | Bridge | A- | Stones assembling at cliff-tops, lanterns above, spirit footprints |
-| Library | A- | Gothic cavern with sacred book pedestals, central tome opens, crystals, floating books |
-| Stones | A- | Standing stones rise, ley lines draw, ritual circle, heather/moss patches |
-| Sanctum | A- (post-rebuild) | Translucent teardrop spirits with radial-gradient pearls + halos, moon beams, firefly particles |
-| Tree | A- (post-rebuild) | Widened trunk with bark detail, six overlapping canopy puffs, three-phase root/branch/canopy glow |
-| World | B+ | Panoramic landscape assembles with callbacks to all prior levels, ley lines connect |
+| Library | A | Phrase-2 escalation: voice rays from open tome, crystal pulse, warm gold pages, expanding tome glow |
+| Stones | A- | Standing stones with hand-carved runes (turbulence/displacement filter), ley lines, ritual circle |
+| Sanctum | A- | Translucent teardrop spirits (+30% size from v14, slow opacity pulse via SMIL), moon beams, fireflies |
+| Tree | A- | Widened trunk + bark, canopy reaches sky via three spire puffs + upward bleed, three-phase glow |
+| World | B+ | Panoramic landscape assembles with callbacks to all prior levels, 21-connection ley network |
 
 ### Technical Stack
 - **Vite + React 19 + TypeScript** — standalone SPA
@@ -183,6 +183,9 @@ This project is a close collaboration. **Do not build art without discussing the
 - Doorbell-like completion chime — replaced with filter sweep
 - Audio loud enough to hurt ears — hard-capped at MASTER_VOLUME = 0.15
 - Outro replay bug — now loops indefinitely until restart
+- World ley-line graph as 6 radial spokes (v15 attempt) — director prefers the 21-connection complete graph for its woven "interconnected" reading
+- Intro dormant trees as filled-branch silhouettes (v15 attempt) — director prefers the original stroked branches with delicate twigs
+- Bordered CTAs replaced with text + underline (v15 attempt) — the bordered box is doing real work as a mobile tap affordance; restored. **Default to keeping bordered buttons unless explicitly directed otherwise.**
 
 ---
 
@@ -360,7 +363,12 @@ This file documents a multi-session collaboration that took the game from incons
 13. **Scene polish (v14)** — Tree trunk widened with bark detail and overlapping canopy puffs; Sanctum / World / Outro spirit figures rebuilt as translucent teardrops with radial-gradient pearls and halos; Garden flowers now sway via `<animateTransform>`. Cat ear occlusion fixed; Well water no longer surfaces through ground.
 14. **Audio safety** — `armTerminationSilence()` silences master gain on `pagehide` and `visibilitychange` to kill the loud sine burst on mobile tab-close. Mute slider compacted to icon-only on mobile.
 15. **Long-prompt typography** — `--char-count` CSS clamp + `.wordRun` / `.spaceRun` flex containers so long phrases never wrap mid-typing.
-16. **v1.0 launch (2026-04-26)** — Custom domain `inkwood.codywymore.com` (CNAME in `public/`, base path `/`). PWA kept enabled (offline play, installable). GoatCounter analytics wired with per-screen pageviews via `src/analytics.ts` (paths: `/intro`, `/play/{scene}`, `/win/{scene}`, `/transition/{scene}`, `/outro`, `/wander`).
+16. **v1.0 launch (2026-04-26)** — Custom domain `inkwood.codywymore.com` (CNAME in `public/`, base path `/`). PWA kept enabled (offline play, installable). GoatCounter analytics wired with per-screen pageviews via `src/analytics.ts` (paths: `/intro`, `/play/{scene}`, `/win/{scene}`, `/transition/{scene}`, `/outro`, `/wander`). Tagged `v1.0` in git.
+17. **v15 critique + first post-launch polish pass (2026-04-26 → 2026-04-29)** — Nine of eleven v15 priority items shipped, two reverted per director feedback, plus an intro behavior change.
+    - **Shipped:** skip-caption race fixed (intro #10); Library phrase-2 escalation with voice rays + crystal pulse + warm gold pages + bigger tome glow (#1, #8); Tree canopy spire puffs + upward bleed (#4); Sanctum spirits scaled +30% with staggered slow opacity pulse via SMIL `<animate>` (#5); Cottage candle floor pools bumped from 0.04 to ~0.10–0.14 with bright cores (#9); Stones runes gain a `feTurbulence` + `feDisplacementMap` filter chain for hand-carved displacement (#11); Garden dormant-trunk path tapered from a wider base (#6); Title-screen warmth accent — drifting amber firefly mote + dawn glow at the horizon, always on under the title (#3).
+    - **Reverted per director feedback:** World finale 6-spoke rebalance (kept the original 21-connection complete graph); intro dormant-tree filled-branch redesign (kept the original stroked branches with thin twigs).
+    - **Intro behavior change (post-v15):** Title now appears immediately on load. The three dormant vignettes loop continuously behind it on a 24-second cycle (`time % CYCLE_LEN`, three phases at 9s with 1.2s crossfades, sampled at ±cycle for clean wrap-around). Spark transition retired. Skip-hint and click-to-skip handler removed.
+    - **CTA styling experiment** — Tried a text + always-visible underline pattern for Begin / Begin Again / Replay any level. Director preferred the original bordered buttons; reverted. Lesson: the box border is doing real work as a tap affordance on mobile, and the "form button" feeling didn't bother the director the way it bothered me in screenshots.
 
 ### Total Improvements
 - All scenes rebuilt or polished to B+/A-
@@ -375,13 +383,16 @@ This file documents a multi-session collaboration that took the game from incons
 
 ## Known Issues / Next Steps
 
-v1.0 has shipped. `PERSONAS.md` reflects the v14 critique snapshot. Open work, lightly prioritized:
+v1.0 has shipped. `PERSONAS.md` reflects the **v15** critique snapshot. The v15 priority stack is mostly cleared (see Session History #17). Open work, lightly prioritized:
 
-1. **Library tome glow at 99%** — could radiate more light at full progress.
-2. **Cottage window shadow** — soft floor light pool when candles are lit; currently floor stays uniformly dark.
+1. **Sanctum prompt 2 length** — "moonlight, gather where spirits convene" (39 chars) still squeezes via `--char-count` font scaling. Tightening to ~30 chars would let it sit at full prompt size. Both v14 and v15 flagged this.
+2. **Watch GoatCounter funnel** — site has been live since 2026-04-26 with per-screen pageviews. Pull `/intro → /play/garden → … → /outro` drop-off rates and let real player data drive the next round of art priorities. v15 explicitly recommended a one-week watch before more art work.
 3. **Trailer publishing** — `scripts/trailer.mjs` produces a polished mp4; consider pinning the latest export to a release asset and updating share previews to point at it.
-4. **Run `/critique` again** — full multi-persona pass to surface what's drifted since v14, now with v1.0 in the wild.
-5. **Watch GoatCounter** — first-day funnel data should tell us where players drop off (intro → play/garden → … → outro). Use this to drive the next round of UX work.
+4. **Library voice rays sanity check** — verify in motion they don't read as a "victory beam" cliché. If they do, dial five rays back to three.
+5. **Re-screenshot the World scene at 99%** — director kept the 21-connection complete graph but v15 testers (Alex) flagged the in-game finale as anticlimactic. If the funnel shows drop-off there, revisit (with options shown rather than a unilateral redesign).
+6. **Run `/critique` again** for v16 once funnel data lands.
+
+**Director-rejected territory (do not re-attempt without explicit ask):** redesigning the World ley-line graph, redesigning the dormant intro trees, replacing the bordered CTA buttons with text/underline.
 
 ---
 
