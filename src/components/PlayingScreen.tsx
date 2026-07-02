@@ -4,6 +4,7 @@ import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import InkOverlay from "./InkOverlay";
+import SeasonalLayer from "./SeasonalLayer";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
 import { startAmbient, playCompletionSweep, toggleMute, isMuted, getUserVolume, setUserVolume } from "../audio";
 import { soundResolution } from "../music";
@@ -175,6 +176,7 @@ export default function PlayingScreen() {
         <ErrorBoundary>
           <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
         </ErrorBoundary>
+        <SeasonalLayer />
       </div>
 
       <HeaderBar />

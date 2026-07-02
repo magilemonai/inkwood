@@ -3,6 +3,7 @@ import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import { isMusicEnabled, setMusicEnabled } from "../music";
 import { isInkEnabled, setInkEnabled } from "../ink";
+import { isSeasonsEnabled, setSeasonsEnabled } from "../seasons";
 
 /**
  * Floating dev panel for testing. Toggle with F2 key.
@@ -84,6 +85,7 @@ export default function DevPanel() {
 function MusicToggle() {
   const [music, setMusic] = useState(isMusicEnabled);
   const [ink, setInk] = useState(isInkEnabled);
+  const [seasons, setSeasons] = useState(isSeasonsEnabled);
   return (
     <>
       <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: music ? "#b8c8a8" : "#888" }}>
@@ -107,6 +109,17 @@ function MusicToggle() {
           }}
         />
         ink motes
+      </label>
+      <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, cursor: "pointer", color: seasons ? "#b8c8a8" : "#888" }}>
+        <input
+          type="checkbox"
+          checked={seasons}
+          onChange={(e) => {
+            setSeasons(e.target.checked);
+            setSeasonsEnabled(e.target.checked);
+          }}
+        />
+        living seasons
       </label>
     </>
   );
