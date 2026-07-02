@@ -69,6 +69,7 @@ intro → playing → [levelWin | actTransition] → playing → ... → outro �
 - **CSS Modules** — scoped styles
 - **Inline SVG** — all scene art (hand-crafted bezier paths)
 - **Web Audio API** — all audio synthesis (no audio files)
+- **Vitest** — unit tests for the pure logic modules (`npm test`)
 - **GitHub Pages** — auto-deploy on push to `main` via `.github/workflows/deploy.yml`
 
 ### Narrative
@@ -102,6 +103,8 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
 ├── CLAUDE.md                    # This file — the entry point
 ├── PERSONAS.md                  # Latest six-persona critique (regenerate via /critique)
 ├── SCENE_ART_GUIDE.md           # Art principles learned from scene rebuilds
+├── NEXT.md                      # (local, untracked) dashboard steering — auto-synced by /critique Step 6
+├── LOOPS.md                     # (local, untracked) scouted self-improvement loops + status
 ├── inkwood-claude.md            # Earlier version of CLAUDE.md with process notes
 ├── .claude/
 │   └── commands/
@@ -114,10 +117,12 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
     ├── levels.ts                # All 10 level definitions
     ├── types.ts                 # TypeScript interfaces
     ├── audio.ts                 # Web Audio API synthesis module (pads, textures, melody voices)
+    ├── analytics.ts             # GoatCounter wrapper: per-screen pageviews + prototype-gate events
     ├── melody.ts                # Music of Typing: pure per-phrase melody planner (composer-tunable)
     ├── music.ts                 # Music of Typing: controller + prototype gate (?music)
     ├── ink.ts                   # Ink system: gate (?ink), INK_FOCUS landing map, mote bus
     ├── seasons.ts               # Living Seasons: gate (?seasons / ?season=x), particle specs
+    ├── __tests__/               # Vitest unit tests (melody, ink, seasons, store, util)
     ├── hooks/
     │   ├── useCompletionTimer.ts
     │   └── useParticles.tsx     # Physics particle system hook
@@ -226,6 +231,7 @@ Rules:
 npm run dev        # Vite dev server at :5173
 npm run build      # TypeScript check + Vite production build
 npm run lint       # ESLint
+npm test           # Vitest unit tests (pure logic: melody, ink, seasons, store, util)
 npx tsc --noEmit   # TypeScript check only
 ```
 
@@ -408,7 +414,7 @@ This file documents a multi-session collaboration that took the game from incons
 1. **Director listens to the Music of Typing** (`?music`) → tune `ACT_SCALES`/timbre/levels together → flip `DEFAULT_ENABLED` in music.ts.
 2. **Director views the Ink** (`?ink`, especially on iPhone) → tune `INK_FOCUS` landing points + mote density/size → flip gate in ink.ts.
 3. **Director views Living Seasons** (`?season=winter` etc. to taste-test all four) → refine palettes (leaf shapes?) → flip gate in seasons.ts.
-4. **GoatCounter access** — dashboard is private; need an API token (Settings → API) or public toggle, then pull the two-month funnel and let data re-rank everything below.
+4. **GoatCounter access** — dashboard is private; need an API token (Settings → API) or public toggle, then pull the two-month funnel and let data re-rank everything below. The token also unlocks the new `gate/*` events, which count prototype playtest sessions per gate.
 5. **World finale ink convergence** — proposal: during World phrase 3, ink threads flow along the existing 21-connection ley network, feeding it (never replacing it). Show options before building; the graph is defended territory.
 6. **Scribe's Memory + planting finale** (pillar 4) — journal frame in existing text slots, "Leave one word for the next scribe" authorship beat, printable SVG keepsake. Design agreed at vision level; text specifics need the director's pen.
 
