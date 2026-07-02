@@ -3,8 +3,8 @@
 > A cozy, meditative typing game where the player is a forest scribe whose typed words bring a dormant world back to life.
 
 **Live site:** https://inkwood.codywymore.com/
-**Status:** v1.0 shipped 2026-04-26.
-**Dev panel:** Append `?dev` to the URL, press F2 to jump between scenes.
+**Status:** v1.0 shipped 2026-04-26. **Elevation project in flight** (kicked off 2026-07-02): v1.5 archived, three gated prototypes live awaiting director verdicts — see Session History #18.
+**Dev panel:** Append `?dev` to the URL, press F2 to jump between scenes (panel also has toggles for the three prototype gates).
 
 ---
 
@@ -113,7 +113,11 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
     ├── store.ts                 # Zustand game state + localStorage save
     ├── levels.ts                # All 10 level definitions
     ├── types.ts                 # TypeScript interfaces
-    ├── audio.ts                 # Web Audio API synthesis module
+    ├── audio.ts                 # Web Audio API synthesis module (pads, textures, melody voices)
+    ├── melody.ts                # Music of Typing: pure per-phrase melody planner (composer-tunable)
+    ├── music.ts                 # Music of Typing: controller + prototype gate (?music)
+    ├── ink.ts                   # Ink system: gate (?ink), INK_FOCUS landing map, mote bus
+    ├── seasons.ts               # Living Seasons: gate (?seasons / ?season=x), particle specs
     ├── hooks/
     │   ├── useCompletionTimer.ts
     │   └── useParticles.tsx     # Physics particle system hook
@@ -124,8 +128,10 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
     │   ├── OutroSequence.tsx    # Panoramic outro that loops indefinitely
     │   ├── ActTransition.tsx    # 7-second interstitial animations
     │   ├── LevelWinScreen.tsx   # Between-level transition
-    │   ├── DevPanel.tsx         # F2 level-skip panel (gated behind ?dev)
+    │   ├── DevPanel.tsx         # F2 level-skip panel (gated behind ?dev) + prototype toggles
     │   ├── ErrorBoundary.tsx    # Scene crash safety net
+    │   ├── InkOverlay.tsx       # Ink motes: canvas overlay, glyph → scene focus point
+    │   ├── SeasonalLayer.tsx    # Seasonal weather overlay (viewBox-aligned SVG)
     │   └── ParticleField.tsx    # SVG particle renderer
     ├── scenes/                  # One file per scene (all memo'd)
     │   ├── util.ts              # Shared sub() helper
@@ -370,6 +376,15 @@ This file documents a multi-session collaboration that took the game from incons
     - **Intro behavior change (post-v15):** Title now appears immediately on load. The three dormant vignettes loop continuously behind it on a 24-second cycle (`time % CYCLE_LEN`, three phases at 9s with 1.2s crossfades, sampled at ±cycle for clean wrap-around). Spark transition retired. Skip-hint and click-to-skip handler removed.
     - **CTA styling experiment** — Tried a text + always-visible underline pattern for Begin / Begin Again / Replay any level. Director preferred the original bordered buttons; reverted. Lesson: the box border is doing real work as a tap affordance on mobile, and the "form button" feeling didn't bother the director the way it bothered me in screenshots.
 
+18. **Elevation project kickoff (2026-07-02)** — Director-approved five-pillar plan: (1) archive + funnel, (2) Music of Typing, (3) the Ink, (4) Scribe's Memory + planting finale + keepsake, (5) Living Seasons. Session output:
+    - **v1.5 archived, triple-redundant**: annotated tag `v1.5` @ e858c95, branch `archive/v1-classic`, GitHub release with playable build zip. Non-negotiable safety net before any bold moves.
+    - **Music of Typing prototype** (`?music`): every keystroke plays a note; each phrase has a fixed, deterministic melody in the act's harmonic world. Per-act just-intonation pentatonics rooted on the pad tonics (C4/E3/D4/G3). Skeleton = one target tone per word in an arch (climax ~70% through, final word lands the tonic); letters walk stepwise toward each word's target. Word ends bloom a low tonic (dominant at the climax word), wrong keys thud softly, completion swells a tonic chord through the 1.5s breath. Tuning knobs in `ACT_SCALES` (melody.ts); flip `DEFAULT_ENABLED` in music.ts to ship for everyone.
+    - **Ink system prototype** (`?ink`): each accepted keystroke lifts a glowing mote off its glyph in the prompt box and arcs it into the scene, landing with a ripple at that phrase's focus point (`INK_FOCUS` in ink.ts, director-tunable viewBox coords). The letters-as-origin design was chosen specifically for mobile: no cursor concept needed, and the portrait crossing from prompt box to letterboxed scene is the shortest, cleanest flight. Word-end motes are brighter, synced with the music bloom. Reduced-motion pulses at the landing point instead of traveling.
+    - **Living Seasons prototype** (`?seasons`, or `?season=winter` etc. to force one): quiet weather over outdoor scenes keyed to the real calendar — spring pollen rising, summer fireflies, autumn leaf-fall, winter snow-hush. Interiors (cottage, library) take no weather; the well only weathers above ground. Deliberately sparse (max 26 particles, opacity ≤ 0.6).
+    - **All three gates default OFF** — the live game is byte-identical to v1.5 for players until the director approves each and its `DEFAULT_ENABLED` flips.
+    - **GoatCounter funnel pull blocked**: dashboard is private; needs an API token or public toggle from the director.
+    - Not built, pending discussion: World finale ink convergence (touches the defended 21-connection ley graph — options first), Scribe's Memory text beats, planting finale + printable keepsake.
+
 ### Total Improvements
 - All scenes rebuilt or polished to B+/A-
 - 30+ commits over multiple sessions
@@ -383,7 +398,16 @@ This file documents a multi-session collaboration that took the game from incons
 
 ## Known Issues / Next Steps
 
-v1.0 has shipped. `PERSONAS.md` reflects the **v15** critique snapshot. The v15 priority stack is mostly cleared (see Session History #17). Open work, lightly prioritized:
+**Elevation project (active, 2026-07-02 →):** three gated prototypes await director verdicts. The immediate queue:
+
+1. **Director listens to the Music of Typing** (`?music`) → tune `ACT_SCALES`/timbre/levels together → flip `DEFAULT_ENABLED` in music.ts.
+2. **Director views the Ink** (`?ink`, especially on iPhone) → tune `INK_FOCUS` landing points + mote density/size → flip gate in ink.ts.
+3. **Director views Living Seasons** (`?season=winter` etc. to taste-test all four) → refine palettes (leaf shapes?) → flip gate in seasons.ts.
+4. **GoatCounter access** — dashboard is private; need an API token (Settings → API) or public toggle, then pull the two-month funnel and let data re-rank everything below.
+5. **World finale ink convergence** — proposal: during World phrase 3, ink threads flow along the existing 21-connection ley network, feeding it (never replacing it). Show options before building; the graph is defended territory.
+6. **Scribe's Memory + planting finale** (pillar 4) — journal frame in existing text slots, "Leave one word for the next scribe" authorship beat, printable SVG keepsake. Design agreed at vision level; text specifics need the director's pen.
+
+**Pre-elevation backlog (still valid, data-pending):**
 
 1. **Sanctum prompt 2 length** — "moonlight, gather where spirits convene" (39 chars) still squeezes via `--char-count` font scaling. Tightening to ~30 chars would let it sit at full prompt size. Both v14 and v15 flagged this.
 2. **Watch GoatCounter funnel** — site has been live since 2026-04-26 with per-screen pageviews. Pull `/intro → /play/garden → … → /outro` drop-off rates and let real player data drive the next round of art priorities. v15 explicitly recommended a one-week watch before more art work.
