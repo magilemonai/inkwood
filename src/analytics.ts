@@ -19,3 +19,24 @@ export function trackPageview(path: string, title?: string, tries = 0) {
     setTimeout(() => trackPageview(path, title, tries + 1), 200);
   }
 }
+
+// Prototype-gate telemetry: one event per gate per session, fired when a
+// gate is (or becomes) active. `event: true` keeps these out of the
+// pageview funnel — they count sessions that played with a prototype on,
+// the usage data behind each DEFAULT_ENABLED verdict.
+const firedGates = new Set<string>();
+
+export function trackGateActive(gate: string, title?: string) {
+  if (typeof window === "undefined" || firedGates.has(gate)) return;
+  firedGates.add(gate);
+  sendEvent(`gate/${gate}`, title);
+}
+
+function sendEvent(path: string, title?: string, tries = 0) {
+  const gc = getGC();
+  if (gc?.count) {
+    gc.count({ path, title, event: true });
+  } else if (tries < 25) {
+    setTimeout(() => sendEvent(path, title, tries + 1), 200);
+  }
+}

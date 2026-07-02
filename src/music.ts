@@ -13,6 +13,7 @@
 
 import { planMelody, type MelodyPlan } from "./melody";
 import { playMelodyNote, playRejectThud, playResolutionPad, playTypeClick } from "./audio";
+import { trackGateActive } from "./analytics";
 
 const MUSIC_KEY = "inkwood-music";
 const DEFAULT_ENABLED = false;
@@ -27,12 +28,15 @@ let enabled: boolean = (() => {
   return DEFAULT_ENABLED;
 })();
 
+if (enabled) trackGateActive("music");
+
 export function isMusicEnabled(): boolean {
   return enabled;
 }
 
 export function setMusicEnabled(on: boolean) {
   enabled = on;
+  if (on) trackGateActive("music");
   try { localStorage.setItem(MUSIC_KEY, on ? "1" : "0"); } catch { /* ignore */ }
 }
 

@@ -16,6 +16,7 @@
  */
 
 import type { SceneKey } from "./types";
+import { trackGateActive } from "./analytics";
 
 const INK_KEY = "inkwood-ink";
 const DEFAULT_ENABLED = false;
@@ -30,12 +31,15 @@ let enabled: boolean = (() => {
   return DEFAULT_ENABLED;
 })();
 
+if (enabled) trackGateActive("ink");
+
 export function isInkEnabled(): boolean {
   return enabled;
 }
 
 export function setInkEnabled(on: boolean) {
   enabled = on;
+  if (on) trackGateActive("ink");
   try { localStorage.setItem(INK_KEY, on ? "1" : "0"); } catch { /* ignore */ }
 }
 

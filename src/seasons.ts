@@ -16,6 +16,7 @@
  */
 
 import type { SceneKey } from "./types";
+import { trackGateActive } from "./analytics";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
@@ -50,12 +51,22 @@ function readGate(): { enabled: boolean; override: Season | null } {
 
 let gate = readGate();
 
+// The title records which season was seen, and whether it was a forced
+// taste-test (?season=x) or the calendar's own.
+function reportSeasonsGate() {
+  const season = gate.override ?? currentSeason();
+  trackGateActive("seasons", gate.override ? `${season} (forced)` : season);
+}
+
+if (gate.enabled) reportSeasonsGate();
+
 export function isSeasonsEnabled(): boolean {
   return gate.enabled;
 }
 
 export function setSeasonsEnabled(on: boolean) {
   gate = { ...gate, enabled: on };
+  if (on) reportSeasonsGate();
   try { localStorage.setItem(SEASONS_KEY, on ? "1" : "0"); } catch { /* ignore */ }
 }
 
