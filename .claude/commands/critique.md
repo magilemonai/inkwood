@@ -138,3 +138,18 @@ Rank by impact/effort ratio. The human's feedback from previous critiques should
 ## Step 5: Save
 
 Save the complete critique to `PERSONAS.md`, replacing the previous version. Include the date and version number (increment from the last version found in the file).
+
+## Step 6: Sync the Priority Stack into NEXT.md
+
+`NEXT.md` (repo root) is the steering file the dashboard reads. After saving PERSONAS.md, rewrite NEXT.md from the fresh priority stack — this is how critique output becomes next-session steering. If the file is missing, create it.
+
+Rules:
+
+1. **Preserve the contract.** Keep the `# NEXT — inkwood` heading and the `>` header line intact. The body is 1–6 `- [ ]` bullets, most important first. `- [x]` marks a line the dashboard hides — leave checked lines alone.
+2. **Merge, don't clobber.** Read the current NEXT.md first. Bullets that are manual steering — director decisions in flight, items blocked on external input, work the stack doesn't know about — stay if still live. Drop bullets the new critique confirms are shipped or obsolete.
+3. **Compress the top stack items.** Take the top 3–5 items from the new priority stack and write each as a one-line bullet in the file's existing voice: lowercase, imperative, specific. Name the target (scene, file, moment), skip the table columns. Include the "why" only when it changes what to do.
+4. **Cap at 6.** If the merge exceeds 6 unchecked bullets, drop the lowest-impact stack items first.
+5. **Respect rejected territory.** Never re-add items CLAUDE.md lists as director-rejected, even if a persona re-raises them.
+6. **Stamp provenance.** End the file with `<!-- synced from PERSONAS.md v{N} — {YYYY-MM-DD} -->`, replacing any prior stamp.
+
+In the Step 4 summary shown to the user, include a short "NEXT.md sync" note: which bullets were added, kept, and dropped.
