@@ -438,6 +438,156 @@ class AudioEngine {
     }, 200);
   }
 
+  // ── Melody voice — the Music of Typing ─────────────────
+
+  /** Shared echo send for melody plucks: one feedback delay (~3/8s)
+   *  with a darkened loop. Gives the plucks a soft cathedral shimmer
+   *  without the cost of a convolution reverb. Built lazily once. */
+  private melodySend: GainNode | null = null;
+
+  private ensureMelodySend(): GainNode {
+    const ac = this.ensureCtx();
+    if (this.melodySend) return this.melodySend;
+
+    const input = ac.createGain();
+    input.gain.value = 0.3; // send level
+
+    const delay = ac.createDelay(1);
+    delay.delayTime.value = 0.38;
+    const darken = ac.createBiquadFilter();
+    darken.type = "lowpass";
+    darken.frequency.value = 1500;
+    darken.Q.value = 0.3;
+    const feedback = ac.createGain();
+    feedback.gain.value = 0.26;
+
+    input.connect(delay);
+    delay.connect(darken);
+    darken.connect(feedback);
+    feedback.connect(delay);
+    darken.connect(this.masterGain!);
+
+    this.melodySend = input;
+    return input;
+  }
+
+  /** One melody pluck — soft kalimba/celesta hybrid: sine fundamental
+   *  + quiet triangle octave through a gentle lowpass, fast attack,
+   *  long exponential ring. Word-end notes also bloom a low pad tone
+   *  underneath (the heartbeat of the incantation). */
+  playMelodyNote(freq: number, opts: { velocity?: number; bloomFreq?: number | null } = {}) {
+    const ac = this.ensureCtx();
+    const now = ac.currentTime;
+    const peak = 0.034 * (opts.velocity ?? 1);
+
+    const body = ac.createOscillator();
+    body.type = "sine";
+    body.frequency.value = freq;
+    const shimmer = ac.createOscillator();
+    shimmer.type = "triangle";
+    shimmer.frequency.value = freq * 2;
+    const shimmerGain = ac.createGain();
+    shimmerGain.gain.value = 0.18;
+
+    const soften = ac.createBiquadFilter();
+    soften.type = "lowpass";
+    soften.frequency.value = 2400;
+    soften.Q.value = 0.4;
+
+    const env = ac.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(peak, now + 0.005);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+
+    body.connect(soften);
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(soften);
+    soften.connect(env);
+    env.connect(this.masterGain!);
+    env.connect(this.ensureMelodySend());
+
+    body.start(now);
+    shimmer.start(now);
+    body.stop(now + 1.2);
+    shimmer.stop(now + 1.2);
+
+    if (opts.bloomFreq) {
+      const bloom = ac.createOscillator();
+      bloom.type = "sine";
+      bloom.frequency.value = opts.bloomFreq;
+      const bloomEnv = ac.createGain();
+      bloomEnv.gain.setValueAtTime(0, now);
+      bloomEnv.gain.linearRampToValueAtTime(0.02, now + 0.12);
+      bloomEnv.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+      bloom.connect(bloomEnv);
+      bloomEnv.connect(this.masterGain!);
+      bloom.start(now);
+      bloom.stop(now + 1.7);
+      setTimeout(() => {
+        try { bloomEnv.disconnect(); } catch { /* */ }
+      }, 1900);
+    }
+
+    setTimeout(() => {
+      try { env.disconnect(); shimmerGain.disconnect(); soften.disconnect(); } catch { /* */ }
+    }, 1400);
+  }
+
+  /** Rejected keystroke — a felted low thud, pitch sagging as it dies.
+   *  Feedback without punishment. */
+  playRejectThud() {
+    const ac = this.ensureCtx();
+    const now = ac.currentTime;
+
+    const osc = ac.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(110, now);
+    osc.frequency.exponentialRampToValueAtTime(82, now + 0.09);
+
+    const muffle = ac.createBiquadFilter();
+    muffle.type = "lowpass";
+    muffle.frequency.value = 300;
+
+    const env = ac.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(0.02, now + 0.003);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+    osc.connect(muffle);
+    muffle.connect(env);
+    env.connect(this.masterGain!);
+    osc.start(now);
+    osc.stop(now + 0.15);
+    setTimeout(() => {
+      try { env.disconnect(); muffle.disconnect(); } catch { /* */ }
+    }, 400);
+  }
+
+  /** Phrase complete — the tonic chord swells softly and rings through
+   *  the 1.5s breathing pause. Staggered entries, slow attack. */
+  playResolutionPad(freqs: number[]) {
+    const ac = this.ensureCtx();
+    const now = ac.currentTime;
+    freqs.forEach((freq, i) => {
+      const t = now + i * 0.07;
+      const osc = ac.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const env = ac.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.015, t + 0.3);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      osc.connect(env);
+      env.connect(this.masterGain!);
+      env.connect(this.ensureMelodySend());
+      osc.start(t);
+      osc.stop(t + 2.3);
+      setTimeout(() => {
+        try { env.disconnect(); } catch { /* */ }
+      }, 2600 + i * 100);
+    });
+  }
+
   // ── Mute toggle ───────────────────────────────────────
 
   toggleMute(): boolean {
@@ -489,6 +639,9 @@ export function startAmbient(act: number, scene: number = 0) { engine.startAmbie
 export function stopAmbient() { engine.stopAmbient(); }
 export function playCompletionSweep() { engine.playCompletionSweep(); }
 export function playTypeClick() { engine.playTypeClick(); }
+export function playMelodyNote(freq: number, opts?: { velocity?: number; bloomFreq?: number | null }) { engine.playMelodyNote(freq, opts); }
+export function playRejectThud() { engine.playRejectThud(); }
+export function playResolutionPad(freqs: number[]) { engine.playResolutionPad(freqs); }
 export function toggleMute() { return engine.toggleMute(); }
 export function isMuted() { return engine.isMuted(); }
 export function setUserVolume(v: number) { engine.setUserVolume(v); }

@@ -5,6 +5,7 @@ import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
 import { startAmbient, playCompletionSweep, toggleMute, isMuted, getUserVolume, setUserVolume } from "../audio";
+import { soundResolution } from "../music";
 import { useInput } from "../contexts/InputContext";
 import type { CharState } from "../types";
 import s from "../styles/PlayingScreen.module.css";
@@ -134,8 +135,9 @@ export default function PlayingScreen() {
     if (isComplete && !completing) {
       startCompletion();
       playCompletionSweep();
+      soundResolution(target, getActIndex(lvl));
     }
-  }, [isComplete, completing, startCompletion]);
+  }, [isComplete, completing, startCompletion, target, lvl]);
 
   // ── Ambient audio — start/crossfade on level change ──
   // No teardown on unmount: the engine crossfades between voices on

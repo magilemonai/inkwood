@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useGameStore } from "../store";
+import { getActIndex } from "../levels";
 import { useInput } from "../contexts/InputContext";
-import { playTypeClick } from "../audio";
+import { soundKeystroke, soundRejection } from "../music";
 import s from "../styles/PlayingScreen.module.css";
 
 /**
@@ -41,9 +42,11 @@ export default function PersistentInput() {
     const acceptedForward = wasForward && acceptedTyped.length > prevTyped.length;
     const acceptedBackward = !wasForward && acceptedTyped.length !== prevTyped.length;
     if (acceptedForward) {
-      playTypeClick();
+      const state = useGameStore.getState();
+      soundKeystroke(state.target(), getActIndex(state.lvl), acceptedTyped.length - 1);
       setRejectTick(0);
     } else if (wasForward && !acceptedForward) {
+      soundRejection();
       setRejectTick((t) => t + 1);
     } else if (acceptedBackward) {
       setRejectTick(0);

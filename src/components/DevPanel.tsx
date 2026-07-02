@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
+import { isMusicEnabled, setMusicEnabled } from "../music";
 
 /**
  * Floating dev panel for testing. Toggle with F2 key.
@@ -69,10 +70,30 @@ export default function DevPanel() {
         ))}
       </div>
 
+      <MusicToggle />
+
       <div style={{ marginTop: 6, color: "#444", fontSize: 9 }}>
         F2 to close
       </div>
     </div>
+  );
+}
+
+/** Prototype gate for the Music of Typing (also enabled via ?music). */
+function MusicToggle() {
+  const [music, setMusic] = useState(isMusicEnabled);
+  return (
+    <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: music ? "#b8c8a8" : "#888" }}>
+      <input
+        type="checkbox"
+        checked={music}
+        onChange={(e) => {
+          setMusic(e.target.checked);
+          setMusicEnabled(e.target.checked);
+        }}
+      />
+      music of typing
+    </label>
   );
 }
 
