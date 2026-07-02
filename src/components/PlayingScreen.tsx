@@ -3,6 +3,7 @@ import { useGameStore } from "../store";
 import { LEVELS, getActIndex } from "../levels";
 import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
+import InkOverlay from "./InkOverlay";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
 import { startAmbient, playCompletionSweep, toggleMute, isMuted, getUserVolume, setUserVolume } from "../audio";
 import { soundResolution } from "../music";
@@ -167,6 +168,7 @@ export default function PlayingScreen() {
     <div className={s.container} onClick={focusInput}>
       <div
         className={s.sceneContainer}
+        data-scene-container
         role="img"
         aria-label={`${level.title} — ${levelProgress === 0 ? "dormant, waiting" : levelProgress < 1 ? "awakening" : "fully alive"}`}
       >
@@ -177,6 +179,8 @@ export default function PlayingScreen() {
 
       <HeaderBar />
 
+      <InkOverlay />
+
       <div className={s.typingArea}>
         <ProgressBar accent={accent} />
 
@@ -184,6 +188,7 @@ export default function PlayingScreen() {
 
         <div
           className={`${s.promptBox} ${showPulse ? s.promptBoxPulsing : ""} ${showPulse && idleNudge && !showTapOverlay ? s.promptBoxIdleNudge : ""} ${showBreathRing ? s.promptBoxBreathing : ""}`}
+          data-prompt-box
           style={{
             border: `1px solid ${accent}25`,
             "--breath-color": accent,
@@ -219,6 +224,7 @@ export default function PlayingScreen() {
                   return (
                     <span
                       key={i}
+                      data-char-idx={i}
                       className={`${s.char} ${isCursor ? s.cursor : ""}`}
                       style={{
                         color:

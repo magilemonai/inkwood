@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import { isMusicEnabled, setMusicEnabled } from "../music";
+import { isInkEnabled, setInkEnabled } from "../ink";
 
 /**
  * Floating dev panel for testing. Toggle with F2 key.
@@ -79,21 +80,35 @@ export default function DevPanel() {
   );
 }
 
-/** Prototype gate for the Music of Typing (also enabled via ?music). */
+/** Prototype gates for the elevation pillars (also ?music / ?ink). */
 function MusicToggle() {
   const [music, setMusic] = useState(isMusicEnabled);
+  const [ink, setInk] = useState(isInkEnabled);
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: music ? "#b8c8a8" : "#888" }}>
-      <input
-        type="checkbox"
-        checked={music}
-        onChange={(e) => {
-          setMusic(e.target.checked);
-          setMusicEnabled(e.target.checked);
-        }}
-      />
-      music of typing
-    </label>
+    <>
+      <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: music ? "#b8c8a8" : "#888" }}>
+        <input
+          type="checkbox"
+          checked={music}
+          onChange={(e) => {
+            setMusic(e.target.checked);
+            setMusicEnabled(e.target.checked);
+          }}
+        />
+        music of typing
+      </label>
+      <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, cursor: "pointer", color: ink ? "#b8c8a8" : "#888" }}>
+        <input
+          type="checkbox"
+          checked={ink}
+          onChange={(e) => {
+            setInk(e.target.checked);
+            setInkEnabled(e.target.checked);
+          }}
+        />
+        ink motes
+      </label>
+    </>
   );
 }
 

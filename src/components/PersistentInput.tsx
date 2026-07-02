@@ -3,6 +3,7 @@ import { useGameStore } from "../store";
 import { getActIndex } from "../levels";
 import { useInput } from "../contexts/InputContext";
 import { soundKeystroke, soundRejection } from "../music";
+import { emitInk } from "../ink";
 import s from "../styles/PlayingScreen.module.css";
 
 /**
@@ -44,6 +45,7 @@ export default function PersistentInput() {
     if (acceptedForward) {
       const state = useGameStore.getState();
       soundKeystroke(state.target(), getActIndex(state.lvl), acceptedTyped.length - 1);
+      emitInk({ charIndex: acceptedTyped.length - 1 });
       setRejectTick(0);
     } else if (wasForward && !acceptedForward) {
       soundRejection();
