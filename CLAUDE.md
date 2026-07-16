@@ -6,6 +6,8 @@
 **Status:** v1.0 shipped 2026-04-26. **Elevation project in flight** (kicked off 2026-07-02): v1.5 archived, three gated prototypes live awaiting director verdicts — see Session History #18.
 **Dev panel:** Append `?dev` to the URL, press F2 to jump between scenes (panel also has toggles for the three prototype gates).
 
+> **AI sessions: read `HANDOFF-OPUS.md` in the repo root FIRST.** It carries the current handoff (state of the world, decision rights, hazards); `ROADMAP.md` beside it carries the long game and learned wisdom. Both are local-only and deliberately unpublished (Cody's ruling 2026-07-15 — do not commit them). If they are missing, you are in a fresh clone without the local steering files: stop and ask Cody before proceeding.
+
 ---
 
 ## What Is Inkwood

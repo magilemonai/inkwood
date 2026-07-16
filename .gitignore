@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 screenshots/
 trailer-output/
+
+# Local steering docs — deliberately unpublished (Cody's ruling 2026-07-15)
+HANDOFF-OPUS.md
+ROADMAP.md
+DIRECTOR-CHECKLIST.md
