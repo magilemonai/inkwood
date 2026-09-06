@@ -3,42 +3,65 @@ import { sub } from "../util";
 
 /**
  * The Night Sky — light manifest.
- * Mirrors StarScene's timing: moon rises 0.05–0.45, milky way 0.2–0.6,
- * constellations draw 0.65–0.9, horizon haze 0.1–0.4, treetop moonlight
- * builds 0.5–1.0. Stars are drawn by the SVG; the Glow gives the moon a
- * real halo, lets the constellation anchors twinkle, and puts a little
- * air on the horizon.
+ *
+ * Mirrors the scene's timing: moon rises 0.05–0.45, milky way 0.15–0.5 and
+ * blooms again on phrase 2, horizon haze 0.1–0.4, treetop moonlight builds
+ * 0.4–0.8. Stars are drawn by the SVG; the Glow gives the moon a real
+ * halo, sets a light on each constellation's brightest star as its figure
+ * is named, and puts a little air on the horizon.
+ *
+ * ANCHORS are the four figures' brightest stars (scenes/v2/stars.tsx):
+ * Betelgeuse and Rigel for Orion, Schedar for Cassiopeia, Vega for Lyra,
+ * Deneb for Cygnus. The manifest only receives progress, so each anchor
+ * is gated on where its name falls in the canonical phrase-1 window
+ * ("Orion Lyra Cygnus Cassiopeia", 28 chars over p 0–0.5). The player can
+ * type the names in any order — the SVG figure obeys the actual words;
+ * this layer is a soft wash arriving on the canonical schedule, and every
+ * anchor is fully lit by the time phrase 1 ends either way.
  */
 
 const MOON: RGB = [0.80, 0.82, 1.0];
 const STARLIGHT: RGB = [0.72, 0.72, 1.0];
+const BETEL: RGB = [1.0, 0.82, 0.62];
 const MILKY: RGB = [0.56, 0.56, 0.97];
 
-// Constellation anchor stars from StarScene.STARS (indices 4, 8, 16, 10, 12, 7).
-const ANCHORS: [number, number][] = [[95, 45], [140, 60], [220, 68], [270, 55], [325, 38], [355, 50]];
+/** [x, y, radius, phrase-1 start, colour] — the four figures' anchors. */
+const ANCHORS: [number, number, number, number, RGB][] = [
+  [50, 88, 13, 0.09, BETEL],       // Betelgeuse — Orion, named first
+  [108, 148, 12, 0.09, STARLIGHT], // Rigel — Orion's other bright foot
+  [194, 70, 13, 0.18, STARLIGHT],  // Vega — Lyra
+  [278, 24, 12, 0.30, STARLIGHT],  // Deneb — Cygnus
+  [120, 50, 12, 0.46, STARLIGHT],  // Schedar — Cassiopeia
+];
 
 const stars: SceneManifest = {
   grain: 0.04,
   lights: (p) => {
     const moonP = sub(p, 0.05, 0.4);
     const moonY = 80 - moonP * 35;
-    const milkyP = sub(p, 0.2, 0.4);
-    const constP = sub(p, 0.65, 0.25);
-    const treeGlow = sub(p, 0.5, 0.5);
+    const milkyP = sub(p, 0.15, 0.35);
+    // Phrase 2: "burn again with ancient fire" — the sky ignites.
+    // Same window as the scene so light and art arrive together.
+    const blaze = sub(p, 0.5, 0.45);
+    const treeGlow = sub(p, 0.4, 0.4);
     return [
       // The moon: a tight bright halo and a wide soft aura.
       { x: 320, y: moonY, radius: 46, intensity: 0.24 * moonP, color: MOON, flicker: 0, core: 0.35 },
       { x: 320, y: moonY, radius: 130, intensity: 0.05 * moonP, color: MOON, flicker: 0 },
-      // The milky way band — a faint violet lift across the upper sky.
-      { x: 200, y: 88, radius: 165, intensity: 0.04 * milkyP, color: MILKY, flicker: 0, yScale: 2.6 },
-      // Constellation anchors twinkle as the lines draw in.
-      ...ANCHORS.map(([x, y], i) => ({
-        x, y, radius: 11,
-        intensity: 0.26 * sub(p, 0.65 + i * 0.03, 0.2) * constP,
-        color: STARLIGHT, flicker: 0.14, core: 0.5,
-      })),
+      // The milky way band — a faint violet lift that blooms on phrase 2.
+      { x: 200, y: 88, radius: 165, intensity: (0.018 + 0.028 * blaze) * milkyP, color: MILKY, flicker: 0, yScale: 2.6 },
+      // Each figure's brightest star lights as its name is written, then
+      // burns harder through the ignition.
+      ...ANCHORS.map(([x, y, radius, start, color]) => {
+        const lit = sub(p, start, 0.12);
+        return {
+          x, y, radius,
+          intensity: (0.24 + 0.12 * blaze) * lit,
+          color, flicker: 0.12, core: 0.5,
+        };
+      }),
       // Moonlight on the treetops nearest the moon.
-      { x: 320, y: 200, radius: 95, intensity: 0.05 * treeGlow, color: [0.6, 0.6, 0.95], flicker: 0, yScale: 2.6 },
+      { x: 320, y: 200, radius: 95, intensity: 0.05 * treeGlow, color: [0.6, 0.6, 0.95] as RGB, flicker: 0, yScale: 2.6 },
     ];
   },
   // Horizon haze: the band between sky and treeline.
