@@ -20,8 +20,12 @@ const cottage: SceneManifest = {
     const windowWarm = sub(p, 0.05, 0.55);
     const room = sub(p, 0.5, 0.5);
     const cat = sub(p, 0.58, 0.2);
+    const script = sub(p, 0.86, 0.12);
     const pools = (c1 + c2 + c3) / 3;
     return [
+      // The open journal between the first two candles — the handwriting
+      // wakes to gold on phrase 2 (Inkwood 2 art; harmless on v1).
+      { x: 237, y: 107, radius: 12, intensity: 0.22 * script, color: [1.0, 0.84, 0.52], flicker: 0.03, core: 0.5 },
       // Candle flames on the shelf — tight halo on the wall behind, hot
       // core at the wick. Tight and bright so the corners stay dark and
       // the light means something.
