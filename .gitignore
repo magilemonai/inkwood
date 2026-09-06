@@ -30,3 +30,6 @@ HANDOFF-OPUS.md
 ROADMAP.md
 DIRECTOR-CHECKLIST.md
 PLAN-INKWOOD-2.md
+
+# Agent worktrees (Claude Code parallel scene work)
+.claude/worktrees/
