@@ -52,9 +52,12 @@ export const LEVELS_V2: Level[] = [
   {
     title: "The Night Sky",
     flavor: "I named them one by one, and one by one they answered.",
-    prompts: ["Orion Vega Sirius Lyra", "burn again with ancient fire"],
+    // Four constellations. The scene draws each figure the moment its
+    // name is finished (SceneProps.wordsDone), so the pool only permutes
+    // the same four names: the shapes are always all there by the end.
+    prompts: ["Orion Lyra Cygnus Cassiopeia", "burn again with ancient fire"],
     promptPool: [
-      ["Orion Vega Sirius Lyra", "Polaris Altair Deneb Rigel"],
+      ["Orion Lyra Cygnus Cassiopeia", "Cassiopeia Cygnus Orion Lyra", "Lyra Orion Cassiopeia Cygnus"],
       ["burn again with ancient fire", "rekindle the old light"],
     ],
     scene: "stars",

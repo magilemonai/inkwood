@@ -202,9 +202,63 @@ chasm haze, moonlight from above.
 
 ---
 
-## 5. Not in this pass (director decisions or later phases)
+## 5. Signature passes for the scenes that keep their art
 
-Cottage hearth; Stones texture and rune-light spill; World rendering (ley lines as
-flowing ink, softer nodes, panorama depth) with options as screenshots; act cards as
-painterly journal pages (text is in, art is v1); the planting finale and keepsake;
-Stars 3D spike; the depth stage.
+The director asked how the non-redrawn scenes stay special. Answer: every scene gets
+the light manifest, the journal voice, and an idle-life pass; each of these four also
+gets one **signature beat** that only it has. Keep the v1 composition and coordinates
+(the manifests are tuned to them); change what's named here.
+
+### Stars (`stars`) — "the constellations you name are the ones that draw"
+
+Phrase 1 is now four constellation names: "Orion Lyra Cygnus Cassiopeia" (the pool only
+permutes these four). The scene receives `wordsDone` (SceneProps): the finished words
+of the current phrase, e.g. "Orion Lyra". **Each constellation draws itself the moment
+its name is finished**, in whatever order the player types them; by the end of phrase 1
+all four are up. Phrase 2 ("burn again with ancient fire") is the sky igniting: every
+star brightens, the milky way blooms, the meteor climax stays.
+
+Target: re-plot the sky so the four figures sit in distinct regions with recognizable
+stylized shapes (Orion: belt of three + two shoulders + two feet, lower left; Lyra: small
+parallelogram hanging from bright Vega, upper center; Cygnus: the cross with Deneb at the
+head, upper right, clear of the moon; Cassiopeia: the W, left of center high). Background
+stars stay scattered. Lines draw with stroke-dashoffset from the named star outward;
+a faint label-free glow lingers on the figure's brightest star. Idle life: per-star
+twinkle via SMIL opacity with phase offsets (not all stars, ~a third). Keep the moon
+crescent (its dark disc must keep matching the sky color), the treeline, the horizon
+haze. The Glow manifest (`manifests/stars.ts`) already exists: update its ANCHORS to
+the four figures' brightest stars and gate each anchor on its constellation being drawn
+(the manifest gets only `p`, so gate on the phrase-1 progress window instead).
+
+### Stones (`stones`) — "light travels between the stones"
+
+Keep the seven stone positions and rune centers (the manifest is tuned to them). Redraw
+each stone as an irregular chipped silhouette (weathered edges, a notch or two) with a
+lichen patch or two and a shadowed side; not a trapezoid. Phrase 2's ley lines become
+**conduits**: once a line has drawn, a small pulse of light travels along it toward the
+center stone (SMIL stroke-dasharray/offset on a short dash over the line path),
+staggered per line so the ring breathes. The ritual circle keeps its ring; add a faint
+rune ring on the ground. Grass tufts sway. The aurora becomes a soft curtain
+(two or three long wavering paths with slow SMIL, low opacity), never a wash.
+
+### Cottage (`cottage`) — "the journal falls open"
+
+The story now turns on this book. On phrase 2 the journal, currently a spine on the
+shelf, lies open on the windowsill beside the cat: two page shapes as paths, a few faint
+handwritten lines (short wavering strokes) that brighten to warm gold, and at 99% one
+page lifts and settles (SMIL). Idle life: candle flames flicker (SMIL scale/opacity on
+the flame paths, subtle), steam drifts upward and fades on a loop, the cat breathes
+(slow scaleY 1.0–1.015 over 4s from its base) and flicks an ear every ~8s. Manifest:
+add a small warm light on the open journal for phrase 2.
+
+### World (`world`) — options first
+
+The 21-connection graph is defended territory. Rendering options come to the director
+as screenshots after the new Tree lands: ley lines as ink threads with traveling light
+and staggered peaks; softer nodes; three-tone hills with mist; callbacks redrawn to
+match the v2 scenes; dawn breaking at the last phrase ("the forest remembers").
+
+## 6. Not in this pass (director decisions or later phases)
+
+Cottage hearth; act cards as painterly journal pages (text is in, art is v1); the
+planting finale and keepsake; Stars 3D spike; the depth stage.

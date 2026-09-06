@@ -38,4 +38,10 @@ export type CharState = "correct" | "error" | "pending";
 
 export interface SceneProps {
   progress: number;
+  /** Inkwood 2: the words of the current phrase the player has finished
+   *  typing, space-joined, in the phrase's own casing (e.g. "Orion Lyra").
+   *  Changes only at word boundaries, so memo'd scenes re-render at most
+   *  once per word. Lets a scene obey the words literally: the Stars draw
+   *  the constellation just named. Optional; v1 scenes ignore it. */
+  wordsDone?: string;
 }

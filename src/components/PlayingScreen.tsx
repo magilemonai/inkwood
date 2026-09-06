@@ -25,6 +25,21 @@ function quantize(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+const WORD_RE = /[a-z0-9]+/gi;
+
+/** The words of `target` that `typed` has fully covered, space-joined in
+ *  the phrase's own casing. A word counts once its last letter is typed.
+ *  Stable between word boundaries, so passing it to a memo'd scene costs
+ *  at most one re-render per word. */
+function wordsDoneOf(typed: string, target: string): string {
+  const done: string[] = [];
+  for (const m of target.matchAll(WORD_RE)) {
+    if ((m.index ?? 0) + m[0].length <= typed.length) done.push(m[0]);
+    else break;
+  }
+  return done.join(" ");
+}
+
 const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
 // ── HeaderBar — subscribes only to lvl + accent so it doesn't re-render per keystroke ──
@@ -112,6 +127,9 @@ export default function PlayingScreen() {
 
   // Scene progress — separately quantized for memo'd scene.
   const levelProgress = useGameStore((g) => quantize(g.levelProgress()));
+  // Inkwood 2 scenes may obey the words literally (the Stars draw the
+  // constellation just named). String-valued so memo compares by value.
+  const wordsDone = wordsDoneOf(typed, target);
 
   // Actions come from the store getter and are stable references.
   const startCompletion = useGameStore((g) => g.startCompletion);
@@ -179,7 +197,7 @@ export default function PlayingScreen() {
         aria-label={`${level.title} — ${levelProgress === 0 ? "dormant, waiting" : levelProgress < 1 ? "awakening" : "fully alive"}`}
       >
         <ErrorBoundary>
-          <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
+          <SceneRenderer sceneKey={level.scene} progress={levelProgress} wordsDone={wordsDone} />
         </ErrorBoundary>
         <GlowLayer scene={level.scene} />
         <SeasonalLayer />

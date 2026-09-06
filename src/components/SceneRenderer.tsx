@@ -15,14 +15,18 @@ import { isV2Enabled } from "../v2";
 interface Props {
   sceneKey: SceneKey;
   progress: number;
+  /** Finished words of the current phrase (see SceneProps.wordsDone). */
+  wordsDone?: string;
 }
 
-export default function SceneRenderer({ sceneKey, progress }: Props) {
+export default function SceneRenderer({ sceneKey, progress, wordsDone }: Props) {
   // Inkwood 2: redrawn scenes live in scenes/v2/ and take over under the
   // gate; anything not redrawn yet falls through to the shipped scene.
+  // Only v2 scenes receive the finished words, so v1 scenes keep their
+  // progress-only memo behavior exactly as shipped.
   if (isV2Enabled()) {
     const Override = V2_SCENES[sceneKey];
-    if (Override) return <Override progress={progress} />;
+    if (Override) return <Override progress={progress} wordsDone={wordsDone} />;
   }
   switch (sceneKey) {
     case "garden": return <GardenScene progress={progress} />;
