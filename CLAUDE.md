@@ -3,8 +3,8 @@
 > A cozy, meditative typing game where the player is a forest scribe whose typed words bring a dormant world back to life.
 
 **Live site:** https://inkwood.codywymore.com/
-**Status:** v1.0 shipped 2026-04-26. **Elevation project in flight** (kicked off 2026-07-02): v1.5 archived, three gated prototypes live awaiting director verdicts — see Session History #18.
-**Dev panel:** Append `?dev` to the URL, press F2 to jump between scenes (panel also has toggles for the three prototype gates).
+**Status:** v1.0 shipped 2026-04-26. **Elevation project in flight** (kicked off 2026-07-02): v1.5 archived, five gated prototypes live awaiting director verdicts — music/ink/seasons (Session History #18) and the Cottage glow + feel slice (#19).
+**Dev panel:** Append `?dev` to the URL, press F2 to jump between scenes (panel also has toggles for the five prototype gates).
 
 > **AI sessions: read `HANDOFF-OPUS.md` in the repo root FIRST.** It carries the current handoff (state of the world, decision rights, hazards); `ROADMAP.md` beside it carries the long game and learned wisdom. Both are local-only and deliberately unpublished (Cody's ruling 2026-07-15 — do not commit them). If they are missing, you are in a fresh clone without the local steering files: stop and ask Cody before proceeding.
 
@@ -124,6 +124,8 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
     ├── music.ts                 # Music of Typing: controller + prototype gate (?music)
     ├── ink.ts                   # Ink system: gate (?ink), INK_FOCUS landing map, mote bus
     ├── seasons.ts               # Living Seasons: gate (?seasons / ?season=x), particle specs
+    ├── glow.ts                  # The Glow: gate (?glow) for the three.js light layer
+    ├── feel.ts                  # The Feel: gate (?feel) for typing-feel CSS (ignite, ink cursor, word settle, exhale)
     ├── __tests__/               # Vitest unit tests (melody, ink, seasons, store, util)
     ├── hooks/
     │   ├── useCompletionTimer.ts
@@ -139,9 +141,12 @@ localStorage key `inkwood-save` stores `{ lvl, promptIdx }`. Cleared on game com
     │   ├── ErrorBoundary.tsx    # Scene crash safety net
     │   ├── InkOverlay.tsx       # Ink motes: canvas overlay, glyph → scene focus point
     │   ├── SeasonalLayer.tsx    # Seasonal weather overlay (viewBox-aligned SVG)
+    │   ├── GlowLayer.tsx        # Mounts the lazy three.js chunk when ?glow is on and the scene has a manifest
+    │   ├── GlowCanvas.tsx       # Screen-blended WebGL quad: light falloff + flicker, haze, dust, grain, exhale
     │   └── ParticleField.tsx    # SVG particle renderer
     ├── scenes/                  # One file per scene (all memo'd)
     │   ├── util.ts              # Shared sub() helper
+    │   ├── manifest.ts          # Per-scene light manifests for the Glow (viewBox coords, director-tunable)
     │   └── *Scene.tsx           # 10 scene files
     ├── contexts/
     │   └── InputContext.tsx     # Singleton typing input shared across screens
@@ -398,6 +403,12 @@ This file documents a multi-session collaboration that took the game from incons
     - **Gate telemetry implemented (same day)**: `trackGateActive()` in `analytics.ts` fires one GoatCounter event per prototype gate per session (`gate/music`, `gate/ink`, `gate/seasons`) whenever a gate is active — at page load (URL param or persisted localStorage) and on dev-panel toggle-on. Events are `event: true` so the pageview funnel stays clean; the seasons event title records which season was seen and whether it was forced (`?season=x`). Once the GoatCounter token arrives, gate-session counts back each `DEFAULT_ENABLED` verdict with real usage data. Verified headless with a stubbed GoatCounter across URL, dev-panel, and control paths.
     - Not built, pending discussion: World finale ink convergence (touches the defended 21-connection ley graph — options first), Scribe's Memory text beats, planting finale + printable keepsake.
 
+19. **Inkwood 2 plan + Cottage test slice (2026-09-05)** — Director asked for a plan to dramatically upgrade the whole game (visuals, typing feel, animation, story, three.js) using subagents, then asked to see a test page in the recommended style before approving. Plan lives in local `PLAN-INKWOOD-2.md` (gitignored with the other steering docs). Thesis: add light, air, texture, depth, and idle life on top of the hand-drawn SVG; redraw only silhouette-test failures; make every keystroke a visible act; give the story a speaker. Recommended three.js path is an atmosphere layer → depth stage → Stars-only 3D spike, not a full 3D rebuild. Test slice shipped on The Dark Cottage behind two new default-off gates (same template as the trio):
+    - **The Glow** (`?glow`, `src/glow.ts`): a lazy-loaded three.js chunk (~130 KB gz, excluded from the PWA precache so classic players never fetch it) renders a screen-blended WebGL quad over the SVG. One fragment shader: light falloff from manifest-declared sources with noise flicker, a drifting fbm haze band, CPU-positioned dust motes bright only where the light is, a 420ms global bloom on phrase completion, and brightening film grain in the dark. `src/scenes/manifest.ts` holds per-scene lights/haze/motes as functions of progress in viewBox coords (only Cottage so far). DPR capped 1.5, paused when hidden, FPS probe after warm-up turns the layer off below ~38 fps, reduced-motion stills flicker/drift/grain. WebGL unavailable → layer off, classic game untouched.
+    - **The Feel** (`?feel`, `src/feel.ts`): typing-feel CSS scoped under `[data-feel="1"]` on the playing container — letters ignite (white flash, lift, bloom, settle to accent, lingering wet-ink text-shadow), a breathing ink-drop cursor replaces the bar, wrong keys shiver, finished words settle and draw an underline (`data-done` on word runs), and the completed phrase exhales left to right through the breath. Helper text goes quiet except "backspace to correct." Zero extra React work; keyed on `data-state`/`--i` attributes PlayingScreen now renders.
+    - `scripts/screenshot.mjs` gained `--mobile` (390×844, touch, DPR 2), `--params=glow,feel`, and `--settle=ms`; headless Chromium now launches with SwiftShader flags so WebGL renders in screenshots.
+    - Director's live test URL: `https://inkwood.codywymore.com/?glow&feel` (Cottage is level 2; `&dev` + F2 jumps straight there). The other nine scenes have no manifest yet and render as before under `?glow`.
+
 ### Total Improvements
 - All scenes rebuilt or polished to B+/A-
 - 30+ commits over multiple sessions
@@ -411,14 +422,15 @@ This file documents a multi-session collaboration that took the game from incons
 
 ## Known Issues / Next Steps
 
-**Elevation project (active, 2026-07-02 →):** three gated prototypes await director verdicts. The immediate queue:
+**Elevation project (active, 2026-07-02 →):** five gated prototypes await director verdicts. The immediate queue:
 
 1. **Director listens to the Music of Typing** (`?music`) → tune `ACT_SCALES`/timbre/levels together → flip `DEFAULT_ENABLED` in music.ts.
 2. **Director views the Ink** (`?ink`, especially on iPhone) → tune `INK_FOCUS` landing points + mote density/size → flip gate in ink.ts.
 3. **Director views Living Seasons** (`?season=winter` etc. to taste-test all four) → refine palettes (leaf shapes?) → flip gate in seasons.ts.
-4. **GoatCounter access** — dashboard is private; need an API token (Settings → API) or public toggle, then pull the two-month funnel and let data re-rank everything below. The token also unlocks the new `gate/*` events, which count prototype playtest sessions per gate.
-5. **World finale ink convergence** — proposal: during World phrase 3, ink threads flow along the existing 21-connection ley network, feeding it (never replacing it). Show options before building; the graph is defended territory.
-6. **Scribe's Memory + planting finale** (pillar 4) — journal frame in existing text slots, "Leave one word for the next scribe" authorship beat, printable SVG keepsake. Design agreed at vision level; text specifics need the director's pen.
+4. **Director judges the Cottage test slice** (`?glow&feel`, desktop + iPhone) → approve/redirect the Inkwood 2 plan in `PLAN-INKWOOD-2.md` (five decisions listed in its §8). On approval: Phase 0 (baseline harness, perf probe, manifest seam for all ten scenes, `.claude/agents/` crew) starts without further taste calls.
+5. **GoatCounter access** — dashboard is private; need an API token (Settings → API) or public toggle, then pull the two-month funnel and let data re-rank everything below. The token also unlocks the new `gate/*` events, which count prototype playtest sessions per gate.
+6. **World finale ink convergence** — proposal: during World phrase 3, ink threads flow along the existing 21-connection ley network, feeding it (never replacing it). Show options before building; the graph is defended territory.
+7. **Scribe's Memory + planting finale** (pillar 4) — journal frame in existing text slots, "Leave one word for the next scribe" authorship beat, printable SVG keepsake. Design agreed at vision level; text specifics need the director's pen.
 
 **Pre-elevation backlog (still valid, data-pending):**
 

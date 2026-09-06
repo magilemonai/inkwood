@@ -29,6 +29,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // The Glow layer's three.js chunk is gated (?glow) and lazy-loaded;
+        // keep it out of the precache so players on the classic game never
+        // download it. It's fetched on demand the first time a gate is on.
+        globIgnores: ['**/GlowCanvas-*.js'],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'document',

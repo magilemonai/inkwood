@@ -2,11 +2,18 @@
  * Screenshot tool for visual verification.
  *
  * Usage:
- *   node scripts/screenshot.mjs <sceneIndex> [progressPercent]
+ *   node scripts/screenshot.mjs <sceneIndex> [progressPercent] [flags]
  *   node scripts/screenshot.mjs 0          # Garden at 0%
  *   node scripts/screenshot.mjs 3 50       # Well at 50%
  *   node scripts/screenshot.mjs 3 95       # Well at 95%
  *   node scripts/screenshot.mjs all        # All scenes at 0%
+ *
+ * Flags:
+ *   --mobile              390x844 portrait, touch, DPR 2 (the iPhone check)
+ *   --params=glow,feel    extra URL gates to enable (comma-separated)
+ *   --settle=1500         extra ms to wait before the shot (animations)
+ *
+ * Filenames carry the flags: scene-1-The_Dark_Cottage-99pct-mobile-glow+feel.png
  */
 
 import { chromium } from 'playwright-core';
@@ -71,17 +78,28 @@ function loadScenesFromLevels() {
 
 const SCENES = loadScenesFromLevels();
 
-async function screenshot(sceneIdx, progressPct = 0) {
+async function screenshot(sceneIdx, progressPct = 0, opts = {}) {
+  const { mobile = false, params = [], settle = 0 } = opts;
   const browser = await chromium.launch({
     executablePath: CHROME_PATH,
     headless: true,
-    args: ['--no-sandbox', '--disable-gpu'],
+    // SwiftShader keeps WebGL available in headless mode (the Glow layer).
+    args: ['--no-sandbox', '--disable-gpu', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
   });
 
   const scene = SCENES[sceneIdx];
-  const page = await browser.newPage();
-  await page.setViewportSize({ width: 1400, height: 800 });
-  await page.goto(BASE_URL + '?dev&canonical', { waitUntil: 'networkidle' });
+  const context = await browser.newContext(
+    mobile
+      ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }
+      : { viewport: { width: 1400, height: 800 } },
+  );
+  const page = await context.newPage();
+  page.on('console', (msg) => {
+    const text = msg.text();
+    if (text.startsWith('[glow]')) console.log('  browser:', text);
+  });
+  const extra = params.length ? '&' + params.join('&') : '';
+  await page.goto(BASE_URL + '?dev&canonical' + extra, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
 
   // Open dev panel and jump to scene
@@ -123,10 +141,12 @@ async function screenshot(sceneIdx, progressPct = 0) {
     }
     await page.waitForTimeout(500);
   }
+  if (settle > 0) await page.waitForTimeout(settle);
 
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
   const safeName = scene.name.replace(/\s+/g, '_');
-  const filename = `${SCREENSHOT_DIR}/scene-${sceneIdx}-${safeName}-${progressPct}pct.png`;
+  const suffix = (mobile ? '-mobile' : '') + (params.length ? '-' + params.join('+') : '');
+  const filename = `${SCREENSHOT_DIR}/scene-${sceneIdx}-${safeName}-${progressPct}pct${suffix}.png`;
   await page.screenshot({ path: filename, fullPage: false });
   console.log(`Saved: ${filename}`);
 
@@ -134,14 +154,21 @@ async function screenshot(sceneIdx, progressPct = 0) {
   return filename;
 }
 
-const args = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const flags = argv.filter((a) => a.startsWith('--'));
+const args = argv.filter((a) => !a.startsWith('--'));
+const opts = {
+  mobile: flags.includes('--mobile'),
+  params: (flags.find((f) => f.startsWith('--params=')) ?? '--params=').slice('--params='.length).split(',').filter(Boolean),
+  settle: parseInt((flags.find((f) => f.startsWith('--settle=')) ?? '--settle=0').slice('--settle='.length)) || 0,
+};
 const sceneArg = args[0] || '0';
 const progressArg = parseInt(args[1] || '0');
 
 if (sceneArg === 'all') {
   for (let i = 0; i < SCENES.length; i++) {
-    await screenshot(i, 0);
+    await screenshot(i, 0, opts);
   }
 } else {
-  await screenshot(parseInt(sceneArg), progressArg);
+  await screenshot(parseInt(sceneArg), progressArg, opts);
 }

@@ -4,6 +4,8 @@ import { LEVELS } from "../levels";
 import { isMusicEnabled, setMusicEnabled } from "../music";
 import { isInkEnabled, setInkEnabled } from "../ink";
 import { isSeasonsEnabled, setSeasonsEnabled } from "../seasons";
+import { isGlowEnabled, setGlowEnabled } from "../glow";
+import { isFeelEnabled, setFeelEnabled } from "../feel";
 
 /**
  * Floating dev panel for testing. Toggle with F2 key.
@@ -86,6 +88,8 @@ function MusicToggle() {
   const [music, setMusic] = useState(isMusicEnabled);
   const [ink, setInk] = useState(isInkEnabled);
   const [seasons, setSeasons] = useState(isSeasonsEnabled);
+  const [glow, setGlow] = useState(isGlowEnabled);
+  const [feel, setFeel] = useState(isFeelEnabled);
   return (
     <>
       <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: music ? "#b8c8a8" : "#888" }}>
@@ -121,6 +125,31 @@ function MusicToggle() {
         />
         living seasons
       </label>
+      <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, cursor: "pointer", color: glow ? "#b8c8a8" : "#888" }}>
+        <input
+          type="checkbox"
+          checked={glow}
+          onChange={(e) => {
+            setGlow(e.target.checked);
+            setGlowEnabled(e.target.checked);
+          }}
+        />
+        the glow (light layer)
+      </label>
+      <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4, cursor: "pointer", color: feel ? "#b8c8a8" : "#888" }}>
+        <input
+          type="checkbox"
+          checked={feel}
+          onChange={(e) => {
+            setFeel(e.target.checked);
+            setFeelEnabled(e.target.checked);
+          }}
+        />
+        the feel (typing)
+      </label>
+      <div style={{ marginTop: 4, color: "#555", fontSize: 9 }}>
+        glow/feel apply on next scene change
+      </div>
     </>
   );
 }

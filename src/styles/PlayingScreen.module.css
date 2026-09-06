@@ -433,3 +433,133 @@
     padding-top: 0.5rem;
   }
 }
+
+/* ══════ THE FEEL (?feel gate) ══════
+ * Every keystroke a visible act. Scoped under [data-feel="1"] so the
+ * classic prompt box is untouched when the gate is off. Colors come from
+ * --accent / --accent-soft, set inline on the prompt box per level.
+ * prefers-reduced-motion flattens every animation here via global.css;
+ * the static glow on typed letters remains. */
+
+[data-feel="1"] .char {
+  display: inline-block;
+  position: relative;
+}
+
+/* Typed letters keep a faint wet-ink glow. */
+[data-feel="1"] .char[data-state="correct"] {
+  text-shadow: 0 0 6px var(--accent-soft);
+  animation: ignite 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Ignition — flash white, lift, bloom, settle into the accent. */
+@keyframes ignite {
+  0% {
+    transform: translateY(0) scale(1);
+    text-shadow: 0 0 0 transparent, 0 0 0 transparent;
+    color: #fff6e4;
+  }
+  28% {
+    transform: translateY(-2px) scale(1.16);
+    text-shadow: 0 0 10px var(--accent), 0 0 26px var(--accent-soft);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    text-shadow: 0 0 6px var(--accent-soft);
+  }
+}
+
+/* Ink cursor — a breathing drop beneath the next letter, which carries
+ * a faint invitation glow. The classic bar and blink are retired. */
+[data-feel="1"] .cursor {
+  animation: none;
+  padding-left: 0;
+}
+
+[data-feel="1"] .cursor::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.2em;
+  width: 0.26em;
+  height: 0.26em;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent), 0 0 2px var(--accent);
+  transform: translateX(-50%) scale(1);
+  animation: inkBreath 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes inkBreath {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(0.85); }
+  50%      { opacity: 1;    transform: translateX(-50%) scale(1.15); }
+}
+
+[data-feel="1"] .cursor .charPending {
+  color: #9a9484;
+  text-shadow: 0 0 8px var(--accent-soft);
+}
+
+/* Wrong key — the expected letter shivers and reddens, then recovers. */
+[data-feel="1"] .charRejectFlashInner {
+  animation: rejectShiver 0.3s ease-out;
+}
+
+@keyframes rejectShiver {
+  0%   { transform: translateX(0);    color: #e05050; }
+  20%  { transform: translateX(-2px); }
+  40%  { transform: translateX(2px);  color: #c06060; }
+  60%  { transform: translateX(-1px); }
+  80%  { transform: translateX(1px); }
+  100% { transform: translateX(0);    color: #686860; }
+}
+
+/* Word settle — the finished word lifts a hair, settles, and draws a
+ * thin underline left to right. The word is the beat. */
+[data-feel="1"] .wordRun {
+  position: relative;
+}
+
+[data-feel="1"] .wordRun[data-done="1"] {
+  animation: wordSettle 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes wordSettle {
+  0%   { transform: translateY(0); }
+  35%  { transform: translateY(-1.5px); }
+  100% { transform: translateY(0); }
+}
+
+[data-feel="1"] .wordRun[data-done="1"]::after {
+  content: "";
+  position: absolute;
+  left: 0.04em;
+  right: 0.04em;
+  bottom: 0.14em;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.4;
+  transform-origin: left center;
+  animation: underlineDraw 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes underlineDraw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Phrase exhale — during the 1.5s breath the letters loosen one by one,
+ * left to right, softening as the world takes the words. Runs alongside
+ * the last letter's ignition (different properties, no conflict). */
+[data-feel="1"] .promptBoxBreathing .char {
+  animation: ignite 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+             exhale 1.4s ease-in-out forwards;
+  animation-delay: 0s, calc(var(--i, 0) * 22ms);
+}
+
+@keyframes exhale {
+  0%   { opacity: 1;    filter: blur(0); }
+  100% { opacity: 0.42; filter: blur(0.6px); }
+}

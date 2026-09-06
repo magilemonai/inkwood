@@ -5,6 +5,8 @@ import SceneRenderer from "./SceneRenderer";
 import ErrorBoundary from "./ErrorBoundary";
 import InkOverlay from "./InkOverlay";
 import SeasonalLayer from "./SeasonalLayer";
+import GlowLayer from "./GlowLayer";
+import { isFeelEnabled } from "../feel";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
 import { startAmbient, playCompletionSweep, toggleMute, isMuted, getUserVolume, setUserVolume } from "../audio";
 import { soundResolution } from "../music";
@@ -164,9 +166,12 @@ export default function PlayingScreen() {
   const showTapOverlay = !inputFocused && typed.length === 0;
   const showPulse = typed.length === 0 && !completing;
   const showBreathRing = completing;
+  // The Feel gate (?feel): glyph ignition, ink cursor, word settle,
+  // phrase exhale. All CSS, keyed on the data attributes below.
+  const feel = isFeelEnabled();
 
   return (
-    <div className={s.container} onClick={focusInput}>
+    <div className={s.container} onClick={focusInput} data-feel={feel ? "1" : undefined}>
       <div
         className={s.sceneContainer}
         data-scene-container
@@ -176,6 +181,7 @@ export default function PlayingScreen() {
         <ErrorBoundary>
           <SceneRenderer sceneKey={level.scene} progress={levelProgress} />
         </ErrorBoundary>
+        <GlowLayer scene={level.scene} />
         <SeasonalLayer />
       </div>
 
@@ -194,6 +200,8 @@ export default function PlayingScreen() {
           style={{
             border: `1px solid ${accent}25`,
             "--breath-color": accent,
+            "--accent": accent,
+            "--accent-soft": `${accent}66`,
             "--char-count": target.length || 1,
           } as React.CSSProperties}
           onClick={focusInput}
@@ -217,7 +225,13 @@ export default function PlayingScreen() {
               cursor += segment.length;
             }
             return groups.map((g, gi) => (
-              <span key={gi} className={g.isSpace ? s.spaceRun : s.wordRun}>
+              <span
+                key={gi}
+                className={g.isSpace ? s.spaceRun : s.wordRun}
+                // A word is "done" once typing has moved past its last
+                // letter — the Feel gate settles it and draws its underline.
+                data-done={!g.isSpace && typed.length >= g.startIdx + g.word.length ? "1" : undefined}
+              >
                 {g.word.split("").map((ch, j) => {
                   const i = g.startIdx + j;
                   const state = charStates[i];
@@ -227,6 +241,7 @@ export default function PlayingScreen() {
                     <span
                       key={i}
                       data-char-idx={i}
+                      data-state={state}
                       className={`${s.char} ${isCursor ? s.cursor : ""}`}
                       style={{
                         color:
@@ -235,8 +250,10 @@ export default function PlayingScreen() {
                             : state === "error"
                               ? "#e05050"
                               : undefined,
-                        borderLeft: isCursor ? `2px solid ${accent}` : "none",
-                      }}
+                        // Classic: a 2px bar cursor. Feel: the ink drop (CSS) takes over.
+                        borderLeft: isCursor && !feel ? `2px solid ${accent}` : "none",
+                        "--i": i,
+                      } as React.CSSProperties}
                     >
                       {state === "pending" ? (
                         <span
@@ -270,13 +287,17 @@ export default function PlayingScreen() {
               color: isComplete ? accent : hasError ? "#c06060" : "#908878",
             }}
           >
-            {isComplete
-              ? "well done"
-              : hasError
-                ? "backspace to correct"
-                : showTapOverlay
-                  ? ""
-                  : "type the phrase above"}
+            {feel
+              // Feel: the world answers the words; the helper text stays quiet
+              // unless the player actually needs a hint.
+              ? (hasError ? "backspace to correct" : "")
+              : isComplete
+                ? "well done"
+                : hasError
+                  ? "backspace to correct"
+                  : showTapOverlay
+                    ? ""
+                    : "type the phrase above"}
           </span>
           <span>
             phrase {promptIdx + 1} of {totalPrompts}
