@@ -37,8 +37,14 @@ const MAX_LIGHTS = 12;
 const MAX_MOTES = 24;
 const DPR_CAP = 1.5;
 const PROBE_WARMUP = 20;
-const PROBE_FRAMES = 60;
-const PROBE_MAX_MS = 28; // median frame slower than ~36 fps → not worth the battery
+const PROBE_FRAMES = 45;
+/** The layer turns itself off only when frames are slow AND the layer is
+ *  the reason: median frame over the window above this... */
+const PROBE_MAX_MS = 28; // ~36 fps
+/** ...and the layer's own marginal cost (frames rendering vs. frames
+ *  skipping the render) above this. A heavy SVG scene with cheap light
+ *  keeps its light; turning it off would not help those frames. */
+const PROBE_MARGIN_MS = 7;
 const PROBE_RETRY_MS = 8000; // one second chance after a slow first window (page load hitches)
 
 /** `?glowprobe=off` disables the FPS probe. For screenshot tooling on
@@ -294,7 +300,15 @@ export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
     const start = performance.now();
     let last = start;
     let frames = 0;
-    const probeSamples: number[] = [];
+    // Probe: after warm-up, sample a window of frames WITH the layer
+    // rendering, then a window WITHOUT (the canvas holds its last frame),
+    // and compare medians. Slow frames alone are not the layer's fault;
+    // slow frames that the layer measurably causes are. One bad verdict
+    // earns a retry (page-load hitches, a font arriving); two turn the
+    // layer off — the game beneath is untouched.
+    const onSamples: number[] = [];
+    const offSamples: number[] = [];
+    let probePhase: "on" | "off" | "idle" = "on";
     let probeStrikes = 0;
     let probeRetryAt = 0;
     const probing = !probeDisabled();
@@ -309,30 +323,39 @@ export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
       const dt = now - last;
       last = now;
 
-      // FPS probe after warm-up: the median frame over a window. One slow
-      // window earns a retry (page-load hitches, a font arriving); two in a
-      // row and the layer turns itself off — the game beneath is untouched.
       frames++;
-      if (probing && frames > PROBE_WARMUP && now >= probeRetryAt) {
-        probeSamples.push(dt);
-        if (probeSamples.length >= PROBE_FRAMES) {
-          const med = median(probeSamples);
-          probeSamples.length = 0;
-          if (med > PROBE_MAX_MS) {
-            probeStrikes++;
-            if (probeStrikes >= 2) {
-              disabled = true;
-              canvas.style.display = "none";
-              console.info(`[glow] median frame ${med.toFixed(1)}ms twice; layer off`);
-              return;
+      let skipRender = false;
+      if (probing && frames > PROBE_WARMUP && now >= probeRetryAt && probePhase !== "idle") {
+        if (probePhase === "on") {
+          onSamples.push(dt);
+          if (onSamples.length >= PROBE_FRAMES) probePhase = "off";
+        } else {
+          skipRender = true;
+          offSamples.push(dt);
+          if (offSamples.length >= PROBE_FRAMES) {
+            const medOn = median(onSamples);
+            const medOff = median(offSamples);
+            onSamples.length = 0;
+            offSamples.length = 0;
+            const layerCost = medOn - medOff;
+            if (medOn > PROBE_MAX_MS && layerCost > PROBE_MARGIN_MS) {
+              probeStrikes++;
+              if (probeStrikes >= 2) {
+                disabled = true;
+                canvas.style.display = "none";
+                console.info(`[glow] frames ${medOn.toFixed(1)}ms with layer, ${medOff.toFixed(1)}ms without, twice; layer off`);
+                return;
+              }
+              console.info(`[glow] frames ${medOn.toFixed(1)}ms with layer, ${medOff.toFixed(1)}ms without; re-probing shortly`);
+              probeRetryAt = now + PROBE_RETRY_MS;
+              probePhase = "on";
+            } else {
+              probePhase = "idle"; // passed, or slow for reasons that aren't ours
             }
-            console.info(`[glow] median frame ${med.toFixed(1)}ms; re-probing shortly`);
-            probeRetryAt = now + PROBE_RETRY_MS;
-          } else {
-            probeRetryAt = Infinity; // passed; stop sampling
           }
         }
       }
+      if (skipRender) return;
 
       // Reduced motion: nothing animates, so ~4 fps is plenty.
       if (reduced && now - lastReducedRender < 250) return;
