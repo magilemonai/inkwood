@@ -56,7 +56,7 @@ The prompts stay the player's own incantations. Act cards become journal pages a
 Acts: Kindling / The Old Paths / The Listening / The Last Line.
 
 Phrase changes from v1 (everything else kept, it was rated 4.8/5):
-- Library 2: "speak again, forgotten words" → "rise, every voice, and speak as one"
+- Library 2: "speak again, forgotten words" → "every voice, rise and speak as one"
   (the pair was redundant; now phrase 1 opens the tome, phrase 2 raises the chorus).
 - Sanctum 1: "moonlight, gather where spirits convene" (39 chars, squeezed the font) →
   "moonlight, pour into the circle".
@@ -163,7 +163,7 @@ lights (up to 6, arriving as they submerge), a surface pool, faint sky haze.
 
 ### Library (`library`)
 
-Prompts: "open, sleeping pages" (the hero tome opens, pages glow) / "rise, every voice,
+Prompts: "open, sleeping pages" (the hero tome opens, pages glow) / "every voice, rise
 and speak as one" (books lift and float, three soft voice-rays lift from the tome,
 crystals pulse, glyph-embers rise).
 

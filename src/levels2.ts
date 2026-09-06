@@ -92,10 +92,10 @@ export const LEVELS_V2: Level[] = [
   {
     title: "The Whispering Library",
     flavor: "Every book here is a voice that stopped mid-sentence.",
-    prompts: ["open, sleeping pages", "rise, every voice, and speak as one"],
+    prompts: ["open, sleeping pages", "every voice, rise and speak as one"],
     promptPool: [
       ["open, sleeping pages", "wake, forgotten pages"],
-      ["rise, every voice, and speak as one", "speak together, every silent book"],
+      ["every voice, rise and speak as one", "speak together, every silent book"],
     ],
     scene: "library",
     accent: "#c088b0",
