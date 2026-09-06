@@ -11,6 +11,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { useGameStore } from "../store";
+import { getDisplayProgress } from "../displayProgress";
 import type { GlowLight, SceneManifest } from "../scenes/manifest";
 
 /**
@@ -376,7 +377,9 @@ export default function GlowCanvas({
         p = Math.max(0, Math.min(1, progressOf()));
       } else {
         const state = useGameStore.getState();
-        p = state.levelProgress();
+        // Follow the tweened display when the playing screen runs one, so
+        // the light moves with the art rather than snapping ahead of it.
+        p = getDisplayProgress() ?? state.levelProgress();
         if (state.completing && !wasCompleting) exhaleAt = now;
         wasCompleting = state.completing;
       }

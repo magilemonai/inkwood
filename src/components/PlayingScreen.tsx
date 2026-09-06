@@ -8,6 +8,7 @@ import SeasonalLayer from "./SeasonalLayer";
 import GlowLayer from "./GlowLayer";
 import { isFeelEnabled } from "../feel";
 import { useCompletionTimer } from "../hooks/useCompletionTimer";
+import { useTweenedProgress } from "../hooks/useTweenedProgress";
 import { startAmbient, playCompletionSweep, toggleMute, isMuted, getUserVolume, setUserVolume } from "../audio";
 import { soundResolution } from "../music";
 import { useInput } from "../contexts/InputContext";
@@ -187,6 +188,9 @@ export default function PlayingScreen() {
   // The Feel gate (?feel): glyph ignition, ink cursor, word settle,
   // phrase exhale. All CSS, keyed on the data attributes below.
   const feel = isFeelEnabled();
+  // Under the Feel gate the world eases toward each keystroke's progress
+  // instead of snapping to it, so the frames flow at any typing speed.
+  const shownProgress = useTweenedProgress(levelProgress, feel, lvl);
 
   return (
     <div className={s.container} onClick={focusInput} data-feel={feel ? "1" : undefined}>
@@ -197,7 +201,7 @@ export default function PlayingScreen() {
         aria-label={`${level.title} — ${levelProgress === 0 ? "dormant, waiting" : levelProgress < 1 ? "awakening" : "fully alive"}`}
       >
         <ErrorBoundary>
-          <SceneRenderer sceneKey={level.scene} progress={levelProgress} wordsDone={wordsDone} />
+          <SceneRenderer sceneKey={level.scene} progress={shownProgress} wordsDone={wordsDone} />
         </ErrorBoundary>
         <GlowLayer scene={level.scene} />
         <SeasonalLayer />
