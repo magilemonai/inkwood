@@ -36,9 +36,25 @@ const VIEW_H = 250;
 const MAX_LIGHTS = 12;
 const MAX_MOTES = 24;
 const DPR_CAP = 1.5;
-const PROBE_WARMUP = 12;
+const PROBE_WARMUP = 20;
 const PROBE_FRAMES = 60;
-const PROBE_MAX_MS = 26; // ~38 fps average → not worth the battery; turn off
+const PROBE_MAX_MS = 28; // median frame slower than ~36 fps → not worth the battery
+const PROBE_RETRY_MS = 8000; // one second chance after a slow first window (page load hitches)
+
+/** `?glowprobe=off` disables the FPS probe. For screenshot tooling on
+ *  software-rendered headless browsers; never set by the game itself. */
+function probeDisabled(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).get("glowprobe") === "off";
+  } catch {
+    return false;
+  }
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)] ?? 0;
+}
 
 const VERT = /* glsl */ `
   void main() {
@@ -278,7 +294,10 @@ export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
     const start = performance.now();
     let last = start;
     let frames = 0;
-    let probeAccum = 0;
+    const probeSamples: number[] = [];
+    let probeStrikes = 0;
+    let probeRetryAt = 0;
+    const probing = !probeDisabled();
     let wasCompleting = false;
     let exhaleAt = -Infinity;
     let lastReducedRender = 0;
@@ -290,15 +309,28 @@ export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
       const dt = now - last;
       last = now;
 
-      // FPS probe after warm-up: bail out on hardware that can't hold it.
+      // FPS probe after warm-up: the median frame over a window. One slow
+      // window earns a retry (page-load hitches, a font arriving); two in a
+      // row and the layer turns itself off — the game beneath is untouched.
       frames++;
-      if (frames > PROBE_WARMUP && frames <= PROBE_WARMUP + PROBE_FRAMES) {
-        probeAccum += dt;
-        if (frames === PROBE_WARMUP + PROBE_FRAMES && probeAccum / PROBE_FRAMES > PROBE_MAX_MS) {
-          disabled = true;
-          canvas.style.display = "none";
-          console.info(`[glow] average frame ${(probeAccum / PROBE_FRAMES).toFixed(1)}ms; layer off`);
-          return;
+      if (probing && frames > PROBE_WARMUP && now >= probeRetryAt) {
+        probeSamples.push(dt);
+        if (probeSamples.length >= PROBE_FRAMES) {
+          const med = median(probeSamples);
+          probeSamples.length = 0;
+          if (med > PROBE_MAX_MS) {
+            probeStrikes++;
+            if (probeStrikes >= 2) {
+              disabled = true;
+              canvas.style.display = "none";
+              console.info(`[glow] median frame ${med.toFixed(1)}ms twice; layer off`);
+              return;
+            }
+            console.info(`[glow] median frame ${med.toFixed(1)}ms; re-probing shortly`);
+            probeRetryAt = now + PROBE_RETRY_MS;
+          } else {
+            probeRetryAt = Infinity; // passed; stop sampling
+          }
         }
       }
 

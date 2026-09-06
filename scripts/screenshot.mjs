@@ -115,7 +115,9 @@ async function screenshot(sceneIdx, progressPct = 0, opts = {}) {
     const text = msg.text();
     if (text.startsWith('[glow]')) console.log('  browser:', text);
   });
-  const extra = params.length ? '&' + params.join('&') : '';
+  // glowprobe=off: headless SwiftShader is slow enough to trip the Glow
+  // layer's FPS probe; screenshots verify art, not frame rate.
+  const extra = (params.length ? '&' + params.join('&') : '') + '&glowprobe=off';
   await page.goto(BASE_URL + '?dev&canonical' + extra, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2000);
 
