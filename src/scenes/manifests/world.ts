@@ -25,16 +25,6 @@ import { sub } from "../util";
  * anything.
  */
 
-/** Matches the scene's own dev-only ending switch, so the night variant
- *  gets no dawn light either. Read once at module init. */
-const NIGHT_ENDING: boolean = (() => {
-  if (typeof window === "undefined") return false;
-  try {
-    return new URLSearchParams(window.location.search).get("worldvariant") === "night";
-  } catch {
-    return false;
-  }
-})();
 
 const WINDOW: RGB = [1.0, 0.66, 0.28];
 const CAVERN: RGB = [1.0, 0.74, 0.38];
@@ -54,7 +44,7 @@ const world: SceneManifest = {
     const earthP = sub(p, 0, 0.33);
     const skyP = sub(p, 0.33, 0.33);
     const unityP = sub(p, 0.66, 0.34);
-    const dawn = NIGHT_ENDING ? 0 : sub(p, 0.74, 0.26);
+    const dawn = sub(p, 0.74, 0.26);
 
     // Mirrors the scene's callback schedule exactly.
     const cotLit = sub(earthP, 0.14, 0.34);

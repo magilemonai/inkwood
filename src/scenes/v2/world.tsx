@@ -43,19 +43,8 @@ import { GlowFilter } from "../../svg/filters";
 // THE ENDING. Dawn is the default: the horizon swells peach into gold
 // behind the ridge, the top of the sky deepens to violet, the moon
 // pales, the low stars wash out, the threads go gold-white, and every
-// callback throws a long soft shadow away from the light. A dev-only
-// `?worldvariant=night` keeps the night sky and skips the dawn so the
-// director can compare the two endings; nothing else differs.
-
-/** Dev-only ending switch, read once at module init. Dawn is default. */
-const NIGHT_ENDING: boolean = (() => {
-  if (typeof window === "undefined") return false;
-  try {
-    return new URLSearchParams(window.location.search).get("worldvariant") === "night";
-  } catch {
-    return false;
-  }
-})();
+// callback throws a long soft shadow away from the light.
+// The finale ends at dawn (director's ruling 2026-09-06).
 
 const hsl = (h: number, s: number, l: number) =>
   `hsl(${h.toFixed(1)}, ${Math.max(0, s).toFixed(1)}%, ${Math.max(0, l).toFixed(1)}%)`;
@@ -848,7 +837,7 @@ function WorldScene({ progress: p }: SceneProps) {
   const unityP = sub(p, 0.66, 0.34);
   const dawnP = sub(p, 0.74, 0.26);
   /** Morning. Zero in the night variant; everything else is identical. */
-  const dawn = NIGHT_ENDING ? 0 : dawnP;
+  const dawn = dawnP;
 
   // ── SKY. Deep at the top all game; only the horizon lifts, so the
   //    frame keeps its depth right up to the dawn. ──

@@ -392,3 +392,83 @@ verify at 390×844 that the text and buttons still fit above the fold.
 Screenshot method: as the intro snippet, but go to `'/?v2&dev&glowprobe=off'`, then
 press F2, click the button whose text is exactly `outro`, press F2 again, and screenshot
 at 4, 12, 20, 28 s (`intro-v2-…` → `outro-v2-…`). Port 4192.
+
+---
+
+## 8. Frame-by-frame findings (director's playtest, 2026-09-06)
+
+The director: "go through the animations frame by frame and analyze them so that they
+make sense to the end user (the well does this properly, for example)." Tool:
+`node scripts/sweep.mjs <sceneIndex> --port=<yours>` types the canonical phrases and
+screenshots every 5% plus the breath after each phrase and the first frame of the next,
+then composes `screenshots/sweep/<idx>-<name>-sheet.png`. Read the sheet. The sheets
+this brief was written from are in `/Users/cody/Desktop/Games/Inkwood/screenshots/sweep/`.
+
+**The standard (the Well):** at 0% the shaft is dry and black; the first letters wake an
+aquifer glow at the floor; water gathers and climbs the fitted stones through phrase 1;
+phrase 2 carries it to the mouth, lighting runes course by course, floating the bucket.
+Every frame follows from the one before, every phrase changes something from its first
+word, nothing appears in one step, and the cause is the words.
+
+**Rules for every scene:**
+1. **Causality.** The effect must follow from the phrase's meaning, in the order a person
+   would expect (a wick catches before its halo grows; a book's cover opens before its
+   pages glow; stars ignite in a sky that is already dark).
+2. **Continuity.** Nothing pops. Any element that appears must grow, draw, rise, unfold,
+   or brighten over at least 15% of its phrase (three sweep frames). No frame may differ
+   from its neighbor by a whole element.
+3. **No dead stretches.** Something visible changes within the first 5% of every phrase
+   and keeps changing through it. A frame identical to the one 10% earlier is a bug.
+4. **Phrase boundaries are seams, not cuts.** The breath frame and the next phrase's first
+   frame must match; the next phrase continues the world, it does not reset it.
+5. **Assembly over fade** where the thing has structure (stones, arches, roots, crowns,
+   pages). Fades are for light and air.
+
+### Library (`scenes/v2/library.tsx`) — the book does not open
+Frames 10–25%: the closed tome tilts, then a diamond-shaped fragment (the cover swinging
+168° about a point) hangs off the left of a bright page block, then a remnant. It reads
+as the book rotating or shattering, not opening. Rebuild the beat as a book opening:
+the front cover hinges on the spine (its width foreshortens with cos of the angle,
+passes edge-on, then shows its inside face on the left), the page block is revealed
+beneath, the two pages part into the spread, and only then does the spread take light.
+Spread it across 5–45% so every frame is a legible stage of one motion. The rest of the
+scene (phrase 2's rising books, rays, crystals) already reads; keep it.
+
+### Tree (`scenes/v2/tree.tsx`) — two dead stretches and two pops
+Phrase 1 (0–33%): frames 0–20% are identical; the root light appears whole at 25–30%.
+Roots should extend from the trunk outward through the whole phrase, the ley light
+drawing along each root's length (stroke-dashoffset or a clip that widens) from the
+first letters. Phrase 2 (33–66%): frames 35–40% are identical to the breath; one clump
+appears at 45%; the crown's top band pops at 50%. The crown should grow from the fork
+outward and upward through the whole phrase, clump by clump, the way it is described in
+its own header comment. Phrase 3 reads.
+
+### Garden (`scenes/v2/garden.tsx`) — canopy and flowers pop
+The crown appears between 30% and 35% (bare at 30%, full at 35%). It should fill from
+the inner branches outward across 20–50%, with the root glow leading it (0–25%). Phrase
+2 (50–100%): nothing but buds until 70%, then several flowers open at once. Stagger:
+buds swell from 50%, the first flower opens by 55%, the rest one after another to 100%,
+each opening as its own small unfolding rather than a swap.
+
+### World (`scenes/v2/world.tsx`) — the sky cuts, the tree pops
+Phrase 1 plays under a pale twilight sky; the "phrase 2 start" frame is a deep night
+with stars: the sky gets DARKER when the player asks the stars to remember. The sky must
+be night from 0% (it is the same night the game has been in since the Stars level); phrase
+2 ignites stars, moon, and wisps in it; phrase 3 brings the dawn. The Great Tree: absent
+at "phrase 3 start", faint at 70%, full crown at 75%. It should rise visibly across
+66–82%: trunk first, then limbs, then the crown clump by clump, before the threads draw.
+
+### Cottage (`scenes/v2/cottage.tsx`) — window before candles, glow before flame
+Frames 10–20%: the first candle shows its halo before any flame, and the window panes
+are already bright amber (brighter than the one lit candle) during "little candle, burn
+bright". Wick catches first (a small core), halo grows after; the window should stay
+cold through phrase 1 with at most a faint reflection of the candles, and warm with the
+room during phrase 2. Fixed by the coordinator.
+
+### Stars (`scenes/v2/stars.tsx`) — verify the draw
+Each figure is fully drawn in the frame 120ms after its name completes. Confirm the
+stroke-dashoffset draw runs at least 600ms so the player sees the line travel; if it is
+instant, give it that duration. Otherwise the scene reads.
+
+### Pass as-is
+Well (the standard), Bridge, Stones, Sanctum.
