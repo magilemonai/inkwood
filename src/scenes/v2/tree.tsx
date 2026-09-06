@@ -441,13 +441,20 @@ const LEAF_SPARKS = {
 
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
+/** Leaf sparks in their own memo'd component: `useParticles` notifies
+ *  ~12×/s, and called from the scene body it would reconcile the whole
+ *  trunk, canopy and root system at that rate. Only the sparks re-render. */
+const Sparks = memo(function Sparks({ active, alpha }: { active: boolean; alpha: number }) {
+  const sparks = useParticles(LEAF_SPARKS, active);
+  return <ParticleField particles={sparks} opacity={alpha} />;
+});
+
 function TreeScene({ progress: p }: SceneProps) {
   const rootPhase = sub(p, 0.02, 0.31);
   const branchPhase = sub(p, 0.34, 0.32);
   const heartPhase = sub(p, 0.67, 0.33);
 
   const sparksOn = heartPhase > 0.15;
-  const sparks = useParticles(LEAF_SPARKS, sparksOn);
 
   // ── Palette ──
   // The sky stays cool the whole way; every drop of warmth comes from
@@ -808,7 +815,7 @@ function TreeScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {sparksOn && <ParticleField particles={sparks} opacity={0.3 * heartPhase} />}
+      {sparksOn && <Sparks active alpha={0.3 * heartPhase} />}
 
       {/* ── HEART BLEED — the tree's own light on the air around it ── */}
       {heartPhase > 0 && (
