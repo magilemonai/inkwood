@@ -17,7 +17,9 @@ const cottage: SceneManifest = {
     const c1 = sub(p, 0.06, 0.18);
     const c2 = sub(p, 0.24, 0.18);
     const c3 = sub(p, 0.42, 0.18);
-    const windowWarm = sub(p, 0.05, 0.55);
+    // Window warms with the room on phrase 2 (frame-by-frame fix: the
+    // panes were brighter than the first candle during "little candle").
+    const windowWarm = sub(p, 0.5, 0.42);
     const room = sub(p, 0.5, 0.5);
     const cat = sub(p, 0.58, 0.2);
     const script = sub(p, 0.86, 0.12);
@@ -29,9 +31,10 @@ const cottage: SceneManifest = {
       // Candle flames on the shelf — tight halo on the wall behind, hot
       // core at the wick. Tight and bright so the corners stay dark and
       // the light means something.
-      { x: 210, y: 84, radius: 38, intensity: 0.36 * c1, color: FLAME, flicker: 0.16, core: 0.6 },
-      { x: 262, y: 80, radius: 40, intensity: 0.38 * c2, color: FLAME, flicker: 0.14, core: 0.6 },
-      { x: 318, y: 86, radius: 38, intensity: 0.36 * c3, color: FLAME, flicker: 0.17, core: 0.6 },
+      // Each halo lags its wick: the flame catches first, then the light spreads.
+      { x: 210, y: 84, radius: 38, intensity: 0.36 * sub(c1, 0.4, 0.6), color: FLAME, flicker: 0.16, core: 0.6 },
+      { x: 262, y: 80, radius: 40, intensity: 0.38 * sub(c2, 0.4, 0.6), color: FLAME, flicker: 0.14, core: 0.6 },
+      { x: 318, y: 86, radius: 38, intensity: 0.36 * sub(c3, 0.4, 0.6), color: FLAME, flicker: 0.17, core: 0.6 },
       // Candlelight reaching the floorboards — one flat shared pool.
       { x: 264, y: 197, radius: 90, intensity: 0.09 * pools, color: FLAME, flicker: 0.10, yScale: 3.2 },
       // The window — steady warmth pouring in, and its pool on the floor.

@@ -77,7 +77,12 @@ function CottageScene({ progress: p }: SceneProps) {
   const c2 = sub(p, 0.24, 0.18);
   const c3 = sub(p, 0.42, 0.18);
 
-  const windowWarm = sub(p, 0.05, 0.55);
+  // The window stays cold through phrase 1: a candle cannot light the night
+  // outside. The panes carry only a faint reflection of the flames until
+  // phrase 2 ("fill every room with warmth") warms them with the room.
+  const pools = (c1 + c2 + c3) / 3;
+  const windowWarm = sub(p, 0.5, 0.42);
+  const paneWarm = Math.min(1, windowWarm + 0.14 * pools);
 
   // Phrase 2
   const catP = sub(p, 0.58, 0.2);
@@ -107,8 +112,9 @@ function CottageScene({ progress: p }: SceneProps) {
 
         {candles.map((_c, i) => (
           <radialGradient key={i} id={`pool${i}`} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#e89a30" stopOpacity={candleLit[i] * 0.2} />
-            <stop offset="60%" stopColor="#e89a30" stopOpacity={candleLit[i] * 0.06} />
+            {/* The wall pool follows the flame; it never leads it. */}
+            <stop offset="0%" stopColor="#e89a30" stopOpacity={sub(candleLit[i], 0.5, 0.5) * 0.2} />
+            <stop offset="60%" stopColor="#e89a30" stopOpacity={sub(candleLit[i], 0.5, 0.5) * 0.06} />
             <stop offset="100%" stopColor="#e89a30" stopOpacity={0} />
           </radialGradient>
         ))}
@@ -142,7 +148,7 @@ function CottageScene({ progress: p }: SceneProps) {
       {/* ── WINDOW ── */}
       {[[52, 30, 38, 46], [100, 30, 38, 46], [52, 80, 38, 48], [100, 80, 38, 48]].map(([x, y, w, h], i) => (
         <rect key={i} x={x} y={y} width={w} height={h} rx="1"
-          fill={`rgb(${10 + Math.round(windowWarm * 160)},${12 + Math.round(windowWarm * 88)},${35 + Math.round(windowWarm * 5)})`} />
+          fill={`rgb(${10 + Math.round(paneWarm * 160)},${12 + Math.round(paneWarm * 88)},${35 + Math.round(paneWarm * 5)})`} />
       ))}
       {windowWarm > 0.1 && (
         <ellipse cx="95" cy="80" rx="65" ry="55" fill="url(#windowGlowGrad)" />
@@ -251,10 +257,12 @@ function CottageScene({ progress: p }: SceneProps) {
                   L${c.x + 4} ${c.baseY} Z`}
               fill={`rgb(${200 + Math.round(lit * 40)},${190 + Math.round(lit * 30)},170)`}
               opacity={0.4 + lit * 0.6} />
-            {lit > 0.3 && (
+            {/* A wick catches in order: the tip first, then the core grows,
+                and only then does the halo spread onto the wall. */}
+            {lit > 0.12 && (
               <>
                 <ellipse cx={c.x} cy={c.wickY - 5} rx={4} ry={7}
-                  fill="#e89a30" opacity={lit * 0.7} filter="url(#flameGlow)">
+                  fill="#e89a30" opacity={sub(lit, 0.5, 0.5) * 0.7} filter="url(#flameGlow)">
                   {!still && (
                     <>
                       <animate attributeName="ry" values="7;6.3;7.4;6.7;7.2;7" dur={`${c.dur}s`} repeatCount="indefinite" />
@@ -262,13 +270,13 @@ function CottageScene({ progress: p }: SceneProps) {
                     </>
                   )}
                 </ellipse>
-                <ellipse cx={c.x} cy={c.wickY - 4} rx={2} ry={5}
-                  fill="#ffe890" opacity={lit * 0.9} filter="url(#flameCore)">
+                <ellipse cx={c.x} cy={c.wickY - 4} rx={2 * (0.4 + 0.6 * sub(lit, 0.25, 0.4))} ry={5 * (0.3 + 0.7 * sub(lit, 0.25, 0.4))}
+                  fill="#ffe890" opacity={sub(lit, 0.25, 0.4) * 0.9} filter="url(#flameCore)">
                   {!still && (
                     <animate attributeName="ry" values="5;4.5;5.3;4.8;5" dur={`${c.dur * 0.9}s`} repeatCount="indefinite" />
                   )}
                 </ellipse>
-                <ellipse cx={c.x} cy={c.wickY - 3} rx={1} ry={2.5} fill="#fff8e0" opacity={lit} />
+                <ellipse cx={c.x} cy={c.wickY - 3} rx={1} ry={2.5 * (0.4 + 0.6 * sub(lit, 0.12, 0.3))} fill="#fff8e0" opacity={sub(lit, 0.12, 0.3)} />
               </>
             )}
           </g>
@@ -384,7 +392,7 @@ function CottageScene({ progress: p }: SceneProps) {
 
       {/* ── WINDOW LIGHT on floor ── */}
       {windowWarm > 0.2 && (() => {
-        const wlp = sub(p, 0.2, 0.55);
+        const wlp = sub(p, 0.55, 0.4);
         return (
           <g opacity={wlp * 0.75}>
             <ellipse cx="95" cy="202" rx={54} ry={10} fill="#e89a30" opacity={0.05} />
