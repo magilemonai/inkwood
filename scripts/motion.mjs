@@ -4,7 +4,14 @@
  * eye meets it (frames in quick succession) rather than as sampled stills.
  *
  * Usage:
- *   node scripts/motion.mjs <sceneIndex> [--from=5] [--to=45] [--cadence=170] [--fps=10] [--port=4173] [--params=v2]
+ *   node scripts/motion.mjs <sceneIndex|all> [--from=5] [--to=45] [--cadence=170] [--fps=10] [--port=4173] [--params=v2]
+ *
+ * Snap detector: adjacent frames of the recording are differenced over the
+ * scene area (above the typing overlay) and the mean luma of each
+ * difference is printed as a series; a frame whose change is far above
+ * the run's median is a snap candidate and is listed with its time, so
+ * the strip can be read at exactly that moment. SMIL idle motion sets the
+ * floor; the tween keeps keystrokes near it; a pop stands out.
  *
  * Types the canonical phrases with `cadence` ms between letters, recording
  * video from the moment level progress passes `from`% until it passes
@@ -48,7 +55,7 @@ const CADENCE = parseInt(flagValue('cadence', '170')) || 170;
 const FPS = parseInt(flagValue('fps', '10')) || 10;
 const PORT = parseInt(flagValue('port', '4173')) || 4173;
 const PARAMS = flagValue('params', 'v2').split(',').filter(Boolean);
-const LEVELS_FILE = PARAMS.includes('v2') ? './src/levels2.ts' : './src/levels.ts';
+const LEVELS_FILE = PARAMS.includes('classic') ? './src/levels.ts' : './src/levels2.ts';
 const BASE_URL = `http://localhost:${PORT}/`;
 const OUT = './screenshots/motion';
 
@@ -64,7 +71,8 @@ function loadScenes() {
 }
 
 const SCENES = loadScenes();
-const idx = parseInt(args[0] ?? '0');
+
+async function recordScene(idx) {
 const scene = SCENES[idx];
 const safe = scene.name.replace(/\s+/g, '_');
 const dir = `${OUT}/${idx}-${safe}`;
@@ -151,4 +159,39 @@ await p2.screenshot({ path: strip, fullPage: true });
 await b2.close();
 renameSync(video, `${dir}/typing.webm`);
 rmSync(videoDir, { recursive: true, force: true });
-console.log(`Strip: ${strip} (${frames.length} frames); video: ${dir}/typing.webm`);
+
+// Snap detector: per-frame mean luma of |frame - previous| over the scene
+// area (y < 640 of 800 keeps the typing overlay and its changing text out).
+const stats = execSync(
+  `ffmpeg -loglevel error -ss ${startS.toFixed(2)} -t ${durS.toFixed(2)} -i "${dir}/typing.webm" -vf "fps=${FPS},crop=1400:600:0:0,tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-" -f null - 2>/dev/null`,
+).toString();
+const diffs = Array.from(stats.matchAll(/lavfi\.signalstats\.YAVG=([\d.]+)/g)).map((m) => parseFloat(m[1])).slice(1);
+const sorted = [...diffs].sort((a, b) => a - b);
+const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+const floor = Math.max(median, 0.15);
+// A snap is an ISOLATED jump: one frame far above both its neighbors.
+// Sustained high change (a finale drawing, the completion bloom) is
+// motion, not a pop, and is left alone.
+const spikes = diffs
+  .map((d, i) => {
+    const prev = diffs[i - 1] ?? d, next = diffs[i + 1] ?? d;
+    const local = Math.max(prev, next, floor);
+    return { i, t: (i + 1) / FPS, d, ratio: d / local };
+  })
+  .filter((x) => x.ratio >= 2.5 && x.d >= 1.0)
+  .sort((a, b) => b.ratio - a.ratio)
+  .slice(0, 8);
+const report = { scene: `${idx} ${scene.name}`, frames: frames.length, median: +median.toFixed(2), max: +Math.max(...diffs, 0).toFixed(2), spikes: spikes.map((x) => `${x.t.toFixed(1)}s ×${x.ratio.toFixed(0)} (${x.d.toFixed(1)})`) };
+writeFileSync(`${dir}/snaps.json`, JSON.stringify({ ...report, diffs: diffs.map((d) => +d.toFixed(2)) }, null, 1));
+console.log(`Strip: ${strip} (${frames.length} frames) · median Δ ${report.median} · max Δ ${report.max} · spikes: ${report.spikes.length ? report.spikes.join(', ') : 'none'}`);
+return report;
+}
+
+const which = args[0] ?? '0';
+const indices = which === 'all' ? SCENES.map((_, i) => i) : which.split(',').map((n) => parseInt(n));
+const reports = [];
+for (const i of indices) reports.push(await recordScene(i));
+if (indices.length > 1) {
+  console.log('\n=== SNAP REPORT ===');
+  for (const r of reports) console.log(`${r.scene.padEnd(28)} frames ${String(r.frames).padStart(3)}  median ${r.median}  max ${r.max}  ${r.spikes.length ? 'SPIKES: ' + r.spikes.join(', ') : 'clean'}`);
+}

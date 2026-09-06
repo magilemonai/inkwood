@@ -15,7 +15,7 @@ import { LEVELS_V2, ACT_LABELS_V2 } from "./levels2";
  * every alternative in that slot MUST also command flowers to bloom.
  */
 
-const LEVELS_V1: Level[] = [
+export const LEVELS_V1: Level[] = [
   // ── Act I: Awakening ──
   {
     title: "The Sleeping Garden",

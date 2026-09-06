@@ -39,20 +39,22 @@ export function useTweenedProgress(target: number, enabled: boolean, snapKey: un
 
   useEffect(() => {
     if (!active) {
+      // The hook returns `target` directly when inactive; just keep the
+      // refs honest and release the shared display value.
       shownRef.current = target;
-      setShown(target);
       setDisplayProgress(null);
       return;
     }
     // A new level: show its state immediately rather than winding down
-    // from the previous scene's progress.
+    // from the previous scene's progress. (State updates happen inside
+    // animation frames, never synchronously in the effect body.)
     if (keyRef.current !== snapKey) {
       keyRef.current = snapKey;
       cancelAnimationFrame(rafRef.current);
       shownRef.current = target;
-      setShown(target);
       setDisplayProgress(target);
-      return;
+      rafRef.current = requestAnimationFrame(() => setShown(target));
+      return () => cancelAnimationFrame(rafRef.current);
     }
     const from = shownRef.current;
     const to = target;

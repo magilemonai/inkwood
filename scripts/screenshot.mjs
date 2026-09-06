@@ -65,7 +65,7 @@ const opts = {
   port: parseInt(flagValue('port', '4173')) || 4173,
 };
 const BASE_URL = `http://localhost:${opts.port}/`;
-const LEVELS_FILE = opts.params.includes('v2') ? './src/levels2.ts' : './src/levels.ts';
+const LEVELS_FILE = opts.params.includes('classic') ? './src/levels.ts' : './src/levels2.ts';
 
 /**
  * Parse scenes + prompts out of src/levels.ts so the screenshot script

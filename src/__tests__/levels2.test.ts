@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { LEVELS } from "../levels";
+import { LEVELS_V1 as LEVELS } from "../levels";
 import { LEVELS_V2, ACT_LABELS_V2, JOURNAL_PAGES_V2 } from "../levels2";
 
 /**

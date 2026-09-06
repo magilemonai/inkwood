@@ -30,7 +30,7 @@ let enabled: boolean = (() => {
   return DEFAULT_ENABLED;
 })();
 
-if (enabled) trackGateActive("glow");
+if (enabled && !isV2Enabled()) trackGateActive("glow");
 
 export function isGlowEnabled(): boolean {
   return enabled;

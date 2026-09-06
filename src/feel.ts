@@ -29,7 +29,7 @@ let enabled: boolean = (() => {
   return DEFAULT_ENABLED;
 })();
 
-if (enabled) trackGateActive("feel");
+if (enabled && !isV2Enabled()) trackGateActive("feel");
 
 export function isFeelEnabled(): boolean {
   return enabled;

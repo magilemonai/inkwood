@@ -3,6 +3,7 @@ import { useGameStore } from "../store";
 import { LEVELS, getActIndex, ACT_LABELS } from "../levels";
 import { startAmbient } from "../audio";
 import { useInput } from "../contexts/InputContext";
+import { isV2Enabled, switchEdition } from "../v2";
 import s from "../styles/Wander.module.css";
 
 /**
@@ -31,6 +32,30 @@ export default function WanderScreen() {
     <div className={s.container}>
       <h2 className={s.heading}>Wander the woods</h2>
       <p className={s.subheading}>Return to any scene you've wakened.</p>
+
+      {/* The edition switch. Only reachable after finishing the game once
+          (this screen is), so the first run is always Inkwood 2. */}
+      <div className={s.edition} role="group" aria-label="Edition">
+        <div className={s.editionRow}>
+          <button
+            className={`${s.editionBtn} ${!isV2Enabled() ? s.editionBtnActive : ""}`}
+            onClick={() => { if (isV2Enabled()) switchEdition(false); }}
+            aria-pressed={!isV2Enabled()}
+          >
+            Classic
+          </button>
+          <button
+            className={`${s.editionBtn} ${isV2Enabled() ? s.editionBtnActive : ""}`}
+            onClick={() => { if (!isV2Enabled()) switchEdition(true); }}
+            aria-pressed={isV2Enabled()}
+          >
+            Inkwood 2
+          </button>
+        </div>
+        <p className={s.editionNote}>
+          Inkwood was made twice: first in April 2026, then again in September 2026 with far more capable models. Wander either one.
+        </p>
+      </div>
 
       <div className={s.grid}>
         {LEVELS.map((level, i) => {

@@ -48,7 +48,7 @@ const STEP = parseInt(flagValue('step', '5')) || 5;
 const PORT = parseInt(flagValue('port', '4173')) || 4173;
 const MOBILE = flags.includes('--mobile');
 const PARAMS = flagValue('params', 'v2').split(',').filter(Boolean);
-const LEVELS_FILE = PARAMS.includes('v2') ? './src/levels2.ts' : './src/levels.ts';
+const LEVELS_FILE = PARAMS.includes('classic') ? './src/levels.ts' : './src/levels2.ts';
 const BASE_URL = `http://localhost:${PORT}/`;
 const OUT = './screenshots/sweep';
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { LEVELS, ACT_RANGES, samplePrompts, shouldShufflePrompts } from "./levels";
+import { consumeReturnTo } from "./v2";
 import type { Screen } from "./types";
 
 // ── localStorage persistence ──
@@ -43,7 +44,11 @@ function isActBoundary(lvl: number): boolean {
 
 // ── Determine initial screen ──
 const saved = loadSave();
-const initialScreen: Screen = saved && saved.lvl > 0 ? "playing" : "intro";
+// Switching editions reloads the page; land back on the chapter select
+// (only meaningful once the game has been completed, which is the only
+// way to reach that switch).
+const returnToWander = consumeReturnTo() === "wander" && loadCompleted();
+const initialScreen: Screen = returnToWander ? "wander" : saved && saved.lvl > 0 ? "playing" : "intro";
 const initialLvl = saved?.lvl ?? 0;
 const initialPromptIdx = saved?.promptIdx ?? 0;
 // If the save has active prompts from a previous session, honor them so
@@ -108,7 +113,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   completing: false,
   activePrompts: initialActivePrompts,
   hasCompleted: loadCompleted(),
-  isWandering: false,
+  isWandering: returnToWander,
 
   level: () => LEVELS[get().lvl],
   target: () => {
