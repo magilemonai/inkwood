@@ -375,6 +375,90 @@ const DUST_CONFIG = {
 
 const ease = (t: number) => t * t * (3 - 2 * t);
 
+// ─── THE TOME'S GEOMETRY ─────────────────────────────────────────────
+// One hinge line, x = 200, shared by every part of the book: the spine,
+// the front board, the page block, every leaf that crosses the gutter.
+// A sheet is written once as a function of how far it reaches from that
+// line and which side of it that is, so the shut block, the two halves
+// of the finished spread and the leaves turning between them are all
+// literally the same sheet at different angles. Nothing in the opening
+// fades in or out — the same two boards and one stack of paper are on
+// screen from the first frame to the last, seen from a turning angle.
+
+const HINGE = 200;
+const PAGE_W = 31;      // a page's reach from the spine
+const BOARD_W = 33;     // the boards' reach — they overhang the paper
+
+/** One leaf: `w` units of reach, `s` = +1 right of the spine / −1 left.
+ *  `lift` bows the free edge up, for a leaf caught mid-turn. */
+function leafFace(w: number, s: number, lift = 0): string {
+  const X = (u: number) => (HINGE + s * u).toFixed(2);
+  const Y = (y: number, k: number) => (y - lift * k).toFixed(2);
+  return `M200 ${Y(101.4, 0)}
+    C${X(w * 0.24)} ${Y(100.3, 0.5)}, ${X(w * 0.54)} ${Y(99.8, 0.9)}, ${X(w * 0.76)} ${Y(100.3, 1)}
+    C${X(w * 0.88)} ${Y(100.6, 0.98)}, ${X(w * 0.97)} ${Y(101.2, 0.92)}, ${X(w * 1.02)} ${Y(102.5, 0.86)}
+    C${X(w * 1.06)} ${Y(111.4, 0.6)}, ${X(w * 1.07)} ${Y(127.0, 0.34)}, ${X(w * 1.03)} ${Y(138.2, 0.2)}
+    C${X(w * 0.97)} ${Y(140.4, 0.18)}, ${X(w * 0.86)} ${Y(141.5, 0.15)}, ${X(w * 0.73)} ${Y(141.9, 0.12)}
+    C${X(w * 0.5)} ${Y(142.5, 0.08)}, ${X(w * 0.22)} ${Y(142.4, 0.04)}, 200 ${Y(141.7, 0)} Z`;
+}
+
+/** The leaf-edges stacked under a page — `d` units of paper. */
+function leafStack(w: number, s: number, d: number): string {
+  const X = (u: number) => (HINGE + s * u).toFixed(2);
+  const D = (y: number) => (y + d).toFixed(2);
+  return `M200 141.7 C${X(w * 0.22)} 142.4, ${X(w * 0.5)} 142.5, ${X(w * 0.73)} 141.9
+    C${X(w * 0.86)} 141.5, ${X(w * 0.97)} 140.4, ${X(w * 1.03)} 138.2
+    L${X(w * 1.03)} ${D(138.2)} C${X(w * 0.97)} ${D(140.4)}, ${X(w * 0.86)} ${D(141.5)}, ${X(w * 0.73)} ${D(141.9)}
+    C${X(w * 0.5)} ${D(142.5)}, ${X(w * 0.22)} ${D(142.4)}, 200 ${D(141.7)} Z`;
+}
+
+/** The fore-edge striations that say "many leaves, not one card". */
+function foreEdge(w: number, s: number): string[] {
+  const X = (u: number) => (HINGE + s * u).toFixed(2);
+  return [0, 1, 2, 3, 4].map((k) => {
+    const y = 105 + k * 7.4;
+    return `M${X(w * 0.955)} ${y} C${X(w * 0.99)} ${(y + 0.7).toFixed(1)}, ${X(w * 1.015)} ${(y + 1.5).toFixed(1)}, ${X(w * 1.025)} ${(y + 2.7).toFixed(1)}`;
+  });
+}
+
+/** The front board, hand-drawn once with a dead-straight hinge edge so
+ *  the cosine scale about x = 200 is a true rotation about the spine. */
+const BOARD_FRONT = `M200 98.2
+  C205.6 97.2, 212.4 96.7, 219.2 96.8
+  C223.8 96.9, 227.8 97.4, 231.0 98.6
+  C231.9 104.8, 232.4 112.4, 233.0 123.0
+  C232.4 133.6, 231.9 140.8, 231.0 146.0
+  C227.8 147.2, 223.8 147.7, 219.2 147.8
+  C212.4 147.9, 205.6 147.4, 200 146.4 Z`;
+
+/** The back board, a shade wider — the rim you see round the paper. */
+const BOARD_BACK = `M199.0 97.4
+  C205.2 96.3, 212.6 95.8, 219.8 95.9
+  C224.6 96.0, 228.8 96.6, 232.2 97.9
+  C233.1 104.4, 233.6 112.4, 233.8 123.2
+  C233.6 134.2, 233.1 141.6, 232.2 147.0
+  C228.8 148.3, 224.6 148.9, 219.8 149.0
+  C212.6 149.1, 205.2 148.6, 199.0 147.5 Z`;
+
+/** The rounded back of the book, standing on the hinge line. It never
+ *  moves. Everything else turns around it, which is what keeps the
+ *  swinging board reading as attached rather than flying off. */
+const SPINE_BACK = `M200.6 97.9
+  C198.6 97.6, 196.9 98.7, 196.5 100.8
+  C195.9 111.4, 195.9 135.0, 196.5 145.0
+  C196.9 147.1, 198.6 148.1, 200.6 147.8
+  C199.7 131.4, 199.7 114.4, 200.6 97.9 Z`;
+
+/** Leaves crossing the gutter, one after another. Each turns on the
+ *  same hinge as the board did — the motion the player just watched,
+ *  repeated small four times, so the parting is the same idea again. */
+const LEAVES = [
+  { s: 0.262, d: 0.100 },
+  { s: 0.302, d: 0.100 },
+  { s: 0.342, d: 0.100 },
+  { s: 0.380, d: 0.095 },
+];
+
 /**
  * The dust lives in its own memo'd component on purpose. `useParticles`
  * notifies about twelve times a second; called from the scene body it
@@ -388,22 +472,167 @@ const Dust = memo(function Dust({ active, alpha }: { active: boolean; alpha: num
 });
 
 function LibraryScene({ progress: p }: SceneProps) {
-  // Phrase 1 — "open, sleeping pages"
-  const openP = ease(sub(p, 0.03, 0.44));   // the cover lifts and swings away
-  const pageP = sub(p, 0.13, 0.37);         // the spread takes light
+  // Phrase 1 — "open, sleeping pages". One motion, five stages a person
+  // can name: the clasps let go; the front board hinges on the spine,
+  // its width foreshortening with the cosine of the angle; it passes
+  // edge-on, a dark sliver standing on the hinge; it comes down on the
+  // far side inside-face-up; the leaves cross the gutter one after
+  // another into the spread — and only then does the spread take light.
+  const claspP = ease(sub(p, 0.006, 0.052));       // the catches let go
+  const hingeQ = sub(p, 0.045, 0.275);             // 0 → 1 over p .045–.32
+  const coverA = 172 * (0.8 * hingeQ + 0.2 * ease(hingeQ));  // degrees
+  const cosA = Math.cos((coverA * Math.PI) / 180); //  1 → 0 → −0.99
+  const partP = ease(sub(p, 0.28, 0.17));          // leaves cross the gutter
+  // How far the book has been opened, read straight off the hinge: 0
+  // shut, ½ edge-on, 1 flat. The light the shut book was holding gets
+  // out in proportion — a warmth on the exposed paper, not a lamp yet.
+  const wakeP = (1 - cosA) / 2;
+  const pageP = ease(sub(p, 0.36, 0.14));   // the spread takes light
   // Phrase 2 — "rise, every voice, and speak as one"
   const voiceP = ease(sub(p, 0.50, 0.34));  // threads climb and braid
   const chorusP = sub(p, 0.58, 0.42);       // crystals answer, marks climb
 
   // How much tome light is loose in the room.
-  const warm = 0.34 * pageP + 0.66 * voiceP;
+  const warm = 0.09 * wakeP + 0.29 * pageP + 0.62 * voiceP;
   const t = (pair: Pair, k = 1) => rgbMix(pair, warm * k);
 
-  const spread = 30 * openP;                       // half-width of the open spread
-  const coverA = 168 * ease(sub(p, 0.05, 0.30));   // cover swing, degrees
-  const coverFade = 1 - sub(p, 0.17, 0.18);
-  const blockFade = 1 - sub(p, 0.26, 0.16);
+  // The book's own reach left of the hinge: the spine's bulge while it
+  // is shut, the swung board once that board is past edge-on, the left
+  // page once there is one. Centring the whole footprint on the lectern
+  // from that keeps the tome under the shaft the whole way open; the
+  // slide is fastest while the board is edge-on and there is least for
+  // the eye to hold on to.
+  const leftW = PAGE_W * partP;
+  const boardReach = BOARD_W * Math.abs(cosA);
+  const leftReach = Math.max(3.5, leftW, cosA < 0 ? boardReach : 0);
+  const dx = leftReach / 2 - 16.9;
+  // Board scale about the hinge. Signed: past 90° the cosine goes
+  // negative and lays the same board down on the far side, which is
+  // the whole trick. Floored so it is never zero-width — edge-on you
+  // should still see the thickness of the board.
+  const boardScale = (cosA >= 0 ? 1 : -1) * Math.max(0.05, Math.abs(cosA));
+  const outerFace = Math.min(1, Math.max(0, (cosA - 0.05) / 0.16));
+  const innerFace = Math.min(1, Math.max(0, (-cosA - 0.05) / 0.16));
   const rayTop = 118 - 84 * voiceP;
+
+  // The paper's own colour. It is dark in a dark room, warms a little
+  // as the opening lets the light out, and only becomes ivory once the
+  // spread exists to hold it.
+  const paper = `hsl(${42 - 6 * voiceP}, ${16 + 10 * wakeP + 28 * pageP}%, ${16 + 10 * wakeP + 44 * pageP + 8 * voiceP}%)`;
+  const stackFill = `hsl(36, ${14 + 10 * wakeP + 20 * pageP}%, ${11 + 9 * wakeP + 26 * pageP}%)`;
+  const edgeStroke = `hsl(34, 18%, ${10 + 8 * wakeP + 22 * pageP}%)`;
+  const inkStroke = `hsl(${30 - 4 * voiceP}, ${22 + 14 * voiceP}%, ${26 + 8 * voiceP}%)`;
+
+  /** One half of the book: its stack, its face, its fore-edge, its
+   *  crease and its writing. The shut block and both halves of the
+   *  finished spread are this same call at different widths. */
+  const page = (w: number, s: number, d: number, key: string) => {
+    const X = (u: number) => (200 + s * u).toFixed(2);
+    return (
+      <g key={key}>
+        <path d={leafStack(w, s, d)} fill={stackFill} />
+        <path d={leafFace(w, s)} fill={paper} />
+        {/* the page turns down into the gutter — without this the two
+            halves are flat cards and the book has no thickness */}
+        <path d={leafFace(w, s)} fill={`url(#v2libGutter${s > 0 ? "R" : "L"})`} />
+        <g stroke={edgeStroke} strokeWidth={0.55} fill="none" opacity={0.85}>
+          {foreEdge(w, s).map((fe, k) => <path key={k} d={fe} />)}
+        </g>
+        {/* a shallow crease down the outer third — the paper has a
+            surface without a turned corner stuck on it */}
+        {w > 10 && (
+          <path d={`M${X(w - 5.5)} 103.2 C${X(w - 4.2)} 112, ${X(w - 4.6)} 126, ${X(w - 3.4)} 137.6`}
+            fill="none" stroke={`hsl(38, ${14 + 18 * pageP}%, ${26 + 26 * pageP}%)`}
+            strokeWidth={0.45} opacity={0.5} />
+        )}
+        {w > 12 && [0, 1, 2, 3, 4, 5, 6].map((k) => {
+          const yy = 106.4 + k * 4.5;
+          const len = (w - 7) * (k === 6 ? 0.55 : 0.82 + 0.14 * rnd(k + s));
+          return (
+            <path key={k} d={`M${X(4.4)} ${yy} C${X(4.4 + len * 0.4)} ${yy - 0.7}, ${X(4.4 + len * 0.7)} ${yy - 0.5}, ${X(4.4 + len)} ${yy + 0.4}`}
+              fill="none" stroke={inkStroke} strokeWidth={0.45 + 0.2 * voiceP}
+              opacity={(0.22 + 0.54 * pageP) * Math.min(1, (w - 10) / 8)} />
+          );
+        })}
+        {/* the previous scribe's seal, on the last page they reached */}
+        {s === 1 && pageP > 0.02 && (
+          <path d="M221.4 131.6 C223.2 131.0, 224.8 132.0, 224.7 133.5 C224.6 135.0, 222.9 135.8, 221.6 135.1 C220.3 134.5, 220.2 132.1, 221.4 131.6 Z"
+            fill={`hsl(8, ${20 + 14 * pageP}%, ${20 + 10 * pageP}%)`} opacity={0.5 * pageP} />
+        )}
+      </g>
+    );
+  };
+
+  /** The front board, scaled about the hinge by the cosine of its
+   *  angle. Past 90° the cosine goes negative, which lays the same
+   *  board down on the far side and turns it over — so the outside
+   *  face crossfades to the pastedown at exactly the moment the board
+   *  is edge-on and neither face is really visible anyway. */
+  const frontBoard = (
+    <g transform={`translate(200 0) scale(${boardScale.toFixed(4)} 1) translate(-200 0)`}>
+      <path d={BOARD_FRONT} fill={`hsl(${16 + 8 * p}, ${18 + 12 * p}%, ${8.5 + 8 * p}%)`} />
+      {/* the outside: tooled border, the scribes' stave, corner bosses */}
+      {outerFace > 0.01 && (
+        <g opacity={outerFace}>
+          <path d="M205.4 103.6 C211.4 102.5, 219.6 102.3, 226.6 103.4
+                   C228.9 103.8, 229.7 105.0, 229.9 107.4
+                   C230.2 116.0, 230.2 129.6, 229.9 137.2
+                   C229.7 139.6, 228.9 140.7, 226.6 141.1
+                   C219.6 142.2, 211.4 142.0, 205.4 140.9
+                   C204.5 132.2, 204.5 112.2, 205.4 103.6 Z"
+            fill="none" stroke={`hsl(42, ${24 + 26 * p}%, ${24 + 26 * p}%)`} strokeWidth={0.55} opacity={0.55} />
+          <g stroke={`hsl(44, ${30 + 26 * p}%, ${28 + 24 * p}%)`} strokeWidth={0.75} strokeLinecap="round" fill="none" opacity={0.8}>
+            <path d="M217.4 112.4 C217.0 118.4, 217.0 126.0, 217.4 131.8" />
+            <path d="M217.4 116.0 L221.6 115.0 M217.4 121.4 L221.8 120.6 M217.4 126.8 L221.4 126.2
+                     M217.2 118.6 L213.6 117.8 M217.2 124.2 L213.4 123.6" />
+          </g>
+          {[[206.8, 105.2], [225.4, 105.2], [206.8, 136.6], [225.4, 136.6]].map(([bx, by], k) => (
+            <path key={k} d={`M${bx} ${by} C${bx + 2.4} ${by - 0.6}, ${bx + 3.4} ${by + 0.6}, ${bx + 2.8} ${by + 2.4} L${bx + 0.6} ${by + 2} Z`}
+              fill={`hsl(40, 24%, ${20 + 18 * p}%)`} opacity={0.55} />
+          ))}
+          {/* the seam of light the shut book was holding, showing at the
+              fore-edge the moment the catches let go */}
+          <path d="M231.0 99.4 C231.9 105.4, 232.4 113.2, 233.0 123.0 C232.4 133.4, 231.9 140.6, 231.0 145.2"
+            fill="none" stroke="#ffd79a" strokeWidth={0.7} strokeLinecap="round"
+            opacity={0.55 * claspP * Math.max(0, 1 - 2.6 * wakeP)} />
+        </g>
+      )}
+      {/* the inside: pastedown, gutter shadow, and the plate the last
+          scribe wrote their name on */}
+      {innerFace > 0.01 && (
+        <g opacity={innerFace}>
+          {/* The pastedown is deliberately much darker than the paper.
+              An open board that matches the pages just reads as a third
+              page, which is how the left half stopped saying "cover". */}
+          <path d="M204.6 101.6 C211 100.6, 221.8 100.4, 228.6 101.4
+                   C229.5 111.8, 229.8 133.0, 228.6 142.4
+                   C221.8 143.4, 211 143.2, 204.6 142.2
+                   C203.8 129.0, 203.8 115.0, 204.6 101.6 Z"
+            fill={`hsl(32, ${13 + 10 * pageP}%, ${8.5 + 3 * wakeP + 14 * pageP}%)`} />
+          <path d="M204.6 101.6 C207.4 101.2, 210.4 100.9, 213.4 100.8
+                   C212.6 115.0, 212.6 129.0, 213.4 143.0
+                   C210.4 142.9, 207.4 142.6, 204.6 142.2
+                   C203.8 129.0, 203.8 115.0, 204.6 101.6 Z"
+            fill="#080604" opacity={0.5} />
+          <g opacity={0.4 + 0.35 * pageP}>
+            <path d="M216.6 113.4 C220.2 112.9, 224.8 112.9, 227.4 113.5
+                     C227.9 117.2, 227.9 122.4, 227.4 125.8
+                     C224.8 126.4, 220.2 126.4, 216.6 125.9
+                     C216.1 122.2, 216.1 117.0, 216.6 113.4 Z"
+              fill="none" stroke={`hsl(40, 22%, ${20 + 22 * pageP}%)`} strokeWidth={0.45} />
+            {[116.8, 119.8, 122.8].map((yy, k) => (
+              <path key={yy} d={`M218.4 ${yy} C220.6 ${yy - 0.4}, 223.6 ${yy - 0.3}, ${k === 2 ? 224.4 : 225.6} ${yy + 0.3}`}
+                fill="none" stroke={`hsl(34, 20%, ${19 + 20 * pageP}%)`} strokeWidth={0.4} opacity={0.7} />
+            ))}
+          </g>
+        </g>
+      )}
+      {/* the free edge catching the shaft as the board turns through it */}
+      <path d="M231.0 99.4 C231.9 105.4, 232.4 113.2, 233.0 123.0 C232.4 133.4, 231.9 140.6, 231.0 145.2"
+        fill="none" stroke="#c8bfae" strokeWidth={0.5} strokeLinecap="round"
+        opacity={0.34 * (1 - Math.abs(Math.abs(cosA) * 2 - 1))} />
+    </g>
+  );
 
   return (
     <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
@@ -472,10 +701,26 @@ function LibraryScene({ progress: p }: SceneProps) {
         </radialGradient>
 
         <radialGradient id="v2libTomeHalo" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ffdca8" stopOpacity={0.30 * pageP + 0.16 * voiceP} />
-          <stop offset="50%" stopColor="#ffbc70" stopOpacity={0.10 * pageP + 0.08 * voiceP} />
+          <stop offset="0%" stopColor="#ffdca8" stopOpacity={0.06 * wakeP + 0.30 * pageP + 0.16 * voiceP} />
+          <stop offset="50%" stopColor="#ffbc70" stopOpacity={0.02 * wakeP + 0.10 * pageP + 0.08 * voiceP} />
           <stop offset="100%" stopColor="#ffb060" stopOpacity={0} />
         </radialGradient>
+
+        {/* A page turns into the gutter, so it is darkest at the spine
+            and opens toward its fore-edge. Two gradients rather than
+            one because the left half's spine is on its right. */}
+        <linearGradient id="v2libGutterR" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#150e06" stopOpacity={0.42} />
+          <stop offset="26%" stopColor="#150e06" stopOpacity={0.13} />
+          <stop offset="62%" stopColor="#150e06" stopOpacity={0} />
+          <stop offset="100%" stopColor="#150e06" stopOpacity={0.10} />
+        </linearGradient>
+        <linearGradient id="v2libGutterL" x1="1" y1="0" x2="0" y2="0">
+          <stop offset="0%" stopColor="#150e06" stopOpacity={0.42} />
+          <stop offset="26%" stopColor="#150e06" stopOpacity={0.13} />
+          <stop offset="62%" stopColor="#150e06" stopOpacity={0} />
+          <stop offset="100%" stopColor="#150e06" stopOpacity={0.10} />
+        </linearGradient>
 
         <radialGradient id="v2libBookHalo" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#ffd7a0" stopOpacity={0.24} />
@@ -715,107 +960,101 @@ function LibraryScene({ progress: p }: SceneProps) {
       <path d="M170 143.6 C184 140.6, 216 140.6, 230 143.6 C216 146, 184 146, 170 143.6 Z"
         fill={t(P.carve, 0.85)} opacity={0.6} />
 
-      {/* ── THE TOME ── */}
-      <g>
-        {/* Halo under everything: the room's only lamp once it is open. */}
-        {pageP > 0 && <ellipse cx="200" cy="124" rx={66 + 26 * voiceP} ry={52 + 20 * voiceP} fill="url(#v2libTomeHalo)" />}
-
-        {/* The page block: a shut stack of leaves. At rest only its
-            fore-edge shows past the cover; as the cover swings it is the
-            whole book, and it dissolves as the spread opens. */}
-        {blockFade > 0.01 && (
-          <g opacity={blockFade}>
-            <path d="M185 105.4 C194 104, 210 103.8, 220.6 105.8 C222 117, 222 135, 220.6 146.6
-                     C210 148.6, 194 148.4, 185 147 C183.9 133, 183.9 119, 185 105.4 Z"
-              fill={`hsl(40, ${16 + 22 * pageP}%, ${24 + 40 * pageP}%)`} />
-            {[0, 1, 2, 3, 4].map((k) => (
-              <path key={k} d={`M${217.6 - k * 0.2} ${109 + k * 7.8} C${219.6 - k * 0.2} ${109.6 + k * 7.8}, ${220.8 - k * 0.2} ${110.4 + k * 7.8}, ${221.2 - k * 0.2} ${111.6 + k * 7.8}`}
-                fill="none" stroke={`hsl(34, 18%, ${14 + 22 * pageP}%)`} strokeWidth={0.5} opacity={0.6} />
-            ))}
-          </g>
+      {/* ── THE TOME ──────────────────────────────────────────────────
+          The whole of phrase 1 is one object turning. The two boards,
+          the spine and the stack of paper are all on screen from frame
+          zero; the only thing that changes is the angle of the front
+          board and, after it, of four leaves. Read the frames: shut →
+          catches loose → board foreshortening → edge-on → coming down
+          inside-face-up → leaves crossing → spread → light. */}
+      <g transform={`translate(${dx.toFixed(2)} 0)`}>
+        {/* Halo under everything: the light the shut book was holding,
+            then the room's only lamp. */}
+        {(wakeP > 0.01 || pageP > 0) && (
+          <ellipse cx="201" cy="121"
+            rx={40 + 24 * pageP + 26 * voiceP} ry={31 + 20 * pageP + 20 * voiceP}
+            fill="url(#v2libTomeHalo)" />
         )}
 
-        {/* The cover, swinging off the spine and burning away into light. */}
-        {coverFade > 0.01 && (
-          <g transform={`rotate(${-coverA}, 183.5, 125)`} opacity={coverFade}>
-            <path d="M182 102.4 C193 100.8, 209 100.6, 219.2 102.8 C220.8 115, 220.8 135, 219.2 147.4
-                     C209 149.4, 193 149.2, 182 147.6 C180.8 133, 180.8 117, 182 102.4 Z"
-              fill={`hsl(${16 + 8 * p}, ${18 + 12 * p}%, ${8.5 + 8 * p}%)`} />
-            {/* spine band with two raised cords */}
-            <path d="M182 102.4 C184.4 102, 186.8 101.7, 189 101.5 C187.9 117, 187.9 133, 189 148.4
-                     C186.8 148.2, 184.4 147.9, 182 147.6 C180.8 133, 180.8 117, 182 102.4 Z"
-              fill={`hsl(${14 + 8 * p}, ${20 + 12 * p}%, ${6.5 + 7 * p}%)`} />
-            {[112, 138].map((y) => (
-              <path key={y} d={`M181.6 ${y} C183.8 ${y - 0.4}, 186.6 ${y - 0.5}, 189 ${y - 0.6} L189 ${y + 1.4} C186.6 ${y + 1.5}, 183.8 ${y + 1.6}, 181.6 ${y + 2} Z`}
-                fill={`hsl(38, ${20 + 22 * p}%, ${16 + 20 * p}%)`} opacity={0.55} />
-            ))}
-            {/* tooled border and the scribes' mark — an ogham-style stave */}
-            <path d="M193.4 106.6 C201 105.6, 209.6 105.5, 215.6 106.8 C216.6 116, 216.6 134, 215.6 143.4
-                     C209.6 144.6, 201 144.6, 193.4 143.6 C192.5 133, 192.5 117, 193.4 106.6 Z"
-              fill="none" stroke={`hsl(42, ${24 + 26 * p}%, ${24 + 26 * p}%)`} strokeWidth={0.55} opacity={0.55} />
-            <g stroke={`hsl(44, ${30 + 26 * p}%, ${28 + 24 * p}%)`} strokeWidth={0.75} strokeLinecap="round" fill="none" opacity={0.8}>
-              <path d="M204.6 116.4 C204.2 122, 204.2 128.6, 204.6 134" />
-              <path d="M204.6 119.6 L208.6 118.6 M204.6 124.6 L208.8 123.8 M204.6 129.6 L208.4 129
-                       M204.4 122 L201 121.2 M204.4 127.2 L200.8 126.6" />
+        {/* it stands on the slab rather than floating over it */}
+        <path d={`M${(200 - leftReach - 1.4).toFixed(1)} 147.2
+                  C${(200 - leftReach * 0.4).toFixed(1)} 150.0, 224 150.0, 235.2 147.2
+                  C224 145.0, ${(200 - leftReach * 0.4).toFixed(1)} 145.0, ${(200 - leftReach - 1.4).toFixed(1)} 147.2 Z`}
+          fill="#000" opacity={0.26} />
+
+        {/* the back board */}
+        <path d={BOARD_BACK} fill={`hsl(${13 + 8 * p}, ${18 + 10 * p}%, ${6 + 6 * p}%)`} />
+
+        {/* The front board, once it is past edge-on: it has come down on
+            the far side and the left page settles on top of it. */}
+        {cosA < 0 && frontBoard}
+
+        {/* The rounded back of the book. It never moves — the board and
+            the leaves turn around it, and because it stays put nothing
+            reads as coming off. */}
+        <path d={SPINE_BACK} fill={`hsl(${13 + 8 * p}, ${20 + 12 * p}%, ${7 + 7 * p}%)`} />
+        {[110, 136].map((y) => (
+          <path key={y} d={`M196.4 ${y} C197.6 ${y - 0.5}, 199.2 ${y - 0.7}, 200.5 ${y - 0.8}
+                            L200.5 ${y + 1.4} C199.2 ${y + 1.5}, 197.6 ${y + 1.7}, 196.4 ${y + 2.2} Z`}
+            fill={`hsl(38, ${20 + 22 * p}%, ${14 + 20 * p}%)`} opacity={0.5} />
+        ))}
+
+        {/* The page block. This is not a separate object that dissolves
+            into a spread — it IS the right half of the spread, present
+            from the first frame, hidden under the board until the board
+            turns off it. */}
+        {page(PAGE_W, 1, 3.6 - 1.7 * partP, "rp")}
+
+        {/* The front board while it still lies over the block. */}
+        {cosA >= 0 && frontBoard}
+
+        {/* The catches. They let go first — the one beat that says the
+            book was shut on purpose, and the reason frame 5% is not the
+            same picture as frame 0%. */}
+        {[110.5, 135].map((y0) => (
+          <g key={y0} transform={`rotate(${(94 * claspP).toFixed(1)} 233.2 ${y0})`} opacity={1 - 0.5 * partP}>
+            <path d={`M232.8 ${y0 - 2.5} C233.9 ${y0 - 1.5}, 233.9 ${y0 + 1.5}, 232.8 ${y0 + 2.5}
+                      C230.2 ${y0 + 2.9}, 226.8 ${y0 + 2.4}, 225.0 ${y0 + 1.4}
+                      C224.0 ${y0 + 0.8}, 224.0 ${y0 - 0.8}, 225.0 ${y0 - 1.4}
+                      C226.8 ${y0 - 2.4}, 230.2 ${y0 - 2.9}, 232.8 ${y0 - 2.5} Z`}
+              fill={`hsl(38, ${24 + 14 * p}%, ${16 + 14 * p}%)`} />
+            <path d={`M225.9 ${y0 - 1.0} C227.3 ${y0 - 1.4}, 228.2 ${y0 - 0.4}, 227.8 ${y0 + 0.6}
+                      C227.4 ${y0 + 1.4}, 226.1 ${y0 + 1.4}, 225.5 ${y0 + 0.6}
+                      C225.1 ${y0 + 0.0}, 225.2 ${y0 - 0.8}, 225.9 ${y0 - 1.0} Z`}
+              fill={`hsl(44, ${34 + 18 * p}%, ${30 + 20 * p}%)`} opacity={0.85} />
+          </g>
+        ))}
+
+        {/* The left page, built out of the leaves that crossed. */}
+        {leftW > 0.6 && page(leftW, -1, 0.5 + 1.4 * partP, "lp")}
+
+        {/* Leaves crossing the gutter — the board's own motion again,
+            four times small, so the parting is the same idea repeated
+            rather than a new one. */}
+        {LEAVES.map((L, i) => {
+          const q = ease(sub(p, L.s, L.d));
+          if (q <= 0.015 || q >= 0.985) return null;
+          const ang = Math.PI * q;
+          const c = Math.cos(ang);
+          const s = c >= 0 ? 1 : -1;
+          const w = Math.max(1.6, PAGE_W * Math.abs(c));
+          // The bow is scaled by how much of the leaf is facing us, so
+          // a leaf standing dead upright is a sliver at the gutter and
+          // not a thorn sticking out of the top of the book.
+          const d = leafFace(w, s, 3.4 * Math.sin(ang) * (0.3 + 0.7 * Math.abs(c)));
+          return (
+            <g key={`lf${i}`}>
+              <path d={d} fill={paper} />
+              <path d={d} fill={`url(#v2libGutter${s > 0 ? "R" : "L"})`} />
+              <path d={d} fill="#ffe7b8" opacity={(0.07 + 0.18 * Math.sin(ang)) * (0.4 + 0.6 * pageP)} />
             </g>
-            {/* corner bosses */}
-            {[[194.4, 108], [213.6, 108], [194.4, 140.6], [213.6, 140.6]].map(([bx, by], k) => (
-              <path key={k} d={`M${bx} ${by} C${bx + 2.4} ${by - 0.6}, ${bx + 3.4} ${by + 0.6}, ${bx + 2.8} ${by + 2.4} L${bx + 0.6} ${by + 2} Z`}
-                fill={`hsl(40, 24%, ${20 + 18 * p}%)`} opacity={0.55} />
-            ))}
-          </g>
-        )}
+          );
+        })}
 
-        {/* Open: two page planes off a curved spine, fore-edges curling. */}
-        {spread > 1 && (
-          <g opacity={Math.min(1, openP * 2.4)}>
-            {[-1, 1].map((side) => {
-              const W = spread;
-              const topIn = 106, botIn = 143;
-              return (
-                <g key={side}>
-                  {/* page block underneath — the stack you can see */}
-                  <path d={`M200 ${botIn - 1} C${200 + side * W * 0.5} ${botIn + 1.8}, ${200 + side * W * 0.85} ${botIn + 1.4}, ${200 + side * W} ${botIn - 3}
-                            L${200 + side * W} ${botIn - 5.4} C${200 + side * W * 0.85} ${botIn - 1.2}, ${200 + side * W * 0.5} ${botIn - 0.4}, 200 ${botIn - 2.6} Z`}
-                    fill={`hsl(36, ${16 + 20 * pageP}%, ${20 + 28 * pageP}%)`} />
-                  {/* the page itself */}
-                  <path d={`M200 ${topIn + 1} C${200 + side * W * 0.35} ${topIn - 1.6}, ${200 + side * W * 0.78} ${topIn - 2.2}, ${200 + side * W} ${topIn + 1.4}
-                            C${200 + side * (W + 2.2)} ${topIn + 12}, ${200 + side * (W + 1.8)} ${topIn + 24}, ${200 + side * (W - 1.2)} ${botIn - 3}
-                            C${200 + side * W * 0.7} ${botIn - 0.6}, ${200 + side * W * 0.3} ${botIn + 0.2}, 200 ${botIn - 2} Z`}
-                    fill={`hsl(${42 - 6 * voiceP}, ${18 + 34 * pageP}%, ${28 + 52 * pageP + 8 * voiceP}%)`} />
-                  {/* A shallow crease down the outer third of the sheet,
-                      instead of a turned corner. Both a rounded curl and
-                      a folded triangle read as an object stuck on the
-                      page at this size; a crease just gives the paper a
-                      surface. */}
-                  <path d={`M${200 + side * (W - 5.5)} ${topIn + 2.6} C${200 + side * (W - 4.2)} ${topIn + 12}, ${200 + side * (W - 4.6)} ${topIn + 24}, ${200 + side * (W - 3.4)} ${botIn - 4.4}`}
-                    fill="none" stroke={`hsl(38, ${14 + 18 * pageP}%, ${34 + 26 * pageP}%)`} strokeWidth={0.45} opacity={0.55} />
-                  {/* the previous scribe's seal, on the last page they
-                      reached — the detail that says a person wrote here */}
-                  {W > 22 && side === 1 && (
-                    <g opacity={0.55 * pageP}>
-                      <path d="M221.6 138.4 C223.4 137.8, 225 138.8, 224.9 140.3 C224.8 141.8, 223.1 142.6, 221.8 141.9
-                               C220.5 141.3, 220.4 138.9, 221.6 138.4 Z"
-                        fill={`hsl(8, ${20 + 14 * pageP}%, ${24 + 8 * pageP}%)`} />
-                    </g>
-                  )}
-                  {/* the words, coming up out of the paper */}
-                  {W > 12 && [0, 1, 2, 3, 4, 5, 6].map((k) => {
-                    const yy = topIn + 10 + k * 4.4;
-                    const len = (W - 7) * (k === 6 ? 0.55 : 0.82 + 0.14 * rnd(k + side));
-                    return (
-                      <path key={k} d={`M${200 + side * 4.4} ${yy} C${200 + side * (4.4 + len * 0.4)} ${yy - 0.7}, ${200 + side * (4.4 + len * 0.7)} ${yy - 0.5}, ${200 + side * (4.4 + len)} ${yy + 0.4}`}
-                        fill="none" stroke={`hsl(${30 - 4 * voiceP}, ${22 + 14 * voiceP}%, ${26 + 8 * voiceP}%)`}
-                        strokeWidth={0.45 + 0.2 * voiceP} opacity={(0.24 + 0.5 * pageP) * Math.min(1, openP * 2)} />
-                    );
-                  })}
-                </g>
-              );
-            })}
-            {/* the gutter */}
-            <path d="M200 107 C198.6 118, 198.6 132, 200 141 C201.4 132, 201.4 118, 200 107 Z"
-              fill={`hsl(30, ${14 + 16 * pageP}%, ${12 + 16 * pageP}%)`} />
-          </g>
+        {/* the gutter, which only exists once there are two halves */}
+        {partP > 0.02 && (
+          <path d="M200 101.8 C198.5 112, 198.5 130, 200 140.2 C201.5 130, 201.5 112, 200 101.8 Z"
+            fill={`hsl(30, ${14 + 16 * pageP}%, ${9 + 14 * pageP}%)`} opacity={partP} />
         )}
       </g>
 

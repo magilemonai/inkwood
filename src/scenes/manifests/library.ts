@@ -26,8 +26,13 @@ const ease = (t: number) => t * t * (3 - 2 * t);
 const library: SceneManifest = {
   grain: 0.045,
   lights: (p) => {
-    const openP = ease(sub(p, 0.03, 0.40));   // the tome opens
-    const pageP = sub(p, 0.12, 0.36);         // the spread takes light
+    // Mirrors v2/library.tsx: the board hinges open over p .045–.32,
+    // the leaves cross to .45, and only then does the spread take
+    // light. `wakeP` is the light the shut book was holding getting
+    // out as it opens — a warmth on the paper, not a lamp yet.
+    const openP = ease(sub(p, 0.045, 0.275)); // the board hinges open
+    const wakeP = ease(sub(p, 0.07, 0.23));   // the opening lets light out
+    const pageP = ease(sub(p, 0.36, 0.14));   // the spread takes light
     const voiceP = ease(sub(p, 0.50, 0.34));  // threads climb and braid
     const chorusP = sub(p, 0.58, 0.42);       // crystals answer
     const rayTop = 118 - 84 * voiceP;
@@ -49,9 +54,11 @@ const library: SceneManifest = {
       { x: 200, y: 52, radius: 54, intensity: 0.11 * Math.max(0, 1 - 1.25 * pageP), color: COLD, flicker: 0.02, yScale: 0.45 },
 
       // THE TOME — the room's one lamp. Hot core at the spread, halo on
-      // the apse behind it.
-      { x: 200, y: 124, radius: 46, intensity: 0.34 * pageP + 0.10 * voiceP, color: PAGE, flicker: 0.05, core: 0.55 },
-      { x: 200, y: 118, radius: 82, intensity: 0.13 * pageP + 0.07 * voiceP, color: GOLD, flicker: 0.03 },
+      // the apse behind it. The `wakeP` term is small on purpose: while
+      // the board is turning, the book should look like it is holding
+      // light in, not giving it off.
+      { x: 200, y: 124, radius: 46, intensity: 0.07 * wakeP + 0.34 * pageP + 0.10 * voiceP, color: PAGE, flicker: 0.05, core: 0.55 },
+      { x: 200, y: 118, radius: 82, intensity: 0.03 * wakeP + 0.13 * pageP + 0.07 * voiceP, color: GOLD, flicker: 0.03 },
       // Its pool on the flagstones at the lectern's foot.
       { x: 200, y: 160, radius: 74, intensity: 0.085 * pageP, color: GOLD, flicker: 0.04, yScale: 3.0 },
 
