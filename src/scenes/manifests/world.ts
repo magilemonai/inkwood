@@ -52,9 +52,12 @@ const world: SceneManifest = {
     const bridgeP = sub(earthP, 0.46, 0.34);
     const libP = sub(earthP, 0.58, 0.4);
     const gdnP = sub(earthP, 0.0, 0.42);
-    const moonP = sub(skyP, 0.04, 0.5);
-    const constP = sub(skyP, 0.16, 0.5);
-    const sanctumP = sub(skyP, 0.3, 0.45);
+    // The sky phrase now lays its four arrivals end to end so the
+    // last third of "stars remember, spirits sing" is not dead; these
+    // mirror scenes/v2/world.tsx exactly, the moon's climb included.
+    const moonP = sub(skyP, 0.0, 0.60);
+    const constP = sub(skyP, 0.30, 0.50);
+    const sanctumP = sub(skyP, 0.45, 0.35);
     const heartP = sub(unityP, 0.44, 0.34);
     const runeP = sub(unityP, 0.34, 0.36);
 
@@ -74,7 +77,7 @@ const world: SceneManifest = {
       { x: 45, y: 166, radius: 26, intensity: 0.09 * gdnP, color: GARDEN, flicker: 0 },
 
       // ── SKY ──
-      { x: 354, y: 26, radius: 44, intensity: 0.17 * moonP * (1 - dawn * 0.74), color: MOON, flicker: 0, core: 0.3 },
+      { x: 354, y: 26 + (1 - moonP) * 20, radius: 44, intensity: 0.17 * moonP * (1 - dawn * 0.74), color: MOON, flicker: 0, core: 0.3 },
       { x: 280, y: 55, radius: 30, intensity: 0.09 * constP * (1 - dawn * 0.62), color: STARS, flicker: 0.09 },
       // Moonlight lying flat on the sanctum's pool.
       { x: 252, y: 131, radius: 20, intensity: 0.14 * sanctumP, color: POOL, flicker: 0, yScale: 2.6 },

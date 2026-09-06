@@ -9,20 +9,30 @@ import { GlowFilter } from "../../svg/filters";
 // the player woke, seen at once from a hill above the valley, and the
 // ley web that finally ties them to each other.
 //
+// THE NIGHT IS ALREADY HERE. The sky is the same night the game has
+// been under since the Night Sky: fixed from p=0, untouched by the
+// first two incantations. Only the dawn moves it. The player never
+// watches the sky get darker; the earth wakes under it, then the stars
+// are struck into it, then the morning comes.
+//
 //   "garden bloom, hearth burn bright"  (p 0–0.33) — THE EARTH.
-//       The three depths green up, the garden crowns itself in the near
-//       meadow, the cottage window catches and its chimney draws, the
-//       well fills, the lanterns come back to the bridge, the stream
-//       starts to run out of the gully.
+//       The three depths come up out of a blue-black dormancy into
+//       green, the garden crowns itself in the near meadow, the cottage
+//       window catches and its chimney draws, the well fills, the
+//       lanterns come back to the bridge, the stream starts to run out
+//       of the gully.
 //   "stars remember, spirits sing"      (p 0.33–0.66) — THE SKY.
-//       Stars ignite, the named constellation draws itself over the
-//       eastern hill, the moon rises, the sanctum's pool takes the
-//       moonlight, spirits come up out of the valley.
+//       Into that already-dark sky: stars ignite in a sweep across it,
+//       the moon climbs over the eastern hill, the named constellation
+//       draws itself, the sanctum's pool takes the moonlight, and the
+//       spirits and wisps come up out of the valley last, so the
+//       phrase keeps changing to its final letter.
 //   "the forest remembers"              (p 0.66–1) — THE WORLD.
-//       The Great Tree rises in the middle distance and its heart
-//       ignites, the standing stones come back to the meadow, all
-//       twenty-one ley threads draw, and the dawn breaks behind the
-//       ridge.
+//       The Great Tree RISES: the trunk climbs out of the ridge, the
+//       limbs come with it, the crown fills clump by clump, and only
+//       when it is whole do the twenty-one ley threads draw. The heart
+//       ignites, the standing stones come back to the meadow, and the
+//       dawn breaks behind the ridge.
 //
 // DEPTH. Three planes, each in three tones (lit crest, body, shade),
 // with mist banked between them:
@@ -209,12 +219,16 @@ type Puff = [number, number, number, number, number, number];
 // leaves in the dark rather than as holes to the sky; then the body;
 // then the shoulder the sky is on. The crown runs off the top edge.
 
+// Listed lowest-first: the crown grows out of the fork, so the shade
+// mass has to arrive in the same order the detail clusters do. Every
+// clump here carries tone 0.0, so the reordering is invisible once the
+// crown is whole — it only decides which shadow lands first.
 const GT_CROWN_BASE: Puff[] = [
-  [0, 168, 46, 30, -6, 0.0],
-  [1, 200, 34, 34, 4, 0.0],
-  [2, 232, 46, 30, 7, 0.0],
   [3, 184, 58, 25, -4, 0.0],
   [0, 216, 58, 25, 5, 0.0],
+  [0, 168, 46, 30, -6, 0.0],
+  [2, 232, 46, 30, 7, 0.0],
+  [1, 200, 34, 34, 4, 0.0],
   [1, 200, 12, 27, -8, 0.0],
 ];
 
@@ -664,17 +678,20 @@ const LEY_LINES: LeyLine[] = LEY_CONNECTIONS.map(([a, b], i) => {
   };
 });
 
-// Draw schedule. The Tree finishes rising at unityP 0.45 and every one
-// of the 21 threads is complete by 0.88, so at 99% the web is whole —
-// v1's step left five threads unfinished at the end of the game.
-const LEY_START = 0.18;
-const LEY_STEP = 0.024;
-const LEY_DRAW = 0.22;
+// Draw schedule. The web waits for the Tree: the crown lands its last
+// clump at unityP 0.47 (p ≈ 0.82) and the first thread leaves at 0.47,
+// so the player watches one thing at a time — the Tree rise, then the
+// world tie itself together. The twenty-first thread closes at 0.99, so
+// at the end of the game the web is whole (v1's step left five of them
+// unfinished).
+const LEY_START = 0.47;
+const LEY_STEP = 0.0165;
+const LEY_DRAW = 0.19;
 
 const leyDraw = (unityP: number, i: number) =>
   sub(unityP, LEY_START + i * LEY_STEP, LEY_DRAW);
 const leySettle = (unityP: number, i: number) =>
-  sub(unityP, LEY_START + i * LEY_STEP + LEY_DRAW, 0.18);
+  sub(unityP, LEY_START + i * LEY_STEP + LEY_DRAW, 0.13);
 
 /** How much each place weighs in the web. The Great Tree is the heart. */
 const NODE_WEIGHT: number[] = [0.52, 0.55, 0.62, 0.48, 0.45, 0.52, 1.0];
@@ -786,7 +803,10 @@ function LeyNodes({ unityP, dawn }: { unityP: number; dawn: number }) {
   return (
     <>
       {LEY_POINTS.map((pt, i) => {
-        const np = sub(unityP, 0.22 + i * 0.045, 0.22);
+        // Each place lights just before its threads leave it, so the
+        // halos never sit over ground the Tree has not finished rising
+        // out of.
+        const np = sub(unityP, 0.38 + i * 0.035, 0.22);
         if (np <= 0) return null;
         const w = NODE_WEIGHT[i];
         const r = 6 + w * 10;
@@ -839,18 +859,26 @@ function WorldScene({ progress: p }: SceneProps) {
   /** Morning. Zero in the night variant; everything else is identical. */
   const dawn = dawnP;
 
-  // ── SKY. Deep at the top all game; only the horizon lifts, so the
-  //    frame keeps its depth right up to the dawn. ──
-  const skyTop = hsl(236 + dawn * 14, 28 + p * 4 + dawn * 12, 4.5 + p * 1.5 + dawn * 2.2);
-  const skyMid = hsl(228 + dawn * 6, 26 + p * 5 + dawn * 4, 7 + p * 3);
-  const skyLow = hsl(214 - dawn * 4, 24 + p * 7 + dawn * 8, 11 + p * 4 + dawn * 2);
+  // ── SKY. NIGHT FROM THE FIRST FRAME. No term here depends on p:
+  //    the sky the player finishes the Night Sky under is the sky this
+  //    level opens on, holds through both the earth and the sky
+  //    incantations, and only the dawn touches. (The old schedule
+  //    lifted it a little with every keystroke, which read on the
+  //    contact sheet as the sky going dark when the stars arrived — the
+  //    one thing the finale must never do.) The dawn end-state is the
+  //    same colour it always was; the p terms were folded into it. ──
+  const skyTop = hsl(236 + dawn * 14, 28 + dawn * 16, 4.5 + dawn * 3.7);
+  const skyMid = hsl(228 + dawn * 6, 26 + dawn * 5, 7 + dawn * 3);
+  const skyLow = hsl(214 - dawn * 4, 24 + dawn * 15, 11 + dawn * 6);
 
-  // ── LAND. Barren blue-grey at p=0, green by the end of the earth
-  //    phrase; the far range stays palest (atmospheric distance) and
-  //    the near meadow darkest. ──
-  const farH = 202 - earthP * 44, farS = 6 + earthP * 11, farL = 13 + earthP * 6 - dawn * 2.2;
-  const midH = 198 - earthP * 54, midS = 6 + earthP * 15, midL = 8.5 + earthP * 4.5 - dawn * 0.8;
-  const nearH = 194 - earthP * 64, nearS = 6 + earthP * 17, nearL = 5 + earthP * 3 - dawn * 0.2;
+  // ── LAND. Blue-black and asleep under that night at p=0 — night
+  //    ground, not a grey haze that could be mistaken for a pale
+  //    twilight sky — and green by the end of the earth phrase. The far
+  //    range stays palest (atmospheric distance), the near meadow
+  //    darkest. ──
+  const farH = 202 - earthP * 44, farS = 13 + earthP * 4, farL = 11 + earthP * 8 - dawn * 2.2;
+  const midH = 198 - earthP * 54, midS = 13 + earthP * 8, midL = 7 + earthP * 6 - dawn * 0.8;
+  const nearH = 194 - earthP * 64, nearS = 13 + earthP * 10, nearL = 4.2 + earthP * 3.8 - dawn * 0.2;
 
   /** Foliage tone, 0 = deepest shade, 1 = the edge the sky is on. */
   const crownC = (t: number, lift = 0) =>
@@ -860,16 +888,25 @@ function WorldScene({ progress: p }: SceneProps) {
       5 + t * 15 + lift + dawn * t * 5,
     );
 
-  const clumps = (list: Puff[], lift: number, op: number, key: string) =>
-    list.map(([s, x, y, r, rot, t], i) => (
-      <path
-        key={`${key}${i}`}
-        d={PUFFS[s]}
-        fill={crownC(t, lift)}
-        opacity={op}
-        transform={`translate(${x} ${y}) rotate(${rot}) scale(${r})`}
-      />
-    ));
+  /** `grow` < 1 walks the list in order, each clump scaling up out of
+   *  nothing over 0.3 of the window — a crown that fills clump by clump
+   *  instead of a crown that fades in whole. */
+  const clumps = (list: Puff[], lift: number, op: number, key: string, grow = 1) =>
+    list.map(([s, x, y, r, rot, t], i) => {
+      const g =
+        grow >= 1 ? 1 : sub(grow, (i / Math.max(1, list.length - 1)) * 0.78, 0.26);
+      if (g <= 0) return null;
+      const rr = r * (0.34 + 0.66 * g);
+      return (
+        <path
+          key={`${key}${i}`}
+          d={PUFFS[s]}
+          fill={crownC(t, lift)}
+          opacity={op * (grow >= 1 ? 1 : Math.min(1, g * 1.6))}
+          transform={`translate(${x} ${y}) rotate(${rot}) scale(${rr.toFixed(2)})`}
+        />
+      );
+    });
 
   // ── THE CALLBACK SCHEDULE ──
   const gdnCrown = sub(earthP, 0.0, 0.42);
@@ -881,19 +918,35 @@ function WorldScene({ progress: p }: SceneProps) {
   const streamP = sub(earthP, 0.38, 0.45);
   const bloomP = sub(earthP, 0.5, 0.5);
 
-  const starP = sub(skyP, 0.0, 0.45);
-  const constP = sub(skyP, 0.16, 0.5);
-  const moonP = sub(skyP, 0.04, 0.5);
-  const sanctumP = sub(skyP, 0.3, 0.45);
-  const spiritP = sub(skyP, 0.4, 0.5);
+  // ── THE SKY PHRASE. Everything used to be finished by two thirds of
+  //    "stars remember, spirits sing", leaving the last third dead.
+  //    Now the four arrivals are laid end to end and overlapped, so
+  //    every five per cent of the phrase gains something and the last
+  //    wisp settles on the last letter. ──
+  const starP = sub(skyP, 0.0, 0.50);     // struck across the sky first
+  const moonP = sub(skyP, 0.0, 0.60);     // climbs over the eastern hill
+  const constP = sub(skyP, 0.30, 0.50);   // the named figure draws
+  const sanctumP = sub(skyP, 0.45, 0.35); // the pool takes the moonlight
+  const spiritP = sub(skyP, 0.52, 0.48);  // "spirits sing" — last, and slow
 
-  const treeRise = sub(unityP, 0.0, 0.4);
-  const treeCrown = sub(unityP, 0.1, 0.42);
+  // ── THE LAST INCANTATION. The Tree has to be a rise, not an arrival:
+  //    trunk out of the ridge (0–0.34, i.e. p 0.66–0.78), limbs with
+  //    it, crown clump by clump (0.15–0.47, p 0.71–0.82), and only
+  //    then the web. At the sweep's five per cent steps that reads:
+  //    70% a buttressed shaft up to the fork, 75% the limbs bare above
+  //    it with the first clusters at the fork, 80% the crown nearly
+  //    closed, 82% whole — no frame gaining a whole element. ──
+  const trunkP = sub(unityP, 0.0, 0.34);
+  const rootP = sub(unityP, 0.02, 0.26);
+  const treeCrown = sub(unityP, 0.15, 0.32);
   const heartP = sub(unityP, 0.44, 0.34);
   const stoneP = sub(unityP, 0.04, 0.4);
   const runeP = sub(unityP, 0.34, 0.36);
 
-  const treeLift = (1 - treeRise) * 14;
+  /** The edge of the reveal, walking up out of the ridge. Below it the
+   *  Tree is drawn; above it, not yet. Twelve units of softness, so it
+   *  reads as growth and never as a shutter. */
+  const riseEdge = 128 - trunkP * 160;
 
   return (
     <svg viewBox="0 0 400 250" overflow="hidden" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%", display: "block" }}>
@@ -906,6 +959,22 @@ function WorldScene({ progress: p }: SceneProps) {
           <feTurbulence type="fractalNoise" baseFrequency="0.012 0.021" numOctaves={2} seed={11} result="wnoise" />
           <feDisplacementMap in="SourceGraphic" in2="wnoise" scale={3.2} xChannelSelector="R" yChannelSelector="G" />
         </filter>
+
+        {/* The Great Tree's rise. A soft edge walks up out of the ridge
+            and the trunk is drawn below it — flare and buttress first,
+            then the shaft, then the fork, then the limbs and the
+            leader. Nothing about the Tree fades in. */}
+        <linearGradient
+          id="wGtRiseEdge"
+          gradientUnits="userSpaceOnUse"
+          x1="0" y1={(riseEdge - 9).toFixed(2)} x2="0" y2={(riseEdge + 3).toFixed(2)}
+        >
+          <stop offset="0%" stopColor="#000000" />
+          <stop offset="100%" stopColor="#ffffff" />
+        </linearGradient>
+        <mask id="wGtRise" maskUnits="userSpaceOnUse" x="120" y="-40" width="160" height="200">
+          <path d="M120 -40 L280 -40 L280 160 L120 160 Z" fill="url(#wGtRiseEdge)" />
+        </mask>
 
         <linearGradient id="wSky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={skyTop} />
@@ -1002,13 +1071,20 @@ function WorldScene({ progress: p }: SceneProps) {
       {/* ── STARS — the sky phrase lights them; the dawn washes the low
              ones out first, as it does. ── */}
       {starP > 0 && STARFIELD.map((s, i) => {
-        const sp = sub(starP, (i % 8) * 0.05, 0.4);
+        // One at a time, sweeping the sky. Each is STRUCK: a soft bloom
+        // opens around it, then tightens to the point — so the first
+        // letters of "stars remember" already change the sky, and no
+        // star ever simply switches on.
+        const sp = sub(starP, i * 0.033, 0.26);
         const fade = 1 - dawn * (0.3 + (s.y / 80) * 0.65);
         if (sp <= 0 || fade <= 0) return null;
+        const r = s.r * (0.4 + 0.6 * sp);
+        const strike = sp * (1 - sp) * 4;
         return (
           <g key={`st${i}`}>
-            <circle cx={s.x} cy={s.y} r={s.r * 3.2} fill="#dfe4ff" opacity={sp * 0.05 * fade} />
-            <circle cx={s.x} cy={s.y} r={s.r} fill="#f2f2ff" opacity={sp * 0.68 * fade}>
+            <circle cx={s.x} cy={s.y} r={r * (3.2 + 5.5 * strike)} fill="#dfe4ff"
+              opacity={(sp * 0.05 + 0.055 * strike) * fade} />
+            <circle cx={s.x} cy={s.y} r={r} fill="#f2f2ff" opacity={sp * 0.68 * fade}>
               <animate
                 attributeName="opacity"
                 values={`${(sp * 0.68 * fade).toFixed(3)};${(sp * 0.4 * fade).toFixed(3)};${(sp * 0.68 * fade).toFixed(3)}`}
@@ -1055,13 +1131,15 @@ function WorldScene({ progress: p }: SceneProps) {
         );
       })()}
 
-      {/* ── THE MOON — crescent over the eastern hill; it pales as the
-             morning comes up behind the ridge. ── */}
+      {/* ── THE MOON — it CLIMBS over the eastern hill through the sky
+             phrase, and pales as the morning comes up behind the
+             ridge. ── */}
       {moonP > 0 && (() => {
         const bright = 0.25 + moonP * 0.75;
         const fade = moonP * (1 - dawn * 0.74);
+        const climb = (1 - moonP) * 20;
         return (
-          <g opacity={fade}>
+          <g opacity={fade} transform={`translate(0 ${climb.toFixed(2)})`}>
             <circle cx="354" cy="26" r="30" fill="url(#wMoonHalo)" opacity={bright} />
             <path
               d="M358 15 C350 16, 344 21, 344 27 C344 33, 350 38, 358 38
@@ -1124,38 +1202,50 @@ function WorldScene({ progress: p }: SceneProps) {
         )}
       </g>
 
-      {/* ══ THE GREAT TREE — the last incantation raises it ══ */}
-      {treeRise > 0 && (
-        <g transform={`translate(0 ${treeLift.toFixed(2)})`} opacity={Math.min(1, treeRise * 1.6)}>
-          {/* Roots into the ridge; light runs out along them once the
-              heart is lit, exactly as it does in the Great Tree. */}
-          {GT_ROOTS.map((d, i) => (
-            <g key={`gr${i}`}>
-              <path d={d} fill="none" stroke={hsl(28, 16, 7)} strokeWidth={1.6} strokeLinecap="round"
-                opacity={sub(treeRise, 0.3 + i * 0.08, 0.4) * 0.85} />
-              {heartP > 0 && (
-                <path d={d} fill="none" stroke="#e8b45c" strokeWidth={0.55} strokeLinecap="round"
-                  opacity={sub(heartP, i * 0.1, 0.5) * 0.42} />
-              )}
-            </g>
-          ))}
+      {/* ══ THE GREAT TREE — the last incantation raises it ══
+             Nothing here fades. The roots draw outward, the trunk is
+             uncovered by an edge walking up out of the ridge, and the
+             crown fills clump by clump. Every five per cent of the
+             phrase between 0.66 and 0.82 is a different stage of one
+             motion. */}
+      {unityP > 0 && (
+        <g>
+          {/* Roots reaching out into the ridge — drawn, not faded, the
+              way the Great Tree's own roots are. Light runs out along
+              them once the heart is lit. */}
+          {GT_ROOTS.map((d, i) => {
+            const rp = sub(rootP, i * 0.09, 0.44);
+            if (rp <= 0) return null;
+            return (
+              <g key={`gr${i}`}>
+                <path d={d} fill="none" stroke={hsl(28, 16, 7)} strokeWidth={1.6} strokeLinecap="round"
+                  strokeDasharray={36} strokeDashoffset={36 * (1 - rp)} opacity={0.85} />
+                {heartP > 0 && (
+                  <path d={d} fill="none" stroke="#e8b45c" strokeWidth={0.55} strokeLinecap="round"
+                    opacity={sub(heartP, i * 0.1, 0.5) * 0.42} />
+                )}
+              </g>
+            );
+          })}
 
-          {/* Trunk in three tones. */}
-          <path d={GT_TRUNK} fill={hsl(26, 16 + heartP * 8, 7.5 + heartP * 2)} />
-          {/* The left flank takes the sky, and the morning behind the
-              ridge puts a warm rim on it. */}
-          <path d={GT_TRUNK_LIT} fill={hsl(30 + dawn * 6, 15 + heartP * 10 + dawn * 14, 13 + heartP * 4 + dawn * 7)} opacity={0.92} />
-          <path d={GT_TRUNK_SHADE} fill={hsl(22, 14, 4.4)} opacity={0.9} />
-          {GT_FLARES.map((d, i) => (
-            <path key={`gf${i}`} d={d} fill={hsl(26, 15, 6.6)}
-              opacity={sub(treeRise, 0.35 + i * 0.06, 0.4)} />
-          ))}
-          {GT_BUTTRESS.map((d, i) => (
-            <path key={`gb${i}`} d={d} fill={hsl(22, 15, 2.6)} opacity={0.9} />
-          ))}
+          {/* Trunk, buttresses, flares and the dark hollow, all under
+              the rising edge: flare, shaft, fork, limbs, leader. */}
+          <g mask="url(#wGtRise)">
+            <path d={GT_TRUNK} fill={hsl(26, 16 + heartP * 8, 7.5 + heartP * 2)} />
+            {/* The left flank takes the sky, and the morning behind the
+                ridge puts a warm rim on it. */}
+            <path d={GT_TRUNK_LIT} fill={hsl(30 + dawn * 6, 15 + heartP * 10 + dawn * 14, 13 + heartP * 4 + dawn * 7)} opacity={0.92} />
+            <path d={GT_TRUNK_SHADE} fill={hsl(22, 14, 4.4)} opacity={0.9} />
+            {GT_FLARES.map((d, i) => (
+              <path key={`gf${i}`} d={d} fill={hsl(26, 15, 6.6)} />
+            ))}
+            {GT_BUTTRESS.map((d, i) => (
+              <path key={`gb${i}`} d={d} fill={hsl(22, 15, 2.6)} opacity={0.9} />
+            ))}
+            <path d={GT_HEART} fill="#0a0705" opacity={0.9} />
+          </g>
 
           {/* The heart. Dark until the very last of the phrase. */}
-          <path d={GT_HEART} fill="#0a0705" opacity={0.9} />
           {heartP > 0 && (
             <g>
               <circle cx="200" cy="99" r={17} fill="url(#wHeartHalo)" opacity={heartP * 0.6} />
@@ -1171,13 +1261,15 @@ function WorldScene({ progress: p }: SceneProps) {
             </g>
           )}
 
-          {/* Crown. Grows out of the fork, clump by clump, into the top
-              edge of the frame. */}
+          {/* Crown. Grows out of the fork, clump by clump, outward and
+              upward into the top edge of the frame — the shade mass
+              leading its own detail, each cluster swelling into place
+              over a third of the window. Whole by unityP 0.47. */}
           {treeCrown > 0 && (
-            <g opacity={Math.min(1, treeCrown * 1.3)}>
-              <g transform={`translate(200 44) scale(${(0.72 + treeCrown * 0.28).toFixed(3)}) translate(-200 -44)`}>
-                {clumps(GT_CROWN_BASE, 0, 1, "gcb")}
-                {clumps(GT_CROWN, 0, 1, "gc")}
+            <g>
+              <g transform={`translate(200 44) scale(${(0.965 + treeCrown * 0.035).toFixed(3)}) translate(-200 -44)`}>
+                {clumps(GT_CROWN_BASE, 0, 1, "gcb", treeCrown)}
+                {clumps(GT_CROWN, 0, 1, "gc", treeCrown)}
                 <animateTransform attributeName="transform" type="rotate"
                   values="-0.25 200 110; 0.25 200 110; -0.25 200 110"
                   dur="17s" repeatCount="indefinite" additive="sum" />
@@ -1188,7 +1280,7 @@ function WorldScene({ progress: p }: SceneProps) {
       )}
 
       {/* ══ MIST between the far ridge and the mid hills ══ */}
-      <g opacity={0.55 + earthP * 0.45}>
+      <g opacity={0.42 + earthP * 0.58}>
         {MIST_HIGH.map((d, i) => (
           <path key={`mh${i}`} d={d} fill="#b6c6cc" opacity={0.075 - i * 0.022}>
             <animateTransform attributeName="transform" type="translate"
@@ -1482,10 +1574,13 @@ function WorldScene({ progress: p }: SceneProps) {
 
       {/* ══ SPIRITS — the sky phrase brings them up out of the valley ══ */}
       {spiritP > 0 && SPIRITS.map((s, i) => {
-        const fp = sub(spiritP, i * 0.12, 0.5);
+        // They come UP out of the valley — the last thing the sky
+        // phrase does, still moving on its final letter.
+        const fp = sub(spiritP, i * 0.14, 0.45);
         if (fp <= 0) return null;
         return (
-          <g key={`sp${i}`} opacity={fp * (1 - dawn * 0.25)}>
+          <g key={`sp${i}`} transform={`translate(0 ${((1 - fp) * 9).toFixed(2)})`}>
+          <g opacity={fp * (1 - dawn * 0.25)}>
             <path
               d={`M${s.x} ${s.y - 5.4}
                   C${s.x - 1.8} ${s.y - 4.2}, ${s.x - 2.9} ${s.y - 2}, ${s.x - 2.8} ${s.y}
@@ -1500,19 +1595,24 @@ function WorldScene({ progress: p }: SceneProps) {
               values={`0 0; ${i % 2 ? 3 : -3} -4; 0 0`}
               dur={`${13 + i * 3}s`} repeatCount="indefinite" />
           </g>
+          </g>
         );
       })}
 
       {spiritP > 0 && WISPS.map((w, i) => {
-        const wp = sub(spiritP, 0.2 + i * 0.07, 0.4);
+        // Staggered to the last letter of "spirits sing", each lifting
+        // into place so the phrase never stops moving.
+        const wp = sub(spiritP, 0.25 + i * 0.09, 0.30);
         if (wp <= 0) return null;
         return (
-          <g key={`wi${i}`} opacity={wp * (1 - dawn * 0.3)}>
-            <circle cx={w.x} cy={w.y} r={2.6} fill="#d8c48a" opacity={0.07} />
+          <g key={`wi${i}`} transform={`translate(0 ${((1 - wp) * 7).toFixed(2)})`}>
+          <g opacity={wp * (1 - dawn * 0.3)}>
+            <circle cx={w.x} cy={w.y} r={2.6 * (0.5 + 0.5 * wp)} fill="#d8c48a" opacity={0.07} />
             <circle cx={w.x} cy={w.y} r={0.85} fill="#ffe8b0" opacity={0.4} />
             <animateTransform attributeName="transform" type="translate"
               values={`0 0; ${i % 2 ? 5 : -5} -7; 0 0`}
               dur={`${16 + i * 2.5}s`} repeatCount="indefinite" />
+          </g>
           </g>
         );
       })}
