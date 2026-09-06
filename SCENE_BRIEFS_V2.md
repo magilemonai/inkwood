@@ -262,3 +262,133 @@ match the v2 scenes; dawn breaking at the last phrase ("the forest remembers").
 
 Cottage hearth; act cards as painterly journal pages (text is in, art is v1); the
 planting finale and keepsake; Stars 3D spike; the depth stage.
+
+---
+
+## 7. The frame: Waking World, Intro, Outro (director's note, 2026-09-06)
+
+"The Waking World, the intro, and the outro all need the same kind of attention and
+care that the individual scenes got." So: full redraws, not passes. Reference art for
+all three is the finished v2 scene set, screenshot at 99% on desktop and mobile in
+`/Users/cody/Desktop/Games/Inkwood/screenshots/v2-sweep/` (absolute path; read them).
+The miniatures in the World and the Outro must read as those scenes.
+
+### 7a. The Waking World (`src/scenes/v2/world.tsx`, `src/scenes/manifests/world.ts`)
+
+Replace the A/B/C variant switch with one finished scene. Non-negotiable: `LEY_POINTS`
+and `LEY_CONNECTIONS` stay byte-identical to `src/scenes/WorldScene.tsx` (7 nodes, 21
+lines; diff them in the report). The three-phrase structure stays: earth 0–0.33 (hills
+green up, garden blooms, cottage window lights), sky 0.33–0.66 (stars, moon, spirit
+wisps), unity 0.66–1 (the Great Tree rises, the web completes, dawn).
+
+Landscape: three depths (far ridge, mid hills, foreground meadow), each in three tones,
+mist banked between them, a path or stream leading the eye in. Callbacks redrawn as
+miniatures of the v2 scenes, placed so each sits on its LEY_POINT: garden tree at
+(45,172) with the new bare-then-crowned silhouette; cottage at (312,112) with lit window
+and chimney smoke; the constellation cluster at (280,55) as small real figures; the well
+at (95,128) as stone ring plus A-frame; the bridge at (165,126) as a segmental arch; the
+stones at (350,165) as seven chipped stones; the Great Tree at (200,40) with the new
+clustered crown reaching the top edge and the heart glowing on phrase 3. Add the sanctum
+and library as small non-node callbacks if they fit (a ring of trees with a moon pool; a
+cavern mouth with a warm glow).
+
+Lines: the ink-thread rendering from variant A (hair-thin stroke over a soft halo, each
+thread flaring as it draws then settling, a small mote traveling toward the tree on a
+staggered SMIL dash), with the draw schedule completing all 21 by unity 0.9. Nodes are
+soft halos sized by weight (tree largest).
+
+Dawn: phrase 3 ("the forest remembers") brings the dawn as the default ending: horizon
+swelling peach to gold behind the far ridge, violet deepening at the top, moon paling,
+low stars washing out, long soft shadows from the callbacks, threads turning gold-white.
+Keep a `?worldvariant=night` switch (dev-only, read once at module init) that keeps the
+night sky and skips the dawn, so the director can compare; default is dawn. Nothing
+else differs between the two.
+
+Manifest: rewrite `manifests/world.ts` to the new art: callback lights arriving with
+their phrases, ley-node glows on unity, the tree heart, a dawn band on phrase 3 (whole-
+frame light ≤0.05), thin valley mist (≤0.03), a few spirit motes over the valley.
+
+### 7b. The Intro (`src/components/v2/Intro.tsx`, `src/styles/Intro2.module.css`)
+
+The file is a copy of the shipped intro; the stylesheet is its own copy. Keep the
+structure and behavior: title and Begin appear immediately; three dormant vignettes
+(garden → cottage → sky) crossfade behind them on a 24-second loop (`CYCLE_LEN`,
+`LOOP_PHASES`, the wrap-safe opacity sampling); the intro drone; the gesture-driven
+`focusInput()` on Begin; the share link; the returning-player affordance. Defended, do
+not change: the bordered Begin button; the dormant trees drawn as STROKED branches with
+delicate twigs (a filled-silhouette version was rejected); the ogham rune logo and the
+"Inkwood" wordmark.
+
+Redraw the three vignettes in the v2 art language, at the 15–25% lightness floor (a
+too-dark intro was fixed three times; check pixel values, not impressions):
+- Dormant garden: the v2 Garden's bare branching tree over its receding hills at
+  dormancy, stroked-branch style for the near tree, hills in three tones, latent buds.
+- Dark cottage: the v2 Cottage's room at p=0, cold blue, the journal closed on the shelf,
+  the window dark, no cat (it arrives when the room warms).
+- Night sky: the v2 Stars' field with the figures NOT drawn (the stars are there, the
+  lines are not), the moon low.
+Idle life via SMIL: star twinkle on a third of the stars, the amber firefly mote's
+drift (keep it), a slow grass sway, a slow cloud drift. Keep the dawn glow at the
+horizon under the title.
+
+The Glow: mount `GlowSurface` (`src/components/GlowSurface.tsx`) inside the same
+`position: relative` container as the vignette SVG, with a local manifest whose lights
+follow the cycle: `progressOf` returns `(time % CYCLE_LEN) / CYCLE_LEN`; in the sky
+phase a moon halo, in the cottage phase a faint cold window, always a low warm dawn
+band at the horizon (≤0.04) and the firefly mote as a tiny warm light. The manifest is
+a `SceneManifest` (types in `src/scenes/manifest.ts`, tuning law in its header).
+
+One new line under the title, small italic, in the journal's voice: "Someone wrote
+this forest awake once." (The director may cut it; make it one element.)
+
+Portrait: the intro letterboxes the SVG; the title block sits below it. Verify at
+390×844.
+
+Screenshot method (there is no screenshot.mjs mode for the intro; use this inline):
+```bash
+node --input-type=module -e "
+import { createRequire } from 'module';
+const { chromium } = createRequire('/Users/cody/Desktop/Games/Inkwood/package.json')('playwright-core');
+import { readdirSync } from 'fs'; import { homedir } from 'os'; import { resolve } from 'path';
+const cache = resolve(homedir(), 'Library/Caches/ms-playwright');
+const v = readdirSync(cache).filter(d => d.startsWith('chromium-')).sort().reverse()[0];
+const CHROME = resolve(cache, v, 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing');
+const PORT = process.env.PORT ?? '4191';
+const b = await chromium.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox','--disable-gpu','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
+for (const mobile of [false, true]) {
+  const ctx = await b.newContext(mobile ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { viewport: { width: 1400, height: 800 } });
+  const p = await ctx.newPage();
+  await p.goto('http://localhost:' + PORT + '/?v2&glowprobe=off', { waitUntil: 'networkidle' });
+  for (const t of [1, 9, 17]) { await p.waitForTimeout(t === 1 ? 1000 : 8000); await p.screenshot({ path: './screenshots/intro-v2-' + t + 's' + (mobile ? '-mobile' : '') + '.png' }); }
+  await ctx.close();
+}
+await b.close();
+"
+```
+(Clear localStorage state is assumed: a fresh headless context starts on the intro.)
+
+### 7c. The Outro (`src/components/v2/Outro.tsx`, `src/styles/Outro2.module.css`)
+
+The file is a copy of the shipped outro; the stylesheet is its own copy. Keep the
+structure and behavior: the timed phases (horizon draws → vignettes bloom left to right
+→ the Great Tree grows and its roots connect every place → radiance → text and buttons),
+the top dot row, "The forest remembers." then "It remembers you.", the bordered "Begin
+Again" and "Replay any level" buttons, the share link, space/enter restart, and the loop
+that never ends. Keep the `<PlantWord />` mount exactly where it is (after the two
+lines, before the buttons); it is being built in parallel in its own file.
+
+Redraw the panorama: the eight vignettes as miniatures of the v2 scenes (same
+silhouette language as the World callbacks; both of you read the v2-sweep screenshots),
+sky/far/mid/near depth with mist, the Great Tree as the new clustered crown with the
+heart, roots as ink threads flowing to each vignette with traveling motes (SMIL). Dawn
+continuity: the finale ends at dawn, so the outro assembles in first light (a warm band
+low, violet high) rather than in the dark. Glow via `GlowSurface` with a local
+manifest and `progressOf = () => Math.min(1, elapsed / 25)`: vignette lights arriving
+as they bloom, the tree heart, a low dawn band (≤0.05).
+
+Portrait: the outro letterboxes the panorama at the top with the text block below;
+verify at 390×844 that the text and buttons still fit above the fold.
+
+Screenshot method: as the intro snippet, but go to `'/?v2&dev&glowprobe=off'`, then
+press F2, click the button whose text is exactly `outro`, press F2 again, and screenshot
+at 4, 12, 20, 28 s (`intro-v2-…` → `outro-v2-…`). Port 4192.

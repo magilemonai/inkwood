@@ -9,6 +9,9 @@ import OutroSequence from "./components/OutroSequence";
 import WanderScreen from "./components/WanderScreen";
 import DevPanel from "./components/DevPanel";
 import PersistentInput from "./components/PersistentInput";
+import Intro2 from "./components/v2/Intro";
+import Outro2 from "./components/v2/Outro";
+import { isV2Enabled } from "./v2";
 import { InputProvider } from "./contexts/InputContext";
 import { armAudioPreload } from "./audio";
 import { trackPageview } from "./analytics";
@@ -63,11 +66,13 @@ export default function App() {
         className={fade.screenFade}
         style={{ background: bg }}
       >
-        {screen === "intro" && <IntroSequence />}
+        {/* Inkwood 2 (?v2) has its own intro and outro (components/v2/);
+            the shipped ones stay byte-identical for everyone else. */}
+        {screen === "intro" && (isV2Enabled() ? <Intro2 /> : <IntroSequence />)}
         {screen === "playing" && <PlayingScreen />}
         {screen === "levelWin" && <LevelWinScreen />}
         {screen === "actTransition" && <ActTransition />}
-        {screen === "outro" && <OutroSequence />}
+        {screen === "outro" && (isV2Enabled() ? <Outro2 /> : <OutroSequence />)}
         {screen === "wander" && <WanderScreen />}
       </div>
       {new URLSearchParams(window.location.search).has("dev") && <DevPanel />}

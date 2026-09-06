@@ -213,7 +213,16 @@ function hash(i: number, salt: number): number {
   return s - Math.floor(s);
 }
 
-export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
+export default function GlowCanvas({
+  manifest,
+  progressOf,
+}: {
+  manifest: SceneManifest;
+  /** Where progress comes from. Default: the game store's level progress
+   *  (and its `completing` flag drives the exhale). Non-scene surfaces
+   *  (intro, outro) pass their own clock mapped to 0–1; no exhale there. */
+  progressOf?: () => number;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -361,12 +370,16 @@ export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
       if (reduced && now - lastReducedRender < 250) return;
       lastReducedRender = now;
 
-      const state = useGameStore.getState();
-      const p = state.levelProgress();
       const t = (now - start) / 1000;
-
-      if (state.completing && !wasCompleting) exhaleAt = now;
-      wasCompleting = state.completing;
+      let p: number;
+      if (progressOf) {
+        p = Math.max(0, Math.min(1, progressOf()));
+      } else {
+        const state = useGameStore.getState();
+        p = state.levelProgress();
+        if (state.completing && !wasCompleting) exhaleAt = now;
+        wasCompleting = state.completing;
+      }
       const ex = (now - exhaleAt) / 420;
       uniforms.uExhale.value = ex >= 0 && ex < 1 ? Math.sin(ex * Math.PI) : 0;
 
@@ -435,7 +448,7 @@ export default function GlowCanvas({ manifest }: { manifest: SceneManifest }) {
       material.dispose();
       renderer.dispose();
     };
-  }, [manifest]);
+  }, [manifest, progressOf]);
 
   return (
     <canvas
