@@ -25,12 +25,18 @@ const SKY: RGB = [0.58, 0.78, 0.80];
 const tree: SceneManifest = {
   grain: 0.04,
   lights: (p) => {
-    const roots = sub(p, 0.02, 0.31);
-    const canopy = sub(p, 0.34, 0.32);
+    const roots = sub(p, 0.004, 0.325);
+    const canopy = sub(p, 0.334, 0.326);
     const heart = sub(p, 0.67, 0.33);
 
-    // Tip lights arrive in the same order the filaments draw.
-    const tip = (i: number) => sub(roots, 0.5 + i * 0.045, 0.3);
+    // The light wakes in the soil under the buttress first, then runs
+    // out. Mirrors the scene's own `wake`.
+    const wake = sub(roots, 0, 0.11);
+
+    // Tip lights arrive as their filament lands — the scene's own
+    // per-root schedule (ROOT_GROW delay + duration).
+    const TIP_END = [0.98, 0.529, 0.772, 0.3, 0.99, 0.646, 0.878, 0.4];
+    const tip = (i: number) => sub(roots, TIP_END[i] - 0.16, 0.16);
 
     return [
       // The heart in the hollow — the hot spot of the whole game.
@@ -46,6 +52,9 @@ const tree: SceneManifest = {
       { x: 56, y: 195, radius: 24, intensity: 0.13 * tip(1), color: LEY, flicker: 0.11 },
       { x: 318, y: 182, radius: 22, intensity: 0.17 * tip(7), color: LEY, flicker: 0.09 },
       { x: 344, y: 196, radius: 24, intensity: 0.13 * tip(5), color: LEY, flicker: 0.11 },
+      // The wake in the soil under the buttress: the first light of the
+      // phrase, up before any root has reached anywhere.
+      { x: 200, y: 183, radius: 38, intensity: 0.16 * wake * (1 - 0.4 * roots), color: LEY, flicker: 0.06, yScale: 2.4 },
       // A faint seam of light along the root run itself, so phrase one
       // reads even where the filaments are thin.
       { x: 199, y: 174, radius: 140, intensity: 0.035 * roots, color: LEY, flicker: 0.04, yScale: 4.5 },

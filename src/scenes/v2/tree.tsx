@@ -226,6 +226,33 @@ const LEY_TIPS: [number, number][] = [
   [397, 184], [344, 198], [298, 230], [318, 180],
 ];
 
+/**
+ * How each root extends. The reveal is a circle centred on the point
+ * the root leaves the buttress, growing along the root's own length, so
+ * the root pushes out of the dark rather than being uncovered by a
+ * shared curtain.
+ *
+ * `[originX, originY, reach, delay, duration, ease]`, all in rootPhase.
+ * Delays are spaced by how much root each one puts on screen rather
+ * than by count, so the phrase adds about the same length of root at
+ * every step. The two long roots carry the whole phrase on a
+ * near-linear ease — their light is still travelling on the last letter
+ * and lands at the frame edge exactly as the phrase closes — while the
+ * short ones snap out first on a hard ease, so the buttress is not
+ * still bare five per cent in. Everything lands before 1.0.
+ */
+const ROOT_GROW: [number, number, number, number, number, number][] = [
+  [172, 174, 180, 0.02, 0.96, 1.05], // 0 · left, the long run to the frame edge
+  [172, 176, 130, 0.209, 0.32, 1.3], // 1 · left, mid
+  [176, 176, 102, 0.452, 0.32, 1.3], // 2 · left, diving away
+  [172, 172, 102, 0.0, 0.3, 1.5], // 3 · left, short — clears the buttress first
+  [228, 174, 180, 0.05, 0.94, 1.05], // 4 · right, the long run to the frame edge
+  [228, 176, 130, 0.326, 0.32, 1.3], // 5 · right, mid
+  [224, 176, 102, 0.558, 0.32, 1.3], // 6 · right, diving away
+  [228, 172, 102, 0.1, 0.3, 1.5], // 7 · right, short
+  [200, 176, 78, 0.655, 0.32, 1.3], // 8 · the near root, down and left
+];
+
 /** Root threads seen through the soil, below the frame's waistline. */
 const DEEP_ROOTS = [
   "M186 186 C180 198, 172 210, 166 222 C162 230, 159 238, 157 246",
@@ -287,6 +314,15 @@ interface Leaf {
 }
 
 const FOLIAGE: Leaf[] = [
+  // the crotch — the first leaves, right where the limbs divide, so the
+  // crown has somewhere to grow out of instead of arriving mid-air.
+  // Body tone, not shade: these sit against the leader and the limbs,
+  // and in shade tone they were black on black and read as nothing.
+  { x: 196, y: 76, s: 0.55, f: 1, shape: 3, tone: 1 },
+  { x: 214, y: 82, s: 0.48, f: -1, shape: 1, tone: 1 },
+  { x: 180, y: 86, s: 0.46, f: 1, shape: 4, tone: 1 },
+  { x: 226, y: 66, s: 0.42, f: -1, shape: 3, tone: 1 },
+  { x: 172, y: 68, s: 0.44, f: 1, shape: 1, tone: 1 },
   // shade — the underside of the crown, hanging lower at the edges
   { x: 54, y: 72, s: 0.85, f: -1, shape: 4, tone: 0 },
   { x: 84, y: 66, s: 0.95, f: 1, shape: 2, tone: 0 },
@@ -339,6 +375,59 @@ const FOLIAGE: Leaf[] = [
 /** The canopy grows outward from the fork. */
 const FORK_X = 200;
 const FORK_Y = 104;
+
+/** How far out along the crown a clump sits. The y term is weighted
+ *  because the crown is wider than it is tall. */
+const reachOf = (c: { x: number; y: number }) =>
+  Math.hypot(c.x - FORK_X, (c.y - FORK_Y) * 0.8);
+
+/**
+ * When each clump takes its turn. Order is strictly inner-first, so the
+ * crown builds out of the fork; the schedule is spaced by **crown area
+ * already grown**, not by clump count.
+ *
+ * Two things were wrong before. Timing straight off the distance
+ * bunched whole tone bands into the same instant — the lit top arrived
+ * all at once and read as a band dropping in. And spacing by count
+ * still grew the crown as a hockey stick, because the clumps near the
+ * fork are the small ones: forty per cent of the crown used to arrive
+ * in one five-per-cent step while the last two steps changed nothing.
+ * Weighting by area evens it out — measured on the sweep, each step of
+ * the phrase now adds within a few points of the same amount of leaf.
+ */
+const FOLIAGE_ORDER: number[] = (() => {
+  const order = new Array<number>(FOLIAGE.length);
+  const ranked = FOLIAGE.map((c, i) => ({ i, r: reachOf(c), a: c.s * c.s }))
+    .sort((a, b) => a.r - b.r);
+  const total = ranked.reduce((s, e) => s + e.a, 0);
+  let acc = 0;
+  ranked.forEach((e) => {
+    order[e.i] = (acc + e.a / 2) / total;
+    acc += e.a;
+  });
+  return order;
+})();
+
+/** The crown's growth window, and one clump's share of it. Every clump
+ *  swells over a little more than three sweep frames — the floor for
+ *  anything that is allowed to appear at all. */
+const CROWN_SPREAD = 0.82;
+const CROWN_DUR = 0.16;
+
+/**
+ * Buds at the branch and twig tips. "Branches wider than sky" has to
+ * change something in its first letters, and a bare limb cannot leaf
+ * out before it buds — so the tips swell first, inner to outer, and the
+ * clumps grow over them. Listed nearest the fork first.
+ */
+const BUDS: [number, number, number][] = [
+  [212, 37, 0.26], [237, 50, 0.25], [219, 33, 0.23], [152, 45, 0.26],
+  [174, 18, 0.25], [262, 44, 0.25], [190, 6, 0.27], [128, 58, 0.24],
+  [227, 3, 0.28], [134, 35, 0.28], [281, 60, 0.24], [173, -5, 0.28],
+  [273, 34, 0.28], [246, 0, 0.28], [108, 45, 0.3], [114, 25, 0.27],
+  [88, 51, 0.26], [316, 44, 0.27], [66, 62, 0.27], [334, 37, 0.28],
+  [62, 42, 0.3], [349, 40, 0.3],
+];
 
 // ─── THE HOLLOW ───────────────────────────────────────────
 const HOLLOW = `
@@ -439,7 +528,10 @@ const LEAF_SPARKS = {
   lifeRange: [3, 6] as [number, number],
 };
 
-const smooth = (t: number) => t * t * (3 - 2 * t);
+/** Fast off the mark, easing into place — growth, not a fade-in. A
+ *  smoothstep spends its first third invisible, which is exactly how
+ *  the roots and the crown used to lose their opening frames. */
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 1.7);
 
 /** Leaf sparks in their own memo'd component: `useParticles` notifies
  *  ~12×/s, and called from the scene body it would reconcile the whole
@@ -450,11 +542,30 @@ const Sparks = memo(function Sparks({ active, alpha }: { active: boolean; alpha:
 });
 
 function TreeScene({ progress: p }: SceneProps) {
-  const rootPhase = sub(p, 0.02, 0.31);
-  const branchPhase = sub(p, 0.34, 0.32);
+  // Each phase opens on its phrase's first letter, not two letters in.
+  const rootPhase = sub(p, 0.004, 0.325);
+  const branchPhase = sub(p, 0.334, 0.326);
   const heartPhase = sub(p, 0.67, 0.33);
 
   const sparksOn = heartPhase > 0.15;
+
+  // The light wakes in the soil under the buttress before it runs out
+  // along anything — the cause the rest of phrase one follows from.
+  const wake = sub(rootPhase, 0, 0.11);
+
+  // How far each root has pushed out of the buttress. Computed once:
+  // the clip circles in <defs> and the roots themselves both read it.
+  const rootGrow = ROOT_GROW.map(([, , reach, t0, dur, exp]) => {
+    const t = sub(rootPhase, t0, dur);
+    // The light starts a beat behind the wood and finishes with it, so
+    // it always reads as light inside a root that is still growing.
+    const leyT = sub(rootPhase, t0 + 0.08 * dur, dur * 0.92);
+    return { t, r: (1 - Math.pow(1 - t, exp)) * reach, leyT, leyDraw: 1 - Math.pow(1 - leyT, exp) };
+  });
+
+  // Sap in the twigs: the bare limbs pick up light in the first letters
+  // of phrase two, before a single leaf.
+  const sap = sub(branchPhase, 0, 0.16);
 
   // ── Palette ──
   // The sky stays cool the whole way; every drop of warmth comes from
@@ -525,6 +636,13 @@ function TreeScene({ progress: p }: SceneProps) {
           <stop offset="100%" stopColor="#6ea060" stopOpacity={0} />
         </radialGradient>
 
+        {/* the light waking in the soil under the buttress */}
+        <radialGradient id="treeWake" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#d4e8a4" stopOpacity={0.5} />
+          <stop offset="38%" stopColor="#9cc478" stopOpacity={0.2} />
+          <stop offset="100%" stopColor="#5e8c4e" stopOpacity={0} />
+        </radialGradient>
+
         {/* The hollow's mouth clips the fire inside it. */}
         <clipPath id="treeHollowClip"><path d={HOLLOW} /></clipPath>
         {/* The ley light lives inside the wood, never in the air above
@@ -532,10 +650,14 @@ function TreeScene({ progress: p }: SceneProps) {
         <clipPath id="treeRootBodies">
           {ROOTS.map((d, i) => <path key={i} d={d} />)}
         </clipPath>
-        {/* Roots reveal outward from the base as the first phrase lands. */}
-        <clipPath id="treeRootReveal">
-          <ellipse cx="200" cy="178" rx={26 + smooth(rootPhase) * 250} ry={16 + smooth(rootPhase) * 120} />
-        </clipPath>
+        {/* Each root extends along its own length: a front travelling
+            out from the point it leaves the buttress. A single shared
+            curtain uncovered whole roots at once. */}
+        {ROOT_GROW.map(([ox, oy], i) => (
+          <clipPath key={`rc${i}`} id={`treeRootGrow${i}`}>
+            <circle cx={ox} cy={oy} r={rootGrow[i].r} />
+          </clipPath>
+        ))}
       </defs>
 
       {/* ── SKY ── */}
@@ -610,19 +732,22 @@ function TreeScene({ progress: p }: SceneProps) {
            C246 216, 282 224, 318 219 C348 215, 376 221, 400 218 L400 250 L0 250 Z"
       />
 
-      {/* ── DEEP ROOTS — seen through the soil, under everything ── */}
-      <g clipPath="url(#treeRootReveal)">
-        {DEEP_ROOTS.map((d, i) => {
-          const t = sub(rootPhase, 0.25 + i * 0.06, 0.5);
-          if (t <= 0) return null;
-          return (
-            <g key={`deep${i}`}>
-              <path d={d} fill="none" stroke={earthLine} strokeWidth={3.4 - i * 0.3} strokeLinecap="round" opacity={t * 0.4} />
-              <path d={d} fill="none" stroke={leyColor} strokeWidth={0.5} strokeLinecap="round" opacity={t * 0.15} />
-            </g>
-          );
-        })}
-      </g>
+      {/* ── DEEP ROOTS — each drawn downward along its own length as the
+           phrase runs, rather than uncovered by a spreading curtain.
+           They sit under the soil lip, as they always have. ── */}
+      {rootPhase > 0 && DEEP_ROOTS.map((d, i) => {
+        const t = sub(rootPhase, 0.01 + i * 0.09, 0.34);
+        if (t <= 0) return null;
+        const draw = easeOut(t);
+        return (
+          <g key={`deep${i}`}>
+            <path d={d} fill="none" stroke={earthLine} strokeWidth={3.4 - i * 0.3} strokeLinecap="round"
+              opacity={0.4} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - draw} />
+            <path d={d} fill="none" stroke={leyColor} strokeWidth={0.5} strokeLinecap="round"
+              opacity={0.15} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - draw} />
+          </g>
+        );
+      })}
 
       {/* soil lip, buried before the roots lie down on top of it */}
       <path
@@ -636,52 +761,71 @@ function TreeScene({ progress: p }: SceneProps) {
            C262 179, 286 188, 292 202"
       />
 
-      {/* ── BUTTRESS ROOTS + LEY, spreading outward from the base ── */}
-      <g clipPath="url(#treeRootReveal)">
-        {/* cast shadow, body, sky-lit top edge */}
-        {ROOTS.map((d, i) => {
-          const t = sub(rootPhase, i * 0.055, 0.42);
-          if (t <= 0) return null;
-          return (
-            <g key={`root${i}`} opacity={0.4 + t * 0.6}>
-              <path d={d} fill={rootShadow} transform="translate(0.6 2.4)" />
-              <path d={d} fill={rootFill} />
-              <path d={d} fill={rootLit} transform="translate(-0.4 -1.2)" opacity={0.4 + t * 0.2} />
-            </g>
-          );
-        })}
+      {/* ── THE WAKE — the first letters of "roots deeper than memory"
+           light the soil under the buttress. Everything in the phrase
+           runs out of this. ── */}
+      {wake > 0 && (
+        <>
+          <ellipse cx={200} cy={183} rx={26 + wake * 62} ry={7 + wake * 11}
+            fill="url(#treeWake)" opacity={wake * 0.5} />
+          <ellipse cx={200} cy={184} rx={7 + wake * 15} ry={2.5 + wake * 4}
+            fill={leyCore} opacity={wake * 0.14} />
+        </>
+      )}
 
-        {/* the light running out along them — clipped to the wood, so
-            it reads as light inside a root, not a wire in the air */}
-        <g clipPath="url(#treeRootBodies)">
-          {LEY.map((d, i) => {
-            const t = sub(rootPhase, 0.18 + i * 0.055, 0.5);
-            if (t <= 0) return null;
-            return (
-              <g key={`ley${i}`}>
-                <path d={d} fill="none" stroke={leyColor} strokeWidth={3} strokeLinecap="round"
-                  pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - t} opacity={t * 0.16} />
-                <path d={d} fill="none" stroke={leyCore} strokeWidth={0.7} strokeLinecap="round"
-                  pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - t} opacity={t * 0.21} />
+      {/* ── BUTTRESS ROOTS + LEY, each pushing out along its own length ──
+           The root wood and the light inside it share one growth front,
+           so a root is never anywhere the light has not reached and the
+           light is never in the open air ahead of the wood. */}
+      {ROOTS.map((d, i) => {
+        const { t } = rootGrow[i];
+        if (t <= 0) return null;
+        const leyT = i < LEY.length ? rootGrow[i].leyT : 0;
+        const draw = rootGrow[i].leyDraw;
+        // The light is at full strength as soon as it is moving — a
+        // filament that fades up while it draws reads as nothing at all
+        // until it is already finished.
+        const lit = Math.min(1, leyT * 3.2);
+        return (
+          <g key={`root${i}`} clipPath={`url(#treeRootGrow${i})`}>
+            {/* cast shadow, body, sky-lit top edge */}
+            <path d={d} fill={rootShadow} transform="translate(0.6 2.4)" />
+            <path d={d} fill={rootFill} />
+            <path d={d} fill={rootLit} transform="translate(-0.4 -1.2)" opacity={0.45 + t * 0.25} />
+            {/* the light running out along it — clipped to the wood, so
+                it reads as light inside a root, not a wire in the air */}
+            {leyT > 0 && (
+              <g clipPath="url(#treeRootBodies)">
+                <path d={LEY[i]} fill="none" stroke={leyColor} strokeWidth={3} strokeLinecap="round"
+                  pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - draw} opacity={lit * 0.18} />
+                <path d={LEY[i]} fill="none" stroke={leyCore} strokeWidth={0.7} strokeLinecap="round"
+                  pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - draw} opacity={lit * 0.24} />
+                {/* a brighter head riding the front of the draw */}
+                {draw < 0.995 && (
+                  <path d={LEY[i]} fill="none" stroke={leyCore} strokeWidth={1.5} strokeLinecap="round"
+                    pathLength={1} strokeDasharray="0.08 1" strokeDashoffset={0.08 - draw}
+                    opacity={lit * 0.3 * (1 - draw)} />
+                )}
               </g>
-            );
-          })}
-        </g>
+            )}
+          </g>
+        );
+      })}
 
-        {/* tip lights */}
-        {LEY_TIPS.map(([x, y], i) => {
-          const t = sub(rootPhase, 0.5 + i * 0.045, 0.3);
-          if (t <= 0) return null;
-          return (
-            <g key={`tip${i}`} opacity={t}>
-              <circle cx={x} cy={y} r={5} fill="url(#treeTip)" opacity={0.3} />
-              <circle cx={x} cy={y} r={0.8} fill={leyCore} opacity={0.45}>
-                <animate attributeName="opacity" values="0.55;0.28;0.55" dur={`${5 + i * 0.7}s`} repeatCount="indefinite" />
-              </circle>
-            </g>
-          );
-        })}
-      </g>
+      {/* tip lights — each blooms as its filament lands at the edge */}
+      {LEY_TIPS.map(([x, y], i) => {
+        const end = ROOT_GROW[i][3] + ROOT_GROW[i][4];
+        const t = sub(rootPhase, end - 0.16, 0.16);
+        if (t <= 0) return null;
+        return (
+          <g key={`tip${i}`} opacity={t}>
+            <circle cx={x} cy={y} r={5} fill="url(#treeTip)" opacity={0.3} />
+            <circle cx={x} cy={y} r={0.8} fill={leyCore} opacity={0.45}>
+              <animate attributeName="opacity" values="0.55;0.28;0.55" dur={`${5 + i * 0.7}s`} repeatCount="indefinite" />
+            </circle>
+          </g>
+        );
+      })}
 
       {/* ── TRUNK ── */}
       <path d={TRUNK} fill={wood} />
@@ -692,6 +836,17 @@ function TreeScene({ progress: p }: SceneProps) {
           <path key={`but${i}`} d={d} fill={woodShade} opacity={0.85} />
         ))}
       </g>
+      {/* the wake coming up through the buttress grooves — the first
+          thing the player's letters touch, and the last of it fades as
+          the light leaves for the root tips */}
+      {wake > 0 && BUTTRESS.map((d, i) => {
+        const t = sub(rootPhase, i * 0.012, 0.12);
+        if (t <= 0) return null;
+        return (
+          <path key={`butley${i}`} d={d} fill={leyCore}
+            opacity={t * 0.16 * (1 - 0.45 * rootPhase)} />
+        );
+      })}
       <g opacity={0.7 + p * 0.2}>
         {BARK.map((d, i) => (
           <path key={`bark${i}`} d={d} fill={i % 2 === 0 ? woodShade : woodLit} opacity={i % 2 === 0 ? 0.85 : 0.55} />
@@ -701,16 +856,23 @@ function TreeScene({ progress: p }: SceneProps) {
         ))}
       </g>
 
-      {/* ── LIMBS ── */}
+      {/* ── LIMBS — the sap reaches these too, and they carry enough
+           area that the first letters of phrase two are legible ── */}
       {BRANCHES.map((d, i) => (
         <g key={`br${i}`}>
           <path d={d} fill={woodShade} transform="translate(0.6 1.4)" opacity={0.7} />
-          <path d={d} fill={wood} />
+          <path d={d} fill={sap > 0 ? `hsl(${woodHue + 6 + sap * 12}, ${woodSat + sap * 8}%, ${woodL + sap * 2.6}%)` : wood} />
         </g>
       ))}
-      <g stroke={woodShade} fill="none" strokeLinecap="round" opacity={0.9}>
+      {/* Twigs. Sap runs into them on the first letters of "branches
+          wider than sky": they thicken and pick up light before a
+          single leaf, so the phrase never opens on a still frame. */}
+      <g
+        stroke={sap > 0 ? `hsl(${woodHue + 8 + sap * 14}, ${woodSat + sap * 10}%, ${woodL + 1 + sap * 7.5}%)` : woodShade}
+        fill="none" strokeLinecap="round" opacity={0.9 + sap * 0.1}
+      >
         {TWIGS.map((d, i) => (
-          <path key={`tw${i}`} d={d} strokeWidth={i % 3 === 0 ? 1 : 0.65} />
+          <path key={`tw${i}`} d={d} strokeWidth={(i % 3 === 0 ? 1 : 0.65) + sap * 0.6} />
         ))}
       </g>
 
@@ -766,23 +928,55 @@ function TreeScene({ progress: p }: SceneProps) {
         );
       })}
 
-      {/* ── CANOPY — grows outward from the fork on phrase two ── */}
-      {branchPhase > 0 && [0, 1].map((group) => (
-        <g key={`sway${group}`}>
+      {/* ── BUDS — the tips swell before anything leafs out ── */}
+      {branchPhase > 0 && BUDS.map(([x, y, s], i) => {
+        const t = sub(branchPhase, i * 0.007, 0.16);
+        if (t <= 0) return null;
+        const e = easeOut(t);
+        const bs = s * (0.3 + 0.7 * e);
+        return (
+          <path key={`bud${i}`} d={CLUMPS[i % CLUMPS.length]}
+            fill={`hsl(${146 - heartPhase * 12}, ${22 + heartPhase * 4}%, ${10.5 + heartPhase * 3}%)`}
+            opacity={0.55 + e * 0.45}
+            transform={`translate(${x} ${y}) scale(${(bs * (i % 2 ? -1 : 1)).toFixed(3)} ${bs.toFixed(3)})`} />
+        );
+      })}
+
+      {/* ── CANOPY — grows outward from the fork on phrase two ──
+           One clump per rank, evenly spaced through the phrase, each
+           swelling over three sweep frames from a point part-way out
+           along its own limb. Grouped by tone band rather than by index
+           parity so the paint order (shade under body under lit) is
+           never inverted and the three bands can sway against each
+           other. */}
+      {branchPhase > 0 && ([0, 1, 2] as const).map((band) => (
+        <g key={`sway${band}`}>
           <animateTransform
             attributeName="transform" type="rotate"
-            values={group === 0
-              ? `-0.45 ${FORK_X} ${FORK_Y}; 0.45 ${FORK_X} ${FORK_Y}; -0.45 ${FORK_X} ${FORK_Y}`
-              : `0.7 ${FORK_X} ${FORK_Y}; -0.7 ${FORK_X} ${FORK_Y}; 0.7 ${FORK_X} ${FORK_Y}`}
-            dur={group === 0 ? "13s" : "9.5s"} repeatCount="indefinite"
+            values={[
+              `-0.32 ${FORK_X} ${FORK_Y}; 0.32 ${FORK_X} ${FORK_Y}; -0.32 ${FORK_X} ${FORK_Y}`,
+              `0.5 ${FORK_X} ${FORK_Y}; -0.5 ${FORK_X} ${FORK_Y}; 0.5 ${FORK_X} ${FORK_Y}`,
+              `-0.72 ${FORK_X} ${FORK_Y}; 0.72 ${FORK_X} ${FORK_Y}; -0.72 ${FORK_X} ${FORK_Y}`,
+            ][band]}
+            dur={["13s", "11s", "9.5s"][band]} repeatCount="indefinite"
           />
           {FOLIAGE.map((c, i) => {
-            if (i % 2 !== group) return null;
-            // clumps nearer the fork fill in first
-            const reach = Math.hypot(c.x - FORK_X, (c.y - FORK_Y) * 0.8) / 210;
-            const t = sub(branchPhase, reach * 0.5, 0.42);
+            if (c.tone !== band) return null;
+            const t = sub(
+              branchPhase,
+              CROWN_SPREAD * Math.pow(FOLIAGE_ORDER[i], 1.1),
+              CROWN_DUR + 0.02 * FOLIAGE_ORDER[i],
+            );
             if (t <= 0) return null;
-            const g = 0.1 + 0.9 * smooth(t);
+            const e = easeOut(t);
+            // The clump grows in place, having already travelled most of
+            // the way out along its limb. Scaling the whole crown about
+            // the fork piled every clump on the fork at small scale,
+            // where none of them could be seen at all.
+            const out = 0.6 + 0.4 * e;
+            const ex = FORK_X + (c.x - FORK_X) * out;
+            const ey = FORK_Y + (c.y - FORK_Y) * out;
+            const s = c.s * (0.24 + 0.76 * e);
             const jitter = ((i * 37) % 5) - 2;
             const warm = heartPhase * (c.tone === 0 ? 1 : c.tone === 1 ? 0.6 : 0.3);
             // Wide tone bands. Measured on screen, anything narrower
@@ -791,14 +985,13 @@ function TreeScene({ progress: p }: SceneProps) {
             const sat = [16, 24, 31][c.tone] + heartPhase * 4;
             const lig = [4.5, 11, 19][c.tone] + heartPhase * 3 + jitter * 0.6;
             return (
-              <g key={`leaf${i}`} transform={`translate(${FORK_X} ${FORK_Y}) scale(${g.toFixed(3)}) translate(${-FORK_X} ${-FORK_Y})`}>
-                <path
-                  d={CLUMPS[c.shape]}
-                  fill={`hsl(${hue.toFixed(1)}, ${sat.toFixed(1)}%, ${lig.toFixed(1)}%)`}
-                  opacity={0.72 + t * 0.28}
-                  transform={`translate(${c.x} ${c.y}) scale(${c.s * c.f} ${c.s})`}
-                />
-              </g>
+              <path
+                key={`leaf${i}`}
+                d={CLUMPS[c.shape]}
+                fill={`hsl(${hue.toFixed(1)}, ${sat.toFixed(1)}%, ${lig.toFixed(1)}%)`}
+                opacity={0.6 + Math.min(1, t * 3) * 0.4}
+                transform={`translate(${ex.toFixed(2)} ${ey.toFixed(2)}) scale(${(s * c.f).toFixed(3)} ${s.toFixed(3)})`}
+              />
             );
           })}
         </g>
