@@ -11,6 +11,7 @@ import DevPanel from "./components/DevPanel";
 import PersistentInput from "./components/PersistentInput";
 import Intro2 from "./components/v2/Intro";
 import Outro2 from "./components/v2/Outro";
+import EditionToggle from "./components/EditionToggle";
 import { isV2Enabled } from "./v2";
 import { InputProvider } from "./contexts/InputContext";
 import { armAudioPreload } from "./audio";
@@ -75,6 +76,8 @@ export default function App() {
         {screen === "outro" && (isV2Enabled() ? <Outro2 /> : <OutroSequence />)}
         {screen === "wander" && <WanderScreen />}
       </div>
+      {/* Classic | Inkwood 2, pinned on every screen. */}
+      <EditionToggle />
       {new URLSearchParams(window.location.search).has("dev") && <DevPanel />}
     </InputProvider>
   );

@@ -44,13 +44,25 @@ function isActBoundary(lvl: number): boolean {
 
 // ── Determine initial screen ──
 const saved = loadSave();
-// Switching editions reloads the page; land back on the chapter select
-// (only meaningful once the game has been completed, which is the only
-// way to reach that switch).
-const returnToWander = consumeReturnTo() === "wander" && loadCompleted();
-const initialScreen: Screen = returnToWander ? "wander" : saved && saved.lvl > 0 ? "playing" : "intro";
-const initialLvl = saved?.lvl ?? 0;
-const initialPromptIdx = saved?.promptIdx ?? 0;
+// Switching editions reloads the page with a marker saying where the
+// player was; land them back there. Screens that need a completed game
+// fall back to the intro if there isn't one.
+const marker = consumeReturnTo();
+const returnToWander = marker?.screen === "wander" && loadCompleted();
+const returnToOutro = marker?.screen === "outro" && loadCompleted();
+const returnToPlaying = marker?.screen === "playing";
+const initialScreen: Screen = returnToWander
+  ? "wander"
+  : returnToOutro
+    ? "outro"
+    : returnToPlaying
+      ? "playing"
+      : saved && saved.lvl > 0
+        ? "playing"
+        : "intro";
+const clampLvl = (n: number) => Math.max(0, Math.min(LEVELS.length - 1, n));
+const initialLvl = returnToPlaying ? clampLvl(marker?.lvl ?? saved?.lvl ?? 0) : (saved?.lvl ?? 0);
+const initialPromptIdx = returnToPlaying ? (marker?.promptIdx ?? 0) : (saved?.promptIdx ?? 0);
 // If the save has active prompts from a previous session, honor them so
 // mid-level reload doesn't swap the phrase out from under the player.
 // Otherwise sample fresh.

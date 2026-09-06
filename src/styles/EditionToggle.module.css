@@ -1,0 +1,61 @@
+/* The pinned edition switch — top-right on every screen. Small, quiet,
+ * always there. Above the header and typing UI (z 10) and the ink canvas
+ * (z 40); below the dev panel. */
+
+.pill {
+  position: fixed;
+  top: 0.6rem;
+  right: 1.1rem;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid rgba(216, 200, 160, 0.22);
+  border-radius: 999px;
+  background: rgba(6, 8, 6, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  user-select: none;
+}
+
+.opt {
+  padding: 0.1rem 0.15rem;
+  border: none;
+  background: transparent;
+  color: #7a7360;
+  font-size: inherit;
+  letter-spacing: inherit;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+.opt:hover {
+  color: #b8ac90;
+  opacity: 1;
+}
+
+.active {
+  color: #d8c8a0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(216, 200, 160, 0.6);
+  cursor: default;
+}
+
+.sep {
+  color: #55503f;
+}
+
+/* Portrait phones: sit below the playing header's row so it never
+ * covers the level dots, and stay off the typing area. */
+@media (max-width: 640px) {
+  .pill {
+    top: 2.15rem;
+    right: 0.7rem;
+    font-size: 0.58rem;
+    padding: 0.18rem 0.5rem;
+  }
+}

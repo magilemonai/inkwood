@@ -32,7 +32,7 @@
 .header {
   position: relative;
   z-index: 10;
-  padding: 0.6rem 1.5rem;
+  padding: 0.6rem 8.5rem 0.6rem 1.5rem; /* right: room for the pinned edition toggle */
   display: flex;
   justify-content: space-between;
   align-items: center;

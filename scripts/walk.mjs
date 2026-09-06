@@ -85,7 +85,7 @@ await page.waitForTimeout(1500);
 await shot('01-intro');
 
 // Begin.
-const begin = await page.$('button:has-text("Begin")');
+const begin = await page.$(CLASSIC ? 'button:has-text("Begin Inkwood Classic")' : 'button:has-text("Begin Inkwood 2")');
 if (!begin) { problems.push('no Begin button on the intro'); }
 else { await begin.click(); }
 await page.waitForTimeout(900);
@@ -141,7 +141,7 @@ if (!wander) problems.push('no "Replay any level" on the outro');
 else { await wander.click(); await page.waitForTimeout(900); }
 const wanderText = await page.textContent('body');
 if (!wanderText.includes('Wander the woods')) problems.push('Wander screen not reached');
-if (!wanderText.includes('Classic') || !wanderText.includes('Inkwood 2')) problems.push('edition switch not offered on Wander');
+if (!wanderText.includes('Classic') || !wanderText.includes('Inkwood 2')) problems.push('edition toggle not present');
 await shot('07-wander');
 
 await browser.close();

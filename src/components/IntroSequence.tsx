@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { startIntroDrone, stopIntroDrone } from "../audio";
 import { useInput } from "../contexts/InputContext";
+import { switchEdition } from "../v2";
 import { shareInkwood } from "../share";
 import s from "../styles/Intro.module.css";
 
@@ -372,15 +373,26 @@ export default function IntroSequence() {
 
           <h1 className={s.title}>Inkwood</h1>
 
-          <button
-            className={s.beginBtn}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBegin();
-            }}
-          >
-            Begin
-          </button>
+          <div className={s.beginRow}>
+            <button
+              className={s.beginBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBegin();
+              }}
+            >
+              Begin Inkwood Classic
+            </button>
+            <button
+              className={s.beginBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                switchEdition(true, { screen: "playing", lvl: 0, promptIdx: 0, fresh: true });
+              }}
+            >
+              Begin Inkwood 2
+            </button>
+          </div>
 
           {hasCompleted && (
             <button
