@@ -32,6 +32,13 @@ export function trackGateActive(gate: string, title?: string) {
   sendEvent(`gate/${gate}`, title);
 }
 
+/** A one-off event (e.g. `plant/word` when a player leaves a word for the
+ *  next scribe). Never send player-typed text; counts only. */
+export function trackEvent(path: string, title?: string) {
+  if (typeof window === "undefined") return;
+  sendEvent(path, title);
+}
+
 function sendEvent(path: string, title?: string, tries = 0) {
   const gc = getGC();
   if (gc?.count) {

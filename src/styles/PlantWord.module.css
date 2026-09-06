@@ -1,0 +1,106 @@
+/* The planting finale — "Leave one word for the next scribe."
+ * Sits in the Inkwood 2 outro after the two closing lines and before the
+ * buttons. Arrives a breath after "It remembers you." */
+
+.plant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.4rem 0 0.9rem;
+  opacity: 0;
+  animation: plantFade 1.6s ease-out 4.4s forwards;
+}
+
+@keyframes plantFade {
+  to { opacity: 1; }
+}
+
+.ask {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #b8a880;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.word {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px; /* prevents iOS auto-zoom */
+  letter-spacing: 0.08em;
+  text-align: center;
+  width: 10ch;
+  padding: 0.25rem 0.2rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(216, 200, 144, 0.45);
+  color: #e8dcc0;
+  outline: none;
+  caret-color: #d8c890;
+  transition: border-color 0.2s;
+}
+
+.word:focus {
+  border-bottom-color: rgba(216, 200, 144, 0.9);
+}
+
+/* Bordered, like every CTA in the game (house rule: the box is the tap
+ * affordance on mobile). */
+.plantBtn {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  padding: 0.4rem 1rem;
+  border: 1px solid #d8c890;
+  border-radius: 4px;
+  color: #d8c890;
+  background: transparent;
+  transition: opacity 0.2s;
+}
+
+.plantBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* The grown thing. */
+.bloom {
+  width: 150px;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.planted {
+  margin: 0;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #d8c890;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+
+.keep {
+  margin: 0;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #908878;
+  text-align: center;
+}
+
+.unplant {
+  font-size: 0.65rem;
+  color: #555;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 640px) {
+  .ask { font-size: 0.85rem; }
+  .bloom { width: 120px; }
+}
