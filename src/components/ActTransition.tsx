@@ -1,7 +1,9 @@
 import { useEffect, useCallback } from "react";
 import { useGameStore } from "../store";
 import { startAmbient } from "../audio";
-import { getActIndex } from "../levels";
+import { getActIndex, ACT_LABELS } from "../levels";
+import { JOURNAL_PAGES_V2 } from "../levels2";
+import { isV2Enabled } from "../v2";
 import { useInput } from "../contexts/InputContext";
 import s from "../styles/ActTransition.module.css";
 
@@ -286,7 +288,11 @@ export default function ActTransition() {
   const { focusInput } = useInput();
 
   const transition = TRANSITIONS[lvl];
-  const title = transition?.title ?? "";
+  // Inkwood 2: the card is a page of the previous scribe's journal. The
+  // act name comes from the live label table; the page text from levels2.
+  const v2 = isV2Enabled();
+  const title = v2 ? (ACT_LABELS[getActIndex(lvl + 1)] ?? "") : (transition?.title ?? "");
+  const journal = v2 ? JOURNAL_PAGES_V2[lvl] ?? null : null;
   const Scene = transition?.Scene;
 
   // Gesture-driven advance: focus the persistent input synchronously
@@ -306,10 +312,11 @@ export default function ActTransition() {
     startAmbient(nextAct, nextLvl);
   }, [lvl]);
 
+  // v2 cards carry a journal page and run longer so it can be read.
   useEffect(() => {
-    const timer = setTimeout(advanceLevel, 7000);
+    const timer = setTimeout(advanceLevel, v2 ? 9500 : 7000);
     return () => clearTimeout(timer);
-  }, [advanceLevel]);
+  }, [advanceLevel, v2]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -340,7 +347,9 @@ export default function ActTransition() {
         {Scene && <Scene />}
       </div>
 
-      <div className={s.actTitle}>{title}</div>
+      <div className={v2 ? s.actTitleV2 : s.actTitle}>{title}</div>
+
+      {journal && <p className={s.journalPage}>{journal}</p>}
 
       <div className={s.skipHint}>tap to continue</div>
     </div>

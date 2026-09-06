@@ -12,12 +12,15 @@
  */
 
 import { trackGateActive } from "./analytics";
+import { isV2Enabled } from "./v2";
 
 const FEEL_KEY = "inkwood-feel";
 const DEFAULT_ENABLED = false;
 
 let enabled: boolean = (() => {
   if (typeof window === "undefined") return DEFAULT_ENABLED;
+  // Inkwood 2 implies the Feel.
+  if (isV2Enabled()) return true;
   try {
     if (new URLSearchParams(window.location.search).has("feel")) return true;
     const stored = localStorage.getItem(FEEL_KEY);

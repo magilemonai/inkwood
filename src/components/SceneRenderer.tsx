@@ -9,6 +9,8 @@ import StonesScene from "../scenes/StonesScene";
 import SanctumScene from "../scenes/SanctumScene";
 import TreeScene from "../scenes/TreeScene";
 import WorldScene from "../scenes/WorldScene";
+import { V2_SCENES } from "../scenes/v2";
+import { isV2Enabled } from "../v2";
 
 interface Props {
   sceneKey: SceneKey;
@@ -16,6 +18,12 @@ interface Props {
 }
 
 export default function SceneRenderer({ sceneKey, progress }: Props) {
+  // Inkwood 2: redrawn scenes live in scenes/v2/ and take over under the
+  // gate; anything not redrawn yet falls through to the shipped scene.
+  if (isV2Enabled()) {
+    const Override = V2_SCENES[sceneKey];
+    if (Override) return <Override progress={progress} />;
+  }
   switch (sceneKey) {
     case "garden": return <GardenScene progress={progress} />;
     case "cottage": return <CottageScene progress={progress} />;

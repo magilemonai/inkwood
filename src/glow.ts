@@ -13,12 +13,15 @@
  */
 
 import { trackGateActive } from "./analytics";
+import { isV2Enabled } from "./v2";
 
 const GLOW_KEY = "inkwood-glow";
 const DEFAULT_ENABLED = false;
 
 let enabled: boolean = (() => {
   if (typeof window === "undefined") return DEFAULT_ENABLED;
+  // Inkwood 2 implies the Glow.
+  if (isV2Enabled()) return true;
   try {
     if (new URLSearchParams(window.location.search).has("glow")) return true;
     const stored = localStorage.getItem(GLOW_KEY);

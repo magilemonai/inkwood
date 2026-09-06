@@ -6,6 +6,7 @@ import { isInkEnabled, setInkEnabled } from "../ink";
 import { isSeasonsEnabled, setSeasonsEnabled } from "../seasons";
 import { isGlowEnabled, setGlowEnabled } from "../glow";
 import { isFeelEnabled, setFeelEnabled } from "../feel";
+import { isV2Enabled, setV2Enabled } from "../v2";
 
 /**
  * Floating dev panel for testing. Toggle with F2 key.
@@ -90,6 +91,7 @@ function MusicToggle() {
   const [seasons, setSeasons] = useState(isSeasonsEnabled);
   const [glow, setGlow] = useState(isGlowEnabled);
   const [feel, setFeel] = useState(isFeelEnabled);
+  const [v2, setV2] = useState(isV2Enabled);
   return (
     <>
       <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: music ? "#b8c8a8" : "#888" }}>
@@ -149,6 +151,20 @@ function MusicToggle() {
       </label>
       <div style={{ marginTop: 4, color: "#555", fontSize: 9 }}>
         glow/feel apply on next scene change
+      </div>
+      <label style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8, cursor: "pointer", color: v2 ? "#e8d080" : "#888", borderTop: "1px solid #333", paddingTop: 6 }}>
+        <input
+          type="checkbox"
+          checked={v2}
+          onChange={(e) => {
+            setV2(e.target.checked);
+            setV2Enabled(e.target.checked);
+          }}
+        />
+        inkwood 2 (story + scenes + glow + feel)
+      </label>
+      <div style={{ marginTop: 2, color: "#555", fontSize: 9 }}>
+        reload to apply
       </div>
     </>
   );

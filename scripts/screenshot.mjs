@@ -11,7 +11,9 @@
  * Flags:
  *   --mobile              390x844 portrait, touch, DPR 2 (the iPhone check)
  *   --params=glow,feel    extra URL gates to enable (comma-separated)
+ *                         (`v2` also switches prompt parsing to src/levels2.ts)
  *   --settle=1500         extra ms to wait before the shot (animations)
+ *   --port=4181           preview server port (default 4173) — parallel workers
  *
  * Filenames carry the flags: scene-1-The_Dark_Cottage-99pct-mobile-glow+feel.png
  */
@@ -47,8 +49,23 @@ function findChrome() {
 }
 
 const CHROME_PATH = findChrome();
-const BASE_URL = 'http://localhost:4173/';
 const SCREENSHOT_DIR = './screenshots';
+
+// Flags are parsed up front because the levels file to read depends on
+// whether the v2 gate is among the params.
+const argv = process.argv.slice(2);
+const flags = argv.filter((a) => a.startsWith('--'));
+const args = argv.filter((a) => !a.startsWith('--'));
+const flagValue = (name, fallback) =>
+  (flags.find((f) => f.startsWith(`--${name}=`)) ?? `--${name}=${fallback}`).slice(name.length + 3);
+const opts = {
+  mobile: flags.includes('--mobile'),
+  params: flagValue('params', '').split(',').filter(Boolean),
+  settle: parseInt(flagValue('settle', '0')) || 0,
+  port: parseInt(flagValue('port', '4173')) || 4173,
+};
+const BASE_URL = `http://localhost:${opts.port}/`;
+const LEVELS_FILE = opts.params.includes('v2') ? './src/levels2.ts' : './src/levels.ts';
 
 /**
  * Parse scenes + prompts out of src/levels.ts so the screenshot script
@@ -59,7 +76,7 @@ const SCREENSHOT_DIR = './screenshots';
  * TypeScript that Node would need to evaluate.
  */
 function loadScenesFromLevels() {
-  const src = readFileSync('./src/levels.ts', 'utf8');
+  const src = readFileSync(LEVELS_FILE, 'utf8');
   const scenes = [];
   // Match each level block: { title: "...", ... prompts: [ ... ], ... }
   const levelRegex = /title:\s*"([^"]+)"[\s\S]*?prompts:\s*\[([^\]]+)\]/g;
@@ -71,7 +88,7 @@ function loadScenesFromLevels() {
     scenes.push({ name, prompts });
   }
   if (scenes.length === 0) {
-    throw new Error('Failed to parse any levels from src/levels.ts');
+    throw new Error(`Failed to parse any levels from ${LEVELS_FILE}`);
   }
   return scenes;
 }
@@ -154,14 +171,6 @@ async function screenshot(sceneIdx, progressPct = 0, opts = {}) {
   return filename;
 }
 
-const argv = process.argv.slice(2);
-const flags = argv.filter((a) => a.startsWith('--'));
-const args = argv.filter((a) => !a.startsWith('--'));
-const opts = {
-  mobile: flags.includes('--mobile'),
-  params: (flags.find((f) => f.startsWith('--params=')) ?? '--params=').slice('--params='.length).split(',').filter(Boolean),
-  settle: parseInt((flags.find((f) => f.startsWith('--settle=')) ?? '--settle=0').slice('--settle='.length)) || 0,
-};
 const sceneArg = args[0] || '0';
 const progressArg = parseInt(args[1] || '0');
 

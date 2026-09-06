@@ -3,6 +3,7 @@ import { useGameStore } from "../store";
 import { LEVELS } from "../levels";
 import { startAmbient } from "../audio";
 import { shareInkwood } from "../share";
+import { isV2Enabled } from "../v2";
 import s from "../styles/Outro.module.css";
 
 /**
@@ -636,6 +637,13 @@ export default function OutroSequence() {
       {showText && (
         <div className={`${s.textOverlay} ${s.textOverlayFade}`}>
           <p className={`${s.body} ${s.bodyFade}`}>The forest remembers.</p>
+          {isV2Enabled() && (
+            // Inkwood 2: the answer to the last incantation the player typed
+            // ("the forest remembers"). Arrives a breath after the first line.
+            <p className={`${s.body} ${s.bodyFade}`} style={{ animationDelay: "2.2s", marginTop: "-0.6rem" }}>
+              It remembers you.
+            </p>
+          )}
 
           <button
             className={`${s.restartBtn} ${s.restartBtnFade}`}

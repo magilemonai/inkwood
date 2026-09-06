@@ -279,3 +279,64 @@
   0%   { opacity: 0; transform: scale(0); }
   100% { opacity: 0.06; transform: scale(1); }
 }
+
+/* ══════ INKWOOD 2 — journal-page act cards (?v2) ══════
+ * The card runs 9.5s under v2 (7s in v1) so a page of the previous
+ * scribe's journal can actually be read. The act name uses its own
+ * timeline so it stays up with the page instead of fading at 6s. */
+.actTitleV2 {
+  position: absolute;
+  top: 8vh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #d0b870;
+  font-size: 1.4rem;
+  letter-spacing: 0.18em;
+  font-weight: normal;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  animation: actTitleFadeV2 9.5s ease-in-out forwards;
+}
+
+@keyframes actTitleFadeV2 {
+  0%   { opacity: 0; }
+  9%   { opacity: 0; }
+  18%  { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.journalPage {
+  position: absolute;
+  bottom: 14vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(78vw, 460px);
+  margin: 0;
+  padding: 0 0.5rem;
+  color: #c8b48c;
+  font-size: 0.98rem;
+  line-height: 1.85;
+  font-style: italic;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  animation: journalPageFade 9.5s ease-in-out forwards;
+}
+
+@keyframes journalPageFade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  16%  { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  28%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  92%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .journalPage {
+    bottom: 12vh;
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+}

@@ -1,4 +1,6 @@
 import type { Level } from "./types";
+import { isV2Enabled } from "./v2";
+import { LEVELS_V2, ACT_LABELS_V2 } from "./levels2";
 
 /**
  * Each level declares both a canonical `prompts` array (the 5/5-rated
@@ -13,7 +15,7 @@ import type { Level } from "./types";
  * every alternative in that slot MUST also command flowers to bloom.
  */
 
-export const LEVELS: Level[] = [
+const LEVELS_V1: Level[] = [
   // ── Act I: Awakening ──
   {
     title: "The Sleeping Garden",
@@ -152,7 +154,13 @@ export const LEVELS: Level[] = [
   },
 ];
 
-export const ACT_LABELS = ["Awakening", "Discovery", "The Nexus", "Restoration"];
+const ACT_LABELS_V1 = ["Awakening", "Discovery", "The Nexus", "Restoration"];
+
+/** The live tables. Under the ?v2 gate (src/v2.ts) these are the
+ *  rewritten story in levels2.ts; otherwise the shipped v1.5 text.
+ *  Chosen once per page load. Same scenes, accents, and ranges. */
+export const LEVELS: Level[] = isV2Enabled() ? LEVELS_V2 : LEVELS_V1;
+export const ACT_LABELS: string[] = isV2Enabled() ? ACT_LABELS_V2 : ACT_LABELS_V1;
 export const ACT_RANGES: [number, number][] = [[0, 2], [3, 5], [6, 8], [9, 9]];
 
 export function getActIndex(lvl: number): number {
