@@ -500,8 +500,15 @@ const SKY: [number, HSL, HSL][] = [
   [1.0, [262, 20, 9], [374, 48, 20]],
 ];
 
+/** Pollen in its own memo'd component: `useParticles` notifies ~12×/s,
+ *  and called from the scene body it would reconcile the whole canopy at
+ *  that rate. Down here only the pollen re-renders. */
+const Pollen = memo(function Pollen({ active, alpha }: { active: boolean; alpha: number }) {
+  const pollen = useParticles(POLLEN_CONFIG, active);
+  return <ParticleField particles={pollen} opacity={alpha} />;
+});
+
 function GardenScene({ progress: p }: SceneProps) {
-  const pollen = useParticles(POLLEN_CONFIG, p > 0.5);
 
   // ── Phase clocks. Phrase 1 runs 0–0.5, phrase 2 runs 0.5–1. ──
   const rootWake = sub(p, 0.02, 0.34);   // light running out along the roots
@@ -863,7 +870,7 @@ function GardenScene({ progress: p }: SceneProps) {
       })}
 
       {/* ── POLLEN ── */}
-      {p > 0.5 && <ParticleField particles={pollen} opacity={0.26 * sub(p, 0.5, 0.25)} />}
+      {p > 0.5 && <Pollen active={p > 0.5} alpha={0.26 * sub(p, 0.5, 0.25)} />}
     </svg>
   );
 }

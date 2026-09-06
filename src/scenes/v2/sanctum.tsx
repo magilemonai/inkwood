@@ -598,8 +598,15 @@ const FIREFLY_CONFIG = {
 
 /* ── scene ────────────────────────────────────────────────────────── */
 
+/** Fireflies in their own memo'd component: `useParticles` notifies
+ *  ~12×/s, and called from the scene body it would reconcile every tree,
+ *  seat and spirit at that rate. Down here only the fireflies re-render. */
+const Fireflies = memo(function Fireflies({ active, alpha }: { active: boolean; alpha: number }) {
+  const fireflies = useParticles(FIREFLY_CONFIG, active);
+  return <ParticleField particles={fireflies} opacity={alpha} />;
+});
+
 function SanctumScene({ progress: p }: SceneProps) {
-  const fireflies = useParticles(FIREFLY_CONFIG, p > 0.52);
 
   // Phrase 1 — the pour.
   const unveil = sub(p, 0.04, 0.26);
@@ -995,7 +1002,7 @@ function SanctumScene({ progress: p }: SceneProps) {
       })}
 
       {/* ── Fireflies — kept from v1, gathering once the council does ── */}
-      {p > 0.52 && <ParticleField particles={fireflies} opacity={0.32} />}
+      {p > 0.52 && <Fireflies active alpha={0.32} />}
 
       {/* ── NEAR: the wings, almost black, holding the frame ── */}
       {NEAR_TREES.map((t, i) => (

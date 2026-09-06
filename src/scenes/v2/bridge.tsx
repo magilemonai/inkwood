@@ -531,8 +531,15 @@ const MIST_CONFIG = {
   lifeRange: [5, 11] as [number, number],
 };
 
-function BridgeScene({ progress: p }: SceneProps) {
+/** Mist particles in their own memo'd component: `useParticles` notifies
+ *  ~12×/s, and called from the scene body it would reconcile every cliff,
+ *  voussoir and lantern at that rate. Down here only the mist re-renders. */
+const Mist = memo(function Mist({ alpha }: { alpha: number }) {
   const mist = useParticles(MIST_CONFIG, true);
+  return <ParticleField particles={mist} opacity={alpha} />;
+});
+
+function BridgeScene({ progress: p }: SceneProps) {
 
   const warmth = sub(p, 0.5, 0.34); // phrase 2 — the lanterns bring colour back
 
@@ -948,7 +955,7 @@ function BridgeScene({ progress: p }: SceneProps) {
       <path d={WISP_NEAR} fill={`hsl(200, 18%, ${28 + p * 4}%)`} opacity={0.075}>
         <animateTransform attributeName="transform" type="translate" values="0 0; 16 -2; 0 0" dur="37s" repeatCount="indefinite" />
       </path>
-      <ParticleField particles={mist} opacity={0.18 - warmth * 0.05} />
+      <Mist alpha={0.18 - warmth * 0.05} />
     </svg>
   );
 }
