@@ -31,8 +31,8 @@ const garden: SceneManifest = {
   grain: 0.04,
   lights: (p) => {
     const sunIn = sub(p, 0.04, 0.5);      // the disc clearing the hills
-    const roots = sub(p, 0.03, 0.34);     // phrase 1: light runs the roots
-    const canopy = sub(p, 0.1, 0.42);     // phrase 1: foliage fills in
+    const roots = sub(p, 0.004, 0.24);    // phrase 1: light runs the roots
+    const canopy = sub(p, 0.2, 0.30);     // phrase 1: foliage fills in
     const bed = sub(p, 0.5, 0.42);        // phrase 2: the bed opens
     const y = sunY(p);
     return [
@@ -54,8 +54,8 @@ const garden: SceneManifest = {
       // ── Phrase one: the player's word running out along the roots.
       // Three small green-gold sources arriving as each head reaches its
       // tip, so the ground lights in the same order the strokes draw.
-      { x: 62, y: 194, radius: 24, intensity: 0.20 * sub(p, 0.12, 0.2), color: SAP, flicker: 0.06, yScale: 2.4, core: 0.3 },
-      { x: 182, y: 192, radius: 24, intensity: 0.20 * sub(p, 0.2, 0.2), color: SAP, flicker: 0.06, yScale: 2.4, core: 0.3 },
+      { x: 62, y: 194, radius: 24, intensity: 0.20 * sub(p, 0.05, 0.14), color: SAP, flicker: 0.06, yScale: 2.4, core: 0.3 },
+      { x: 182, y: 192, radius: 24, intensity: 0.20 * sub(p, 0.11, 0.14), color: SAP, flicker: 0.06, yScale: 2.4, core: 0.3 },
       { x: 122, y: 190, radius: 30, intensity: 0.16 * roots, color: LEAF, flicker: 0.05, yScale: 2.6 },
       // ── Phrase two: the bed warms as the flowers open. A flat pool, not
       // a halo, so it reads as ground light rather than a floating orb.

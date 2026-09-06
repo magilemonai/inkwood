@@ -14,13 +14,28 @@ import ParticleField from "../../components/ParticleField";
  * lands.
  *
  * Phrase 1, "wake now, sleeping roots" (p 0 → 0.5)
- *   A bright head of light runs OUT along each surface root from the
- *   trunk and the wood warms behind it, foliage grows in over the bare
- *   branches, the sun clears the horizon, and stems rise with closed buds
- *   waiting on them.
+ *   In order, and overlapping, so no 5% of the phrase is idle:
+ *   0.00–0.24  a bright head of light runs OUT along each surface root,
+ *              one root leaving after another from the first keystroke.
+ *   0.02–0.42  the wood warms behind the light, grooves and lit edges
+ *              coming up with it; grass and shrubs rise in the bed.
+ *   0.20–0.50  the crown fills, clump by clump, from the first crotch
+ *              outward and upward to the frayed tips. Each clump scales
+ *              in from a nub and travels the last third of the way out
+ *              to its place, so the foliage is never a single fade.
+ *   0.14–0.49  stems rise, each with a closed bud waiting on it.
+ *   Throughout, the sun clears the hills and the sky ramps to dawn.
  * Phrase 2, "bloom, every waiting flower" (p 0.5 → 1)
- *   The waiting buds open, staggered across the bed, each with a small
- *   overshoot. Pollen lifts and the crests take their rim light.
+ *   0.50–0.64  every bud on every stem plumps, lifts, and takes on its
+ *              flower's hue — the phrase changes something from its own
+ *              first letters, before anything has opened.
+ *   0.50–1.00  the flowers open one after another in BLOOM_ORDER, each
+ *              one a real unfolding: the petals start stacked on the
+ *              bud's axis at bud length, then swing out to their places
+ *              and lengthen, outer petals a beat behind the first. The
+ *              first is open by ~55%, the last finishes on the final
+ *              letter. Ground blossoms are interleaved between them.
+ *   Pollen lifts and the crests take their rim light.
  *
  * How the canopy is shaded, in three passes:
  *   1. Each foliage mass is a clip path, and ONE shared set of light
@@ -189,6 +204,14 @@ const ROOTS: { body: string; line: string }[] = [
   },
 ];
 
+/** When each root's head sets out, and how long it takes to reach its
+ *  tip. The first leaves on the first keystroke; the last arrives at
+ *  24%, which is the whole point of "wake now, sleeping roots" — the
+ *  light in the ground is what wakes the tree, so it has to get there
+ *  before the crown starts filling at 20%. */
+const ROOT_LEAD = [0.004, 0.034, 0.064, 0.094, 0.124];
+const ROOT_SPAN = 0.116;
+
 // ─── CANOPY ────────────────────────────────────────────────
 
 /** Five hand-drawn leaf-cluster silhouettes in local units (roughly a
@@ -301,6 +324,56 @@ const CROWN: Puff[] = [
   [2, 62, 46, 9, -16, 0.24],
   [1, 32, 68, 8, 11, 0.08],
 ];
+
+/** The point the crown grows OUT from: the first crotch, just above where
+ *  the three limbs part. Every clump's turn to arrive is decided by how
+ *  far it sits from here, so the foliage fills inner branches first and
+ *  works out to the frayed tips — the crown is never a single fade. */
+const CROWN_ANCHOR: [number, number] = [118, 98];
+
+/** Rank each clump 0 → 1 by distance from the anchor. Rank, not raw
+ *  distance, so the arrivals are evenly spaced through the fill window
+ *  however the clumps happen to be clustered in space: every 5% of
+ *  progress lands the same number of them. */
+function fillOrder(list: Puff[]): number[] {
+  const d = list.map(([, x, y], i) => ({
+    i,
+    // y weighted a little heavier so the fill also reads as upward.
+    d: Math.hypot(x - CROWN_ANCHOR[0], (y - CROWN_ANCHOR[1]) * 1.15),
+  }));
+  d.sort((a, b) => a.d - b.d);
+  const rank = new Array<number>(list.length).fill(0);
+  d.forEach((e, k) => { rank[e.i] = list.length < 2 ? 0 : k / (list.length - 1); });
+  return rank;
+}
+
+const BASE_ORDER = fillOrder(CROWN_BASE);
+const CROWN_ORDER = fillOrder(CROWN);
+
+/** The crown's fill window. Each clump takes CLUMP_SPAN of progress to
+ *  scale in from a nub near the anchor to its full size and place, and
+ *  the starts are spread across CROWN_START → CROWN_START + CROWN_SPREAD
+ *  so the last one finishes exactly as phrase 1 ends. */
+const CROWN_START = 0.20;
+const CROWN_SPREAD = 0.20;
+const CLUMP_SPAN = 0.10;
+
+/** One clump's arrival: how big, how opaque, and how far out from the
+ *  anchor it has travelled. Returns null before its turn. */
+function clumpAt(p: number, rank: number, start: number, spread: number) {
+  const t = sub(p, start + spread * rank, CLUMP_SPAN);
+  if (t <= 0) return null;
+  const e = 1 - Math.pow(1 - t, 3);
+  return {
+    // Scale-in with a hair of overshoot, so each clump lands rather than
+    // simply stops.
+    scale: (0.14 + 0.86 * e) * (1 + 0.07 * Math.sin(Math.PI * t)),
+    // Starts two-thirds of the way out and finishes in place: the crown
+    // opens outward instead of blinking on where it will end up.
+    out: 0.66 + 0.34 * e,
+    alpha: Math.min(1, t * 3.2),
+  };
+}
 
 /** Tone 0–1 across the four foliage values. */
 function leafTone(t: number, p: number): HSL {
@@ -441,6 +514,25 @@ const FLOWERS: Flower[] = [
   { x: 366, base: 192, stem: 27, bend: 3, size: 7.0, hue: 14, sat: 48, lit: 60, leaf: -1, sway: 5.0, spin: 14 },
 ];
 
+/** The order the bed blooms in, by index into FLOWERS. Not left to right
+ *  and not near-then-far: the turns hop across the frame so no corner
+ *  goes quiet, and a near flower takes both the first turn and the last
+ *  so the phrase opens and closes on something you can actually see.
+ *  The three small far ones (0, 1, 2) are spaced between the near ones
+ *  rather than bunched at either end. */
+const BLOOM_ORDER = [6, 4, 0, 8, 5, 1, 7, 2, 3];
+/** Turn `i` in FLOWERS into its place in the queue. */
+const BLOOM_SLOT = FLOWERS.map((_, i) => BLOOM_ORDER.indexOf(i));
+
+/** Phrase 2's clock. The first flower is open by 55%, the last finishes
+ *  on the final letter, and each unfolding spans OPEN_SPAN — long enough
+ *  that a 5% frame catches it mid-splay instead of only before and
+ *  after. The windows overlap by about half, so at every step one flower
+ *  is opening while the next is already parting. */
+const BLOOM_START = 0.50;
+const BLOOM_STEP = 0.0525;
+const OPEN_SPAN = 0.08;
+
 const STARS = [
   { x: 42, y: 26, r: 0.85, tw: 3.4 }, { x: 96, y: 16, r: 0.6, tw: 0 },
   { x: 168, y: 22, r: 0.75, tw: 4.6 }, { x: 232, y: 15, r: 0.55, tw: 0 },
@@ -511,11 +603,23 @@ const Pollen = memo(function Pollen({ active, alpha }: { active: boolean; alpha:
 function GardenScene({ progress: p }: SceneProps) {
 
   // ── Phase clocks. Phrase 1 runs 0–0.5, phrase 2 runs 0.5–1. ──
-  const rootWake = sub(p, 0.02, 0.34);   // light running out along the roots
-  const canopyIn = sub(p, 0.06, 0.40);   // foliage growing in over branches
-  const trunkWarm = sub(p, 0.04, 0.42);
+  // Phrase 1 is read in three overlapping stages so no 5% step is idle:
+  // the root light leads (0 → 0.25), the wood warms behind it, and the
+  // crown fills clump by clump (0.20 → 0.50) once the roots have woken.
+  const rootWake = sub(p, 0.005, 0.25);  // light running out along the roots
+  const canopyIn = sub(p, CROWN_START, CROWN_SPREAD + CLUMP_SPAN);
+  const trunkWarm = sub(p, 0.02, 0.40);
+  // The chain that carries phrase 1: the heads reach the root tips, sap
+  // climbs the trunk behind them, the bare branches take the light, and
+  // the crown follows it out. Each beat overlaps the next, so no 5%
+  // step is waiting on the one before it to finish.
+  const sapRise = sub(p, 0.09, 0.23);    // a glowing band travelling up
+  const branchLight = Math.sin(Math.PI * sub(p, 0.14, 0.24));
   const rim = sub(p, 0.3, 0.5);          // crest rim light
   const sunIn = sub(p, 0.04, 0.5);
+  // Phrase 2's opening beat: every bud on every stem plumps and warms
+  // from the first letters, before the first one splits.
+  const budSwell = sub(p, 0.5, 0.14);
 
   const sunX = 320;
   const sunY = 194 - 136 * p;
@@ -524,8 +628,8 @@ function GardenScene({ progress: p }: SceneProps) {
   const crestMid = mix(at("mid", p), at("crest", p), rim * 0.7);
   const crestNear = mix(at("near", p), at("crest", p), rim * 0.5);
   const trunkFill = css(at("trunk", trunkWarm));
-  const canopyScale = 0.8 + 0.2 * canopyIn;
-  // The bare skeleton recedes as the leaves take it over.
+  // The bare skeleton recedes as the leaves take it over, in step with
+  // the clumps actually covering it.
   const boneFade = 1 - 0.72 * canopyIn;
 
   return (
@@ -569,6 +673,16 @@ function GardenScene({ progress: p }: SceneProps) {
           <stop offset="38%" stopColor={trunkFill} />
           <stop offset="82%" stopColor={css(mix(at("trunk", trunkWarm), at("barkLit", trunkWarm), 0.38))} />
           <stop offset="100%" stopColor={css(mix(at("trunk", trunkWarm), at("bark", trunkWarm), 0.5))} />
+        </linearGradient>
+
+        {/* Sap: a soft band of the root light travelling UP the trunk,
+            arriving at the limbs just as the crown starts to fill. The
+            stops move with progress rather than the opacity of a fixed
+            wash, so what the player sees is a front climbing wood. */}
+        <linearGradient id="gdnSap" gradientUnits="userSpaceOnUse" x1="0" y1="198" x2="0" y2="30">
+          <stop offset={`${Math.max(0, sapRise - 0.14) * 100}%`} stopColor="#9dc472" stopOpacity="0" />
+          <stop offset={`${sapRise * 100}%`} stopColor="#a8cf7c" stopOpacity="0.16" />
+          <stop offset={`${Math.min(1, sapRise + 0.07) * 100}%`} stopColor="#a8cf7c" stopOpacity="0" />
         </linearGradient>
 
         <radialGradient id="gdnSunCore" cx="50%" cy="50%" r="50%">
@@ -648,6 +762,19 @@ function GardenScene({ progress: p }: SceneProps) {
           {FORKS.map((d, i) => (
             <path key={`f${i}`} d={d} fill={trunkFill} />
           ))}
+          {/* The bare branches take the sap light just before the leaves
+              cover them — so the crown arrives on lit wood, not out of
+              nowhere. Rises 14–26%, gone by the time the leaves close. */}
+          {branchLight > 0.01 && (
+            <g opacity={0.17 * branchLight * boneFade}>
+              {FORKS.map((d, i) => (
+                <path key={`fl${i}`} d={d} fill={css([96, 26, 30])} />
+              ))}
+              {TWIGS.map((d, i) => (
+                <path key={`tl${i}`} d={d} fill={css([92, 30, 34])} />
+              ))}
+            </g>
+          )}
         </g>
         <path d={TRUNK} fill="url(#gdnTrunk)" />
         {/* The flank turned away from the sun. */}
@@ -670,45 +797,56 @@ function GardenScene({ progress: p }: SceneProps) {
             strokeWidth={1.2 - i * 0.3} strokeLinecap="round"
             opacity={0.3 + 0.5 * trunkWarm} />
         ))}
+        {/* The sap front, clipped to the trunk's own shape. */}
+        {sapRise > 0 && sapRise < 1 && (
+          <path d={TRUNK} fill="url(#gdnSap)" />
+        )}
       </g>
 
-      {/* ── SURFACE ROOTS — a bright head runs OUT from the trunk ── */}
+      {/* ── SURFACE ROOTS — a bright head runs OUT from the trunk ──
+          The five heads leave one after another from the very first
+          letters and the last reaches its tip by 24%, so the root light
+          leads the crown rather than running under it. */}
       <g>
         {ROOTS.map((r, i) => {
-          const t = sub(p, 0.03 + i * 0.045, 0.26);
+          const t = sub(p, ROOT_LEAD[i], ROOT_SPAN);
           return (
             <path key={`rb${i}`} d={r.body}
-              fill={css(mix([26, 10, 4], [30, 20, 11], t))} />
+              fill={css(mix([26, 10, 4], [34, 28, 16], t))} />
           );
         })}
       </g>
       <g filter="url(#gdnRootGlow)">
         {ROOTS.map((r, i) => {
-          const t = sub(p, 0.03 + i * 0.045, 0.26);
+          const t = sub(p, ROOT_LEAD[i], ROOT_SPAN);
           if (t <= 0 || t >= 1) return null;
           // A short bright segment travelling from trunk to tip, then gone.
           return (
             <path key={`rl${i}`} d={r.line} fill="none"
-              stroke={css([76, 60, 62])} strokeWidth={0.9} strokeLinecap="round"
-              pathLength={1} strokeDasharray="0.14 1"
-              strokeDashoffset={0.14 - t * 1.14}
-              opacity={0.85 * Math.sin(Math.PI * t) + 0.1} />
+              stroke={css([76, 66, 68])} strokeWidth={1.4} strokeLinecap="round"
+              pathLength={1} strokeDasharray="0.2 1"
+              strokeDashoffset={0.2 - t * 1.2}
+              opacity={0.9 * Math.sin(Math.PI * t) + 0.1} />
           );
         })}
       </g>
       {/* The wood keeps a low ember once the light has passed through. */}
-      <g opacity={0.3 * rootWake}>
+      <g opacity={0.45 * rootWake}>
         {ROOTS.map((r, i) => (
           <path key={`re${i}`} d={r.line} fill="none"
-            stroke={css([64, 40, 40])} strokeWidth={0.5} strokeLinecap="round"
+            stroke={css([66, 48, 46])} strokeWidth={0.75} strokeLinecap="round"
             pathLength={1} strokeDasharray="1 1"
-            strokeDashoffset={1 - sub(p, 0.03 + i * 0.045, 0.26)} />
+            strokeDashoffset={1 - sub(p, ROOT_LEAD[i], ROOT_SPAN)} />
         ))}
       </g>
 
-      {/* ── CANOPY — twenty leaf clusters stacked dark to light ── */}
-      <g opacity={canopyIn}
-        transform={`translate(${(116 * (1 - canopyScale)).toFixed(2)} ${(126 * (1 - canopyScale)).toFixed(2)}) scale(${canopyScale.toFixed(3)})`}>
+      {/* ── CANOPY — forty leaf clusters, each arriving on its own ──
+          The crown is not a fade. Every clump scales in from a nub near
+          the first crotch and travels the last third of the way out to
+          its place, and the clumps are ranked by distance from that
+          crotch, so the foliage fills inner branches → outer tips across
+          20–50% and every 5% frame carries more crown than the last. */}
+      <g>
         <g>
           <animateTransform attributeName="transform" type="rotate"
             values="-0.4 116 132; 0.4 116 132; -0.4 116 132"
@@ -717,20 +855,33 @@ function GardenScene({ progress: p }: SceneProps) {
               mushroom cap, which is a shape this project has rejected
               before. Squeezing x and stretching y gives it a head. */}
           <g transform="translate(120 83) scale(0.85 1.1) translate(-120 -78)">
-          {CROWN_BASE.map(([s, x, y, r, rot, tone], i) => (
-            <path key={`b${i}`} d={PUFFS[s]} fill={css(leafTone(tone, p))}
-              transform={`translate(${x} ${y}) rotate(${rot}) scale(${r})`} />
-          ))}
+          {/* The shade mass runs a touch ahead of the detail clusters so
+              the gaps between them read as deep leaf, never as holes. */}
+          {CROWN_BASE.map(([s, x, y, r, rot, tone], i) => {
+            const c = clumpAt(p, BASE_ORDER[i], CROWN_START - 0.015, CROWN_SPREAD * 0.82);
+            if (!c) return null;
+            const cx = lerp(CROWN_ANCHOR[0], x, c.out);
+            const cy = lerp(CROWN_ANCHOR[1], y, c.out);
+            return (
+              <path key={`b${i}`} d={PUFFS[s]} fill={css(leafTone(tone, p))} opacity={c.alpha}
+                transform={`translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${rot}) scale(${(r * c.scale).toFixed(2)})`} />
+            );
+          })}
           {CROWN.map(([s, x, y, r, rot, tone], i) => {
+            const c = clumpAt(p, CROWN_ORDER[i], CROWN_START, CROWN_SPREAD);
+            if (!c) return null;
             const under = css(leafTone(Math.max(0, tone - 0.13), p));
             const face = css(leafTone(tone, p));
+            const cx = lerp(CROWN_ANCHOR[0], x, c.out);
+            const cy = lerp(CROWN_ANCHOR[1], y, c.out);
+            const sc = (r * c.scale).toFixed(2);
             return (
-              <g key={`p${i}`}>
+              <g key={`p${i}`} opacity={c.alpha}>
                 {/* Each cluster casts a hair of shade on the one behind it. */}
                 <path d={PUFFS[s]} fill={under}
-                  transform={`translate(${x - 0.4} ${y + 1.4}) rotate(${rot}) scale(${r})`} />
+                  transform={`translate(${(cx - 0.4).toFixed(2)} ${(cy + 1.4).toFixed(2)}) rotate(${rot}) scale(${sc})`} />
                 <path d={PUFFS[s]} fill={face}
-                  transform={`translate(${x} ${y}) rotate(${rot}) scale(${r})`} />
+                  transform={`translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${rot}) scale(${sc})`} />
               </g>
             );
           })}
@@ -795,19 +946,28 @@ function GardenScene({ progress: p }: SceneProps) {
 
       {/* ── FLOWERS — stems and buds in phrase 1, the bloom in phrase 2 ── */}
       {FLOWERS.map((f, i) => {
-        const grow = sub(p, 0.16 + i * 0.02, 0.26);
+        // Stems rise through phrase 1 and are all up, buds closed, by the
+        // time the phrase ends — the seam has to match.
+        const grow = sub(p, 0.14 + i * 0.019, 0.20);
         if (grow <= 0) return null;
-        const open = sub(p, 0.5 + i * 0.035, 0.18);
+        const open = sub(p, BLOOM_START + BLOOM_SLOT[i] * BLOOM_STEP, OPEN_SPAN);
         const eased = 1 - Math.pow(1 - open, 3);
-        const pop = eased * (1 + 0.14 * Math.sin(Math.PI * open));
         const hx = f.x + f.bend * grow;
-        const hy = f.base - f.stem * grow;
+        // The bud plumps and lifts a hair on its stem before it splits.
+        const hy = f.base - f.stem * grow - 0.6 * budSwell;
         const midY = (f.base + hy) / 2;
         const stemCol = css(mix(at("stem", p), at("mid", p), f.far ? 0.55 : 0));
         const petal: HSL = [f.hue, lerp(f.sat * 0.5, f.sat, open), lerp(f.lit * 0.55, f.lit, open)];
         const petalLow: HSL = [f.hue - 5, f.sat * 0.9, f.lit * 0.58];
-        const budCol: HSL = [f.hue - 10, lerp(16, f.sat * 0.6, grow), lerp(16, 28, grow)];
-        const leafT = sub(p, 0.22 + i * 0.02, 0.24);
+        // The bud takes its colour on from 50%: grey-green while it waits,
+        // already carrying the flower's hue by the time it opens.
+        const budCol: HSL = [
+          f.hue - 10,
+          lerp(lerp(16, f.sat * 0.6, grow), f.sat * 0.9, budSwell),
+          lerp(lerp(16, 28, grow), 42, budSwell),
+        ];
+        const budScale = f.size * (0.6 + 0.3 * budSwell) * grow * (1 - 0.3 * eased);
+        const leafT = sub(p, 0.20 + i * 0.016, 0.16);
 
         return (
           <g key={`fl${i}`} opacity={f.far ? 0.65 : 1}>
@@ -830,25 +990,41 @@ function GardenScene({ progress: p }: SceneProps) {
 
             {open < 1 && (
               <path d={BUD} fill={css(budCol)} opacity={1 - eased}
-                transform={`translate(${hx} ${hy + f.size * 0.25}) rotate(${f.bend * 0.8}) scale(${(f.size * 0.6 * grow).toFixed(2)})`} />
+                transform={`translate(${hx} ${hy + f.size * 0.25}) rotate(${f.bend * 0.8}) scale(${budScale.toFixed(2)})`} />
             )}
 
             {open > 0 && (
-              <g opacity={Math.min(1, open * 2.2)}>
-                {/* Lower petals in the shaded tone, upper petals over them
-                    in the lit tone. Alternating tones read as a pinwheel. */}
+              <g>
+                {/* An unfolding, not a swap. Every petal starts stacked
+                    on the bud's own axis at bud length, then swings out
+                    to its place and lengthens — outer petals a beat
+                    behind the first, so the flower peels open. Shading
+                    is read off the FINAL angle so a petal doesn't change
+                    value while it travels. */}
                 {[0, 1, 2, 3, 4].map((j) => {
-                  const ang = f.spin + j * 72;
-                  const norm = ((ang % 360) + 360) % 360;
+                  const uj = Math.min(1, Math.max(0, (open - j * 0.06) / 0.76));
+                  const ej = 1 - Math.pow(1 - uj, 3);
+                  const popJ = ej * (1 + 0.12 * Math.sin(Math.PI * uj));
+                  const angEnd = f.spin + j * 72;
+                  const angBud = f.bend * 0.8;
+                  // Shortest way round, so a petal never takes the long
+                  // arc back through the far side of the flower.
+                  const d = ((((angEnd - angBud) + 180) % 360) + 360) % 360 - 180;
+                  const ang = angBud + d * ej;
+                  const norm = ((angEnd % 360) + 360) % 360;
                   const lower = norm > 100 && norm < 260;
-                  const len = f.size * pop * (0.94 + ((j + i) % 3) * 0.05);
+                  const len = f.size * (0.42 + 0.58 * popJ) * (0.94 + ((j + i) % 3) * 0.05);
                   return (
                     <path key={j} d={PETAL} fill={css(lower ? petalLow : petal)}
-                      transform={`translate(${hx} ${hy}) rotate(${ang}) scale(${len.toFixed(2)})`} />
+                      opacity={Math.min(1, 0.3 + uj * 3)}
+                      transform={`translate(${hx} ${hy}) rotate(${ang.toFixed(1)}) scale(${len.toFixed(2)})`} />
                   );
                 })}
+                {/* The eye is only there once the petals have parted far
+                    enough to have made a centre. */}
                 <path d={EYE} fill={css([46, 60, lerp(34, 56, open)])}
-                  transform={`translate(${hx} ${hy}) scale(${(f.size * 0.19 * pop).toFixed(2)})`} />
+                  opacity={Math.min(1, Math.max(0, (open - 0.3) / 0.3))}
+                  transform={`translate(${hx} ${hy}) scale(${(f.size * 0.19 * eased).toFixed(2)})`} />
               </g>
             )}
           </g>
@@ -856,8 +1032,11 @@ function GardenScene({ progress: p }: SceneProps) {
       })}
 
       {/* ── GROUND BLOSSOMS — the bed answering the bed ── */}
+      {/* Spread across the whole of phrase 2 and interleaved with the
+          tall flowers, so the frames between two openings still carry a
+          change somewhere in the bed. */}
       {SPECKS.map(([x, y, r, hue], i) => {
-        const t = sub(p, 0.56 + i * 0.026, 0.16);
+        const t = sub(p, 0.525 + i * 0.052, 0.09);
         if (t <= 0) return null;
         return (
           <g key={`sp${i}`} opacity={0.5 * t}>
